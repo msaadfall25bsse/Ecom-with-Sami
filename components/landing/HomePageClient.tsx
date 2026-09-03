@@ -27,6 +27,8 @@ import {
 import { defaultCmsContent, CmsContentSchema } from '@/utils/cmsStore';
 import { Module } from '@/utils/db';
 
+import { supabase } from '@/lib/supabase';
+
 interface HomePageClientProps {
   initialContent: CmsContentSchema;
   initialModules: Module[];
@@ -37,27 +39,50 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
   const [content, setContent] = useState<CmsContentSchema>(initialContent || defaultCmsContent);
 
   useEffect(() => {
-    const syncData = () => {
+    const syncData = async () => {
       try {
         localStorage.removeItem('sami_cms_content');
       } catch (e) {}
 
-      const timestamp = `${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
-      fetch(`/api/public/cms-content?_nocache=${timestamp}`, {
-        cache: 'no-store',
-        headers: {
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-          'Pragma': 'no-cache'
-        }
-      })
-        .then((r) => r.json())
-        .then((res) => {
-          if (res.success && res.sections) {
-            setContent(res.sections);
+      // 1. Try local API route first
+      try {
+        const timestamp = `${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+        const res = await fetch(`/api/public/cms-content?_nocache=${timestamp}`, {
+          cache: 'no-store',
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache'
           }
-        })
-        .catch(() => {});
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.sections) {
+            setContent(data.sections);
+            return;
+          }
+        }
+      } catch (e) {}
+
+      // 2. Direct Supabase Cloud Fetch (Guaranteed fallback for static web hosts like Hostinger)
+      if (supabase) {
+        try {
+          const { data, error } = await supabase
+            .from('cms_settings')
+            .select('value_json')
+            .eq('key', 'main_cms')
+            .maybeSingle();
+
+          if (!error && data && data.value_json) {
+            const parsed = typeof data.value_json === 'string' ? JSON.parse(data.value_json) : data.value_json;
+            if (parsed && typeof parsed === 'object') {
+              setContent({ ...defaultCmsContent, ...parsed });
+            }
+          }
+        } catch (e) {}
+      }
     };
+
+    syncData();
 
     // Listen for instant updates across tabs or windows
     window.addEventListener('sami_cms_updated', syncData);

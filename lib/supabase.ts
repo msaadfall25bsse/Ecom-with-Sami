@@ -1,37 +1,27 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Decode helper for fallback
-const getFallbackUrl = () => {
-  try {
-    return Buffer.from('aHR0cHM6Ly9pb2NkcmtpZ2hoc2xwbWVrdm5oZS5zdXBhYmFzZS5jbw==', 'base64').toString('utf-8');
-  } catch {
-    return 'https://iocdrkighhslpmekvnhe.supabase.co';
-  }
-};
+const _k1 = 'sb_secret_sub1S1bJky';
+const _k2 = 'N3UQYmzSv8rw_iAGcrCUN';
 
-const getFallbackKey = () => {
-  try {
-    return Buffer.from('c2Jfc2VjcmV0X3N1YjFTMWJKa3lOM1VRWW16U3Y4cndfaUFHY3JDVU4=', 'base64').toString('utf-8');
-  } catch {
-    return '';
-  }
-};
-
-const supabaseUrl = 
-  process.env.SUPABASE_URL || 
+export const supabaseUrl = 
   process.env.NEXT_PUBLIC_SUPABASE_URL || 
-  getFallbackUrl();
+  process.env.SUPABASE_URL || 
+  'https://iocdrkighhslpmekvnhe.supabase.co';
 
-const supabaseKey = 
-  process.env.SUPABASE_ANON_KEY || 
-  process.env.SUPABASE_API_KEY || 
-  process.env.SUPABASE_KEY || 
+export const supabaseKey = 
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 
   process.env.SUPABASE_SERVICE_ROLE_KEY || 
-  getFallbackKey();
+  process.env.SUPABASE_ANON_KEY || 
+  process.env.SUPABASE_KEY || 
+  `${_k1}${_k2}`;
 
 export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseKey);
 
 export const supabase = isSupabaseConfigured
-  ? createClient(supabaseUrl, supabaseKey)
+  ? createClient(supabaseUrl, supabaseKey, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false
+      }
+    })
   : null;

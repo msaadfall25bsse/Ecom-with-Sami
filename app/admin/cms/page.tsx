@@ -31,6 +31,8 @@ import {
 import { defaultCmsContent, CmsContentSchema } from '@/utils/cmsStore';
 import { Module, Supplier } from '@/utils/db';
 
+import { supabase } from '@/lib/supabase';
+
 export default function AdminCmsPage() {
   const [activeTab, setActiveTab] = useState<'lms' | 'hero' | 'stats' | 'bonuses' | 'reviews' | 'faqs' | 'payments' | 'contact' | 'pixels'>('lms');
   const [cmsData, setCmsData] = useState<CmsContentSchema>(defaultCmsContent);
@@ -77,56 +79,71 @@ export default function AdminCmsPage() {
   });
   const [newFaq, setNewFaq] = useState({ q: '', a: '' });
 
-  const fetchAllData = () => {
+  const fetchAllData = async () => {
     try {
       localStorage.removeItem('sami_cms_content');
     } catch (e) {}
 
     const cacheBuster = `${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
 
-    // 100% Live Dynamic Fetch from Supabase Database with strict zero-cache headers
-    fetch(`/api/cms/content?_nocache=${cacheBuster}`, {
-      cache: 'no-store',
-      headers: {
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Pragma': 'no-cache'
-      }
-    })
-      .then((r) => r.json())
-      .then((res) => {
-        if (res.success && res.content) {
-          setCmsData(res.content);
+    // 1. Try local API route
+    try {
+      const res = await fetch(`/api/cms/content?_nocache=${cacheBuster}`, {
+        cache: 'no-store',
+        headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache' }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.content) {
+          setCmsData(data.content);
         }
-      })
-      .catch((err) => console.error('CMS live fetch notice:', err));
-
-    // Live Dynamic Fetch LMS Modules from Database
-    fetch(`/api/lms/modules?_nocache=${cacheBuster}`, {
-      cache: 'no-store',
-      headers: {
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Pragma': 'no-cache'
       }
-    })
-      .then(r => r.json())
-      .then(res => {
-        if (res.success && res.modules) setModules(res.modules);
-      })
-      .catch((err) => console.error('Modules live fetch notice:', err));
+    } catch (err) {}
 
-    // Live Dynamic Fetch Suppliers from Database
-    fetch(`/api/lms/suppliers?_nocache=${cacheBuster}`, {
-      cache: 'no-store',
-      headers: {
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Pragma': 'no-cache'
-      }
-    })
-      .then(r => r.json())
-      .then(res => {
-        if (res.success && res.suppliers) setSuppliers(res.suppliers);
-      })
-      .catch((err) => console.error('Suppliers live fetch notice:', err));
+    // 2. Direct Supabase Cloud Fetch (Guaranteed fallback for static web hosts like Hostinger)
+    if (supabase) {
+      try {
+        const { data, error } = await supabase.from('cms_settings').select('value_json').eq('key', 'main_cms').maybeSingle();
+        if (!error && data && data.value_json) {
+          const parsed = typeof data.value_json === 'string' ? JSON.parse(data.value_json) : data.value_json;
+          if (parsed && typeof parsed === 'object') {
+            setCmsData({ ...defaultCmsContent, ...parsed });
+          }
+        }
+      } catch (e) {}
+
+      try {
+        const { data: modData } = await supabase.from('lms_modules').select('*').order('id', { ascending: true });
+        if (modData && modData.length > 0) {
+          setModules(modData.map((r: any) => ({
+            id: Number(r.id),
+            title: r.title,
+            duration: r.duration,
+            description: r.description,
+            lessons: typeof r.lessons_json === 'string' ? JSON.parse(r.lessons_json || '[]') : (r.lessons_json || [])
+          })));
+        }
+      } catch (e) {}
+
+      try {
+        const { data: supData } = await supabase.from('lms_suppliers').select('*').order('updated_at', { ascending: false });
+        if (supData && supData.length > 0) {
+          setSuppliers(supData.map((r: any) => ({
+            id: r.id,
+            name: r.name,
+            category: r.category,
+            country: r.country,
+            city: r.city,
+            phone: r.phone,
+            whatsappLink: r.whatsapp_link,
+            minOrder: r.min_order,
+            deliveryTime: r.delivery_time,
+            codSupported: Boolean(r.cod_supported),
+            notes: r.notes
+          })));
+        }
+      } catch (e) {}
+    }
   };
 
   useEffect(() => {
@@ -136,8 +153,10 @@ export default function AdminCmsPage() {
   const handleSaveAll = async () => {
     setLoading(true);
     setSavedSuccess(false);
+    let saved = false;
+
     try {
-      // Persist to server API & trigger revalidation across entire site
+      // 1. Persist to server API & trigger revalidation
       const res = await fetch('/api/cms/content', {
         method: 'POST',
         headers: { 
@@ -146,20 +165,32 @@ export default function AdminCmsPage() {
         },
         body: JSON.stringify(cmsData)
       });
-      const json = await res.json();
-      if (json.success) {
-        setSavedSuccess(true);
-        if (json.content) {
-          setCmsData(json.content);
-        }
-        window.dispatchEvent(new Event('sami_cms_updated'));
-        setTimeout(() => setSavedSuccess(false), 3000);
+      if (res.ok) {
+        const json = await res.json();
+        if (json.success) saved = true;
       }
-    } catch (e) {
-      console.error('Save error:', e);
-    } finally {
-      setLoading(false);
+    } catch (e) {}
+
+    // 2. Direct Supabase Cloud Save (Guaranteed fallback for static web hosts like Hostinger)
+    if (supabase) {
+      try {
+        const { error } = await supabase.from('cms_settings').upsert({
+          key: 'main_cms',
+          value_json: JSON.stringify(cmsData),
+          updated_at: new Date().toISOString()
+        });
+        if (!error) saved = true;
+      } catch (e) {
+        console.error('Direct Supabase save error:', e);
+      }
     }
+
+    if (saved) {
+      setSavedSuccess(true);
+      window.dispatchEvent(new Event('sami_cms_updated'));
+      setTimeout(() => setSavedSuccess(false), 3000);
+    }
+    setLoading(false);
   };
 
   // --- LMS MODULE ACTIONS ---
