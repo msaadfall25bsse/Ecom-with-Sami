@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/utils/db';
+import { dbGetEnrollments, dbUpdateEnrollmentStatus } from '@/lib/database';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const enrollments = db.getEnrollments();
+    const enrollments = dbGetEnrollments();
     return NextResponse.json({ success: true, enrollments });
   } catch (error: any) {
     return NextResponse.json({ success: false, message: error.message }, { status: 500 });
@@ -17,7 +19,7 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ success: false, message: 'Missing id or status' }, { status: 400 });
     }
 
-    const updated = db.updateEnrollmentStatus(id, status);
+    const updated = dbUpdateEnrollmentStatus(id, status);
     if (!updated) {
       return NextResponse.json({ success: false, message: 'Enrollment not found' }, { status: 404 });
     }

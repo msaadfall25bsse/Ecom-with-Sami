@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/utils/db';
+import { dbGetStudentByEmail, dbUpdateStudent } from '@/lib/database';
+
+export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,7 +14,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const student = db.getStudentByEmail(email);
+    const student = dbGetStudentByEmail(email);
 
     if (!student) {
       return NextResponse.json(
@@ -36,8 +38,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Update last login
-    db.updateStudent(student.id, { lastLogin: new Date().toISOString() });
+    // Update last login in database
+    dbUpdateStudent(student.id, { lastLogin: new Date().toISOString() });
 
     const response = NextResponse.json({
       success: true,
@@ -48,23 +50,26 @@ export async function POST(request: NextRequest) {
         email: student.email,
         phone: student.phone,
         city: student.city,
-        completedLessons: student.completedLessons || []
-      }
+        role: 'student'
+      },
+      redirectTo: '/lms'
     });
 
-    // Set auth cookie
-    response.cookies.set('sami_student_session', student.id, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+    response.cookies.set('sami_student_auth', JSON.stringify({
+      id: student.id,
+      name: student.name,
+      email: student.email,
+      role: 'student'
+    }), {
       path: '/',
-      maxAge: 60 * 60 * 24 * 30 // 30 days
+      httpOnly: false,
+      maxAge: 86400 * 30
     });
 
     return response;
   } catch (error: any) {
     return NextResponse.json(
-      { success: false, message: error.message || 'Server error during authentication' },
+      { success: false, message: error.message || 'Authentication failed' },
       { status: 500 }
     );
   }

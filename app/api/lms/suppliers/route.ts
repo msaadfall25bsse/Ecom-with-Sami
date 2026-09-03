@@ -1,10 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/utils/db';
+import { dbGetSuppliers, dbAddSupplier, dbDeleteSupplier } from '@/lib/database';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const suppliers = db.getSuppliers();
-    return NextResponse.json({ success: true, suppliers });
+    const suppliers = dbGetSuppliers();
+    return NextResponse.json({
+      success: true,
+      suppliers
+    });
   } catch (error: any) {
     return NextResponse.json({ success: false, message: error.message }, { status: 500 });
   }
@@ -13,25 +18,25 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const newSupplier = db.addSupplier({
-      id: `sup_${Date.now()}`,
-      name: body.name || 'New Wholesale Supplier',
-      category: body.category || 'General Wholesale',
+    const newSupplier = dbAddSupplier({
+      id: body.id || `sup_${Date.now()}`,
+      name: body.name || 'New Verified Wholesale Supplier',
+      category: body.category || 'General Wholesale & Electronics',
       country: body.country || 'UAE',
       city: body.city || 'Dubai',
-      phone: body.phone || '+971501234567',
-      whatsappLink: body.whatsappLink || `https://wa.me/${body.phone?.replace(/\D/g, '')}`,
-      minOrder: body.minOrder || '1 Piece (Dropshipping)',
+      phone: body.phone || '+971500000000',
+      whatsappLink: body.whatsappLink || `https://wa.me/${(body.phone || '').replace(/[^0-9]/g, '')}`,
+      minOrder: body.minOrder || '1 Piece (Dropshipping Enabled)',
       deliveryTime: body.deliveryTime || '24-48 Hours',
-      codSupported: body.codSupported ?? true,
-      notes: body.notes || 'Verified GCC supplier.'
+      codSupported: body.codSupported !== undefined ? body.codSupported : true,
+      notes: body.notes || 'Verified supplier with local stock in UAE/KSA.'
     });
 
     return NextResponse.json({
       success: true,
-      message: 'Supplier added to LMS directory!',
+      message: 'Supplier added to database successfully!',
       supplier: newSupplier,
-      suppliers: db.getSuppliers()
+      suppliers: dbGetSuppliers()
     });
   } catch (error: any) {
     return NextResponse.json({ success: false, message: error.message }, { status: 500 });
@@ -42,15 +47,15 @@ export async function DELETE(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
-    if (!id) return NextResponse.json({ success: false, message: 'Missing supplier ID' }, { status: 400 });
+    if (!id) return NextResponse.json({ success: false, message: 'Supplier ID required' }, { status: 400 });
 
-    const removed = db.deleteSupplier(id);
-    if (!removed) return NextResponse.json({ success: false, message: 'Supplier not found' }, { status: 404 });
+    const deleted = dbDeleteSupplier(id);
+    if (!deleted) return NextResponse.json({ success: false, message: 'Supplier not found' }, { status: 404 });
 
     return NextResponse.json({
       success: true,
-      message: 'Supplier removed from LMS directory',
-      suppliers: db.getSuppliers()
+      message: 'Supplier deleted from database',
+      suppliers: dbGetSuppliers()
     });
   } catch (error: any) {
     return NextResponse.json({ success: false, message: error.message }, { status: 500 });

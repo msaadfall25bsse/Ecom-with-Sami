@@ -1,9 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/utils/db';
+import { 
+  dbGetModules, 
+  dbAddModule, 
+  dbUpdateModule, 
+  dbDeleteModule, 
+  dbAddLesson, 
+  dbUpdateLesson, 
+  dbDeleteLesson 
+} from '@/lib/database';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const modules = db.getModules();
+    const modules = dbGetModules();
     return NextResponse.json({
       success: true,
       modules
@@ -21,11 +31,12 @@ export async function POST(request: NextRequest) {
     // Action: Add new module
     if (action === 'ADD_MODULE' || (!action && module)) {
       const newMod = module || body;
-      const nextId = db.getModules().length > 0 
-        ? Math.max(...db.getModules().map(m => m.id)) + 1 
+      const currentModules = dbGetModules();
+      const nextId = currentModules.length > 0 
+        ? Math.max(...currentModules.map(m => m.id)) + 1 
         : 1;
 
-      const createdModule = db.addModule({
+      const createdModule = dbAddModule({
         id: newMod.id || nextId,
         title: newMod.title || `Module ${nextId}: New Course Topic`,
         duration: newMod.duration || '45 mins',
@@ -35,9 +46,9 @@ export async function POST(request: NextRequest) {
 
       return NextResponse.json({
         success: true,
-        message: 'Module added successfully!',
+        message: 'Module added to database successfully!',
         module: createdModule,
-        modules: db.getModules()
+        modules: dbGetModules()
       });
     }
 
@@ -48,7 +59,7 @@ export async function POST(request: NextRequest) {
       }
 
       const lessonId = lesson.id || `m${moduleId}_l${Date.now()}`;
-      const createdLesson = db.addLessonToModule(Number(moduleId), {
+      const createdLesson = dbAddLesson(Number(moduleId), {
         id: lessonId,
         title: lesson.title || 'New Lecture Video',
         duration: lesson.duration || '15:00',
@@ -57,14 +68,14 @@ export async function POST(request: NextRequest) {
       });
 
       if (!createdLesson) {
-        return NextResponse.json({ success: false, message: 'Module not found' }, { status: 404 });
+        return NextResponse.json({ success: false, message: 'Module not found in database' }, { status: 404 });
       }
 
       return NextResponse.json({
         success: true,
-        message: 'Lesson added to module successfully!',
+        message: 'Lesson added to module in database successfully!',
         lesson: createdLesson,
-        modules: db.getModules()
+        modules: dbGetModules()
       });
     }
 
@@ -80,15 +91,15 @@ export async function PUT(request: NextRequest) {
     const { action, moduleId, lessonId, patch } = body;
 
     if (action === 'UPDATE_MODULE') {
-      const updated = db.updateModule(Number(moduleId), patch);
+      const updated = dbUpdateModule(Number(moduleId), patch);
       if (!updated) return NextResponse.json({ success: false, message: 'Module not found' }, { status: 404 });
-      return NextResponse.json({ success: true, message: 'Module updated successfully', module: updated, modules: db.getModules() });
+      return NextResponse.json({ success: true, message: 'Module updated in database', module: updated, modules: dbGetModules() });
     }
 
     if (action === 'UPDATE_LESSON') {
-      const updated = db.updateLesson(Number(moduleId), lessonId, patch);
+      const updated = dbUpdateLesson(Number(moduleId), lessonId, patch);
       if (!updated) return NextResponse.json({ success: false, message: 'Lesson not found' }, { status: 404 });
-      return NextResponse.json({ success: true, message: 'Lesson updated successfully', lesson: updated, modules: db.getModules() });
+      return NextResponse.json({ success: true, message: 'Lesson updated in database', lesson: updated, modules: dbGetModules() });
     }
 
     return NextResponse.json({ success: false, message: 'Invalid update action' }, { status: 400 });
@@ -105,16 +116,16 @@ export async function DELETE(request: NextRequest) {
 
     // Delete specific lesson
     if (moduleId && lessonId) {
-      const removedLesson = db.deleteLesson(Number(moduleId), lessonId);
-      if (!removedLesson) return NextResponse.json({ success: false, message: 'Lesson not found' }, { status: 404 });
-      return NextResponse.json({ success: true, message: 'Lesson removed from module', modules: db.getModules() });
+      const removed = dbDeleteLesson(Number(moduleId), lessonId);
+      if (!removed) return NextResponse.json({ success: false, message: 'Lesson not found' }, { status: 404 });
+      return NextResponse.json({ success: true, message: 'Lesson removed from database', modules: dbGetModules() });
     }
 
     // Delete entire module
     if (moduleId) {
-      const removedMod = db.deleteModule(Number(moduleId));
-      if (!removedMod) return NextResponse.json({ success: false, message: 'Module not found' }, { status: 404 });
-      return NextResponse.json({ success: true, message: 'Module deleted successfully', modules: db.getModules() });
+      const removed = dbDeleteModule(Number(moduleId));
+      if (!removed) return NextResponse.json({ success: false, message: 'Module not found' }, { status: 404 });
+      return NextResponse.json({ success: true, message: 'Module deleted from database', modules: dbGetModules() });
     }
 
     return NextResponse.json({ success: false, message: 'Missing moduleId or lessonId' }, { status: 400 });

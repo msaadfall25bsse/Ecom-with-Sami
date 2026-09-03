@@ -1,18 +1,18 @@
 import { NextResponse } from 'next/server';
-import { getServerCmsContent } from '@/utils/serverStorage';
+import { dbGetCmsSettings } from '@/lib/database';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const data = getServerCmsContent();
+    const data = dbGetCmsSettings();
     return NextResponse.json({
       success: true,
       sections: data
     });
   } catch (error: any) {
     return NextResponse.json(
-      { success: false, message: error.message || 'Failed to fetch public CMS data' },
+      { success: false, message: error.message || 'Failed to fetch public CMS data from database' },
       { status: 500 }
     );
   }

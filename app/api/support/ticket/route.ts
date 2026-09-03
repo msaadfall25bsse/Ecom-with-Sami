@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/utils/db';
+import { dbGetTickets, dbAddTicket } from '@/lib/database';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const tickets = db.getTickets();
+    const tickets = dbGetTickets();
     return NextResponse.json({ success: true, tickets });
   } catch (error: any) {
     return NextResponse.json({ success: false, message: error.message }, { status: 500 });
@@ -18,7 +20,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, message: 'Please fill all required fields' }, { status: 400 });
     }
 
-    const ticket = db.addTicket({
+    const ticket = dbAddTicket({
       id: `tkt_${Date.now()}`,
       name,
       email,
@@ -31,7 +33,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: 'Support ticket submitted successfully. Our team will contact you shortly.',
+      message: 'Support ticket submitted successfully to database.',
       ticket
     });
   } catch (error: any) {

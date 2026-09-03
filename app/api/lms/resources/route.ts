@@ -1,9 +1,11 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/utils/db';
+import { dbGetResources } from '@/lib/database';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const resources = db.getResources();
+    const resources = dbGetResources();
     return NextResponse.json({
       success: true,
       resources

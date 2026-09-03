@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/utils/db';
+import { dbAddEnrollment, dbGetStudentByEmail, dbAddStudent } from '@/lib/database';
+
+export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {
@@ -25,8 +27,8 @@ export async function POST(request: NextRequest) {
     const trackingCode = `SAMI-ENR-${Math.floor(10000 + Math.random() * 90000)}`;
     const studentId = `std_${Date.now()}`;
 
-    // Add enrollment record to persistent database
-    const enrollment = db.addEnrollment({
+    // Add enrollment record to persistent SQLite database
+    const enrollment = dbAddEnrollment({
       id: `enr_${Date.now()}`,
       trackingCode,
       studentId,
@@ -44,9 +46,9 @@ export async function POST(request: NextRequest) {
     });
 
     // Check if student exists or create provisional student
-    let student = db.getStudentByEmail(email);
+    let student = dbGetStudentByEmail(email);
     if (!student) {
-      student = db.addStudent({
+      student = dbAddStudent({
         id: studentId,
         name: fullName,
         email,
@@ -59,26 +61,17 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const whatsappMessage = encodeURIComponent(
-      `Assalam o Alaikum Sami! I have submitted my enrollment form.\nTracking Code: ${trackingCode}\nName: ${fullName}\nEmail: ${email}\nPhone: ${phone}\nSource: ${whereHeard || 'TikTok'}\nPayment Method: ${paymentMethod}\nAmount: PKR 3,900.\nPlease verify and activate my LMS portal.`
-    );
-    const whatsappUrl = `https://wa.me/923158960026?text=${whatsappMessage}`;
-
     return NextResponse.json({
       success: true,
-      message: 'Enrollment submitted successfully!',
-      enrollment: {
-        trackingCode: enrollment.trackingCode,
-        name: enrollment.name,
-        email: enrollment.email,
-        amount: enrollment.amount,
-        status: enrollment.status,
-        whatsappUrl
-      }
+      message: 'Enrollment submitted successfully to database! Login access will be activated upon receipt verification.',
+      trackingCode,
+      enrollmentId: enrollment.id,
+      loginUrl: '/login',
+      studentEmail: email
     });
   } catch (error: any) {
     return NextResponse.json(
-      { success: false, message: error.message || 'Error processing enrollment' },
+      { success: false, message: error.message || 'Failed to submit enrollment' },
       { status: 500 }
     );
   }

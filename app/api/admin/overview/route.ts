@@ -1,10 +1,12 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/utils/db';
+import { dbGetStudents, dbGetEnrollments } from '@/lib/database';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const students = db.getStudents();
-    const enrollments = db.getEnrollments();
+    const students = dbGetStudents();
+    const enrollments = dbGetEnrollments();
 
     const totalStudentsCount = 9700 + students.length;
     const pendingEnrollments = enrollments.filter(e => e.status === 'pending');
