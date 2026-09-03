@@ -20,7 +20,8 @@ import {
   Plus,
   ShieldCheck,
   KeyRound,
-  Filter
+  Filter,
+  Image as ImageIcon
 } from 'lucide-react';
 import { Enrollment, Student } from '@/utils/db';
 
@@ -38,6 +39,9 @@ export default function AdminDashboardPage() {
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'pending' | 'approved' | 'rejected'>('ALL');
   const [searchStudent, setSearchStudent] = useState('');
   const [loading, setLoading] = useState(true);
+
+  // Selected Receipt Preview modal state
+  const [previewReceipt, setPreviewReceipt] = useState<Enrollment | null>(null);
 
   // New Student Modal state
   const [showAddStudent, setShowAddStudent] = useState(false);
@@ -96,6 +100,9 @@ export default function AdminDashboardPage() {
       });
       const data = await res.json();
       if (data.success) {
+        if (previewReceipt && (previewReceipt.id === id || previewReceipt.trackingCode === id)) {
+          setPreviewReceipt(null);
+        }
         fetchDashboardData();
       }
     } catch (e) {
@@ -326,6 +333,8 @@ export default function AdminDashboardPage() {
                       <th className="pb-3">Student Name</th>
                       <th className="pb-3">WhatsApp</th>
                       <th className="pb-3">Payment Method</th>
+                      <th className="pb-3">Source</th>
+                      <th className="pb-3">Proof</th>
                       <th className="pb-3">Status</th>
                       <th className="pb-3 text-right">Quick Action</th>
                     </tr>
@@ -337,6 +346,23 @@ export default function AdminDashboardPage() {
                         <td className="py-3.5 font-bold text-white">{r.name}</td>
                         <td className="py-3.5 text-slate-400">{r.phone}</td>
                         <td className="py-3.5">{r.paymentMethod}</td>
+                        <td className="py-3.5">
+                          <span className="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded-md">
+                            {r.whereHeard || 'TikTok'}
+                          </span>
+                        </td>
+                        <td className="py-3.5">
+                          {r.receiptUrl ? (
+                            <button
+                              onClick={() => setPreviewReceipt(r)}
+                              className="inline-flex items-center gap-1 text-[11px] font-bold text-[#00A0DF] hover:underline"
+                            >
+                              <ImageIcon size={13} /> View Slip
+                            </button>
+                          ) : (
+                            <span className="text-[11px] text-slate-500">No Slip</span>
+                          )}
+                        </td>
                         <td className="py-3.5">
                           <span
                             className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase ${
@@ -415,8 +441,10 @@ export default function AdminDashboardPage() {
                       <th className="pb-3">Tracking Code</th>
                       <th className="pb-3">Student Name</th>
                       <th className="pb-3">Email</th>
-                      <th className="pb-3">Phone</th>
+                      <th className="pb-3">Phone &amp; City</th>
+                      <th className="pb-3">Source</th>
                       <th className="pb-3">Method &amp; TID</th>
+                      <th className="pb-3">Slip Proof</th>
                       <th className="pb-3">Status</th>
                       <th className="pb-3 text-right">Action</th>
                     </tr>
@@ -427,10 +455,30 @@ export default function AdminDashboardPage() {
                         <td className="py-3.5 font-mono text-[11px] text-[#00A0DF] font-bold">{r.trackingCode}</td>
                         <td className="py-3.5 font-bold text-white">{r.name}</td>
                         <td className="py-3.5 text-slate-400">{r.email}</td>
-                        <td className="py-3.5">{r.phone}</td>
+                        <td className="py-3.5">
+                          <div>{r.phone}</div>
+                          <div className="text-[10px] text-slate-500">{r.city}</div>
+                        </td>
+                        <td className="py-3.5">
+                          <span className="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded-md">
+                            {r.whereHeard || 'TikTok'}
+                          </span>
+                        </td>
                         <td className="py-3.5">
                           <div>{r.paymentMethod}</div>
                           <div className="text-[10px] text-slate-400 font-mono">{r.transactionId}</div>
+                        </td>
+                        <td className="py-3.5">
+                          {r.receiptUrl ? (
+                            <button
+                              onClick={() => setPreviewReceipt(r)}
+                              className="inline-flex items-center gap-1 text-[11px] font-bold text-[#00A0DF] hover:underline"
+                            >
+                              <ImageIcon size={13} /> View Slip
+                            </button>
+                          ) : (
+                            <span className="text-[11px] text-slate-500">No Slip</span>
+                          )}
                         </td>
                         <td className="py-3.5">
                           <span
@@ -531,6 +579,57 @@ export default function AdminDashboardPage() {
 
         </div>
       </main>
+
+      {/* Payment Receipt Image Preview Modal */}
+      {previewReceipt && (
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-lg bg-[#111827] border border-white/10 rounded-3xl p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-base font-bold text-white">Payment Screenshot Proof</h3>
+                <p className="text-xs text-slate-400">Student: {previewReceipt.name} &bull; {previewReceipt.trackingCode}</p>
+              </div>
+              <button onClick={() => setPreviewReceipt(null)} className="text-slate-400 hover:text-white">
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="bg-[#0B0F19] rounded-2xl p-2 border border-white/10 max-h-96 overflow-auto flex items-center justify-center">
+              {previewReceipt.receiptUrl ? (
+                <img
+                  src={previewReceipt.receiptUrl}
+                  alt="Payment Receipt"
+                  className="max-h-80 w-auto rounded-xl object-contain shadow-md"
+                />
+              ) : (
+                <div className="py-12 text-slate-500 text-xs">No screenshot image attached</div>
+              )}
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 text-xs bg-[#0B0F19] p-3 rounded-xl border border-white/5">
+              <div><span className="text-slate-400">Method:</span> <strong>{previewReceipt.paymentMethod}</strong></div>
+              <div><span className="text-slate-400">TID:</span> <strong className="font-mono">{previewReceipt.transactionId}</strong></div>
+              <div><span className="text-slate-400">Phone:</span> <strong>{previewReceipt.phone}</strong></div>
+              <div><span className="text-slate-400">City:</span> <strong>{previewReceipt.city}</strong></div>
+            </div>
+
+            <div className="flex items-center gap-2 justify-end pt-2">
+              <button
+                onClick={() => handleUpdateStatus(previewReceipt.id, 'rejected')}
+                className="px-4 py-2 rounded-xl bg-red-600/20 hover:bg-red-600/40 text-red-400 text-xs font-bold"
+              >
+                Reject Proof
+              </button>
+              <button
+                onClick={() => handleUpdateStatus(previewReceipt.id, 'approved')}
+                className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black"
+              >
+                Approve &amp; Activate LMS
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Manual Student Add Modal */}
       {showAddStudent && (

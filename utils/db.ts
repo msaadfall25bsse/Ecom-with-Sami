@@ -23,6 +23,7 @@ export interface Enrollment {
   city: string;
   paymentMethod: string;
   transactionId: string;
+  whereHeard?: string;
   receiptUrl?: string;
   amount: string;
   status: 'pending' | 'approved' | 'rejected';

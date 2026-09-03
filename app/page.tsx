@@ -119,15 +119,10 @@ export default function HomePage() {
             </div>
 
             {/* Pricing Comparison Tag */}
-            <div className="inline-flex items-center gap-2 bg-white border border-slate-200 rounded-full px-4 sm:px-5 py-1.5 sm:py-2 text-xs sm:text-sm md:text-base font-semibold text-slate-800 shadow-sm mb-8 sm:mb-10">
+            <div className="inline-flex items-center gap-2 bg-white border border-slate-200 rounded-full px-4 sm:px-5 py-1.5 sm:py-2 text-xs sm:text-sm md:text-base font-semibold text-slate-800 shadow-sm">
               <span>Originally <span className="line-through text-red-500 font-bold">{hero.original_price}</span></span>
               <span>&mdash;</span>
               <span>Get Instant Access Today for Just <span className="text-[#00A0DF] font-black">{hero.current_price}</span></span>
-            </div>
-
-            {/* Live Countdown Urgency Timer */}
-            <div className="w-full">
-              <CountdownTimer />
             </div>
 
           </div>

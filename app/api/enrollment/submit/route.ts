@@ -4,7 +4,16 @@ import { db } from '@/utils/db';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { fullName, email, phone, city, paymentMethod, transactionId } = body;
+    const { 
+      fullName, 
+      email, 
+      phone, 
+      city, 
+      whereHeard, 
+      paymentMethod, 
+      transactionId, 
+      receiptUrl 
+    } = body;
 
     if (!fullName || !email || !phone) {
       return NextResponse.json(
@@ -16,7 +25,7 @@ export async function POST(request: NextRequest) {
     const trackingCode = `SAMI-ENR-${Math.floor(10000 + Math.random() * 90000)}`;
     const studentId = `std_${Date.now()}`;
 
-    // Add enrollment record
+    // Add enrollment record to persistent database
     const enrollment = db.addEnrollment({
       id: `enr_${Date.now()}`,
       trackingCode,
@@ -26,7 +35,9 @@ export async function POST(request: NextRequest) {
       phone,
       city: city || 'Pakistan',
       paymentMethod: paymentMethod || 'Easypaisa',
-      transactionId: transactionId || 'Pending Manual Verification',
+      transactionId: transactionId || 'Pending Verification',
+      whereHeard: whereHeard || 'TikTok',
+      receiptUrl: receiptUrl || '',
       amount: 'PKR 3,900',
       status: 'pending',
       createdAt: new Date().toISOString()
@@ -42,14 +53,14 @@ export async function POST(request: NextRequest) {
         phone,
         city: city || 'Pakistan',
         password: 'studentpass2026',
-        isActive: false, // will become active upon approval
+        isActive: false, // becomes active upon admin approval
         enrolledAt: new Date().toISOString().split('T')[0],
         completedLessons: []
       });
     }
 
     const whatsappMessage = encodeURIComponent(
-      `Assalam o Alaikum Sami! I have submitted my enrollment form.\nTracking Code: ${trackingCode}\nName: ${fullName}\nEmail: ${email}\nPhone: ${phone}\nPayment Method: ${paymentMethod}\nAmount: PKR 3,900.\nPlease verify and activate my LMS portal.`
+      `Assalam o Alaikum Sami! I have submitted my enrollment form.\nTracking Code: ${trackingCode}\nName: ${fullName}\nEmail: ${email}\nPhone: ${phone}\nSource: ${whereHeard || 'TikTok'}\nPayment Method: ${paymentMethod}\nAmount: PKR 3,900.\nPlease verify and activate my LMS portal.`
     );
     const whatsappUrl = `https://wa.me/923158960026?text=${whatsappMessage}`;
 
