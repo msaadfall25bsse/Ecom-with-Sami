@@ -84,6 +84,12 @@ export const LmsSecurityGuard: React.FC<LmsSecurityGuardProps> = ({
 
     // 2. Keystroke Analyzer for Screenshots, Snipping Tool, DevTools & Print
     const checkKeyAction = (e: KeyboardEvent, sourceEvent: 'keydown' | 'keyup') => {
+      const target = e.target as HTMLElement;
+      // Never block typing, backspace, delete, or shortcuts when user is in an input or textarea!
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) {
+        return;
+      }
+
       const keyName = (e.key || '').toLowerCase();
       const code = (e.code || '').toLowerCase();
       const keyCode = e.keyCode || e.which || 0;

@@ -614,7 +614,7 @@ export default function AdminCmsPage() {
                   <label className="block text-xs font-bold text-slate-400 mb-1">Top Badge Text</label>
                   <input
                     type="text"
-                    value={cmsData.hero.badge}
+                    value={cmsData.hero?.badge ?? ''}
                     onChange={(e) => setCmsData({ ...cmsData, hero: { ...cmsData.hero, badge: e.target.value } })}
                     className="w-full px-3 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF]"
                   />
@@ -623,7 +623,7 @@ export default function AdminCmsPage() {
                   <label className="block text-xs font-bold text-slate-400 mb-1">Highlighted Text (Blue)</label>
                   <input
                     type="text"
-                    value={cmsData.hero.title_highlight}
+                    value={cmsData.hero?.title_highlight ?? ''}
                     onChange={(e) => setCmsData({ ...cmsData, hero: { ...cmsData.hero, title_highlight: e.target.value } })}
                     className="w-full px-3 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF]"
                   />
@@ -634,7 +634,7 @@ export default function AdminCmsPage() {
                 <label className="block text-xs font-bold text-slate-400 mb-1">Main Headline</label>
                 <input
                   type="text"
-                  value={cmsData.hero.title_line1}
+                  value={cmsData.hero?.title_line1 ?? ''}
                   onChange={(e) => setCmsData({ ...cmsData, hero: { ...cmsData.hero, title_line1: e.target.value } })}
                   className="w-full px-3 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF]"
                 />
@@ -644,7 +644,7 @@ export default function AdminCmsPage() {
                 <label className="block text-xs font-bold text-slate-400 mb-1">Sub-headline Description</label>
                 <textarea
                   rows={2}
-                  value={cmsData.hero.subtitle}
+                  value={cmsData.hero?.subtitle ?? ''}
                   onChange={(e) => setCmsData({ ...cmsData, hero: { ...cmsData.hero, subtitle: e.target.value } })}
                   className="w-full px-3 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF] resize-none"
                 />
@@ -660,7 +660,7 @@ export default function AdminCmsPage() {
                     <label className="block text-xs font-bold text-slate-400 mb-1">Video Embed URL</label>
                     <input
                       type="text"
-                      value={cmsData.hero.video_url}
+                      value={cmsData.hero?.video_url ?? ''}
                       onChange={(e) => setCmsData({ ...cmsData, hero: { ...cmsData.hero, video_url: e.target.value } })}
                       className="w-full px-3 py-2 rounded-xl bg-[#111827] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF]"
                     />
@@ -669,7 +669,7 @@ export default function AdminCmsPage() {
                     <label className="block text-xs font-bold text-slate-400 mb-1">Overlay Title</label>
                     <input
                       type="text"
-                      value={cmsData.hero.video_title}
+                      value={cmsData.hero?.video_title ?? ''}
                       onChange={(e) => setCmsData({ ...cmsData, hero: { ...cmsData.hero, video_title: e.target.value } })}
                       className="w-full px-3 py-2 rounded-xl bg-[#111827] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF]"
                     />
@@ -682,7 +682,7 @@ export default function AdminCmsPage() {
                   <label className="block text-xs font-bold text-slate-400 mb-1">Discount Price</label>
                   <input
                     type="text"
-                    value={cmsData.hero.current_price}
+                    value={cmsData.hero?.current_price ?? ''}
                     onChange={(e) => setCmsData({ ...cmsData, hero: { ...cmsData.hero, current_price: e.target.value } })}
                     className="w-full px-3 py-2 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm font-black text-emerald-400 focus:outline-none"
                   />
@@ -691,7 +691,7 @@ export default function AdminCmsPage() {
                   <label className="block text-xs font-bold text-slate-400 mb-1">Original Price</label>
                   <input
                     type="text"
-                    value={cmsData.hero.original_price}
+                    value={cmsData.hero?.original_price ?? ''}
                     onChange={(e) => setCmsData({ ...cmsData, hero: { ...cmsData.hero, original_price: e.target.value } })}
                     className="w-full px-3 py-2 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-red-400 line-through focus:outline-none"
                   />
@@ -700,7 +700,7 @@ export default function AdminCmsPage() {
                   <label className="block text-xs font-bold text-slate-400 mb-1">Button CTA Text</label>
                   <input
                     type="text"
-                    value={cmsData.hero.cta_text}
+                    value={cmsData.hero?.cta_text ?? ''}
                     onChange={(e) => setCmsData({ ...cmsData, hero: { ...cmsData.hero, cta_text: e.target.value } })}
                     className="w-full px-3 py-2 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF]"
                   />
@@ -722,7 +722,7 @@ export default function AdminCmsPage() {
                 <label className="block text-xs font-bold text-slate-400 mb-1">Box 1: Training Hours</label>
                 <input
                   type="text"
-                  value={cmsData.stats.training_hours}
+                  value={cmsData.stats?.training_hours ?? ''}
                   onChange={(e) => setCmsData({ ...cmsData, stats: { ...cmsData.stats, training_hours: e.target.value } })}
                   className="w-full px-3 py-2 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF]"
                 />
@@ -731,7 +731,7 @@ export default function AdminCmsPage() {
                 <label className="block text-xs font-bold text-slate-400 mb-1">Box 2: Lectures Count</label>
                 <input
                   type="text"
-                  value={cmsData.stats.lectures_count}
+                  value={cmsData.stats?.lectures_count ?? ''}
                   onChange={(e) => setCmsData({ ...cmsData, stats: { ...cmsData.stats, lectures_count: e.target.value } })}
                   className="w-full px-3 py-2 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF]"
                 />
@@ -740,7 +740,7 @@ export default function AdminCmsPage() {
                 <label className="block text-xs font-bold text-slate-400 mb-1">Box 3: Access Type</label>
                 <input
                   type="text"
-                  value={cmsData.stats.access_type}
+                  value={cmsData.stats?.access_type ?? ''}
                   onChange={(e) => setCmsData({ ...cmsData, stats: { ...cmsData.stats, access_type: e.target.value } })}
                   className="w-full px-3 py-2 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF]"
                 />
@@ -749,7 +749,7 @@ export default function AdminCmsPage() {
                 <label className="block text-xs font-bold text-slate-400 mb-1">Box 4: Mentorship Type</label>
                 <input
                   type="text"
-                  value={cmsData.stats.mentorship_type}
+                  value={cmsData.stats?.mentorship_type ?? ''}
                   onChange={(e) => setCmsData({ ...cmsData, stats: { ...cmsData.stats, mentorship_type: e.target.value } })}
                   className="w-full px-3 py-2 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF]"
                 />
@@ -968,7 +968,7 @@ export default function AdminCmsPage() {
                 <label className="block text-xs font-bold text-slate-400 mb-1">WhatsApp Phone</label>
                 <input
                   type="text"
-                  value={cmsData.contact.phone}
+                  value={cmsData.contact?.phone ?? ''}
                   onChange={(e) => setCmsData({ ...cmsData, contact: { ...cmsData.contact, phone: e.target.value } })}
                   className="w-full px-3 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-emerald-400 font-bold focus:outline-none focus:border-[#00A0DF]"
                 />
@@ -977,7 +977,7 @@ export default function AdminCmsPage() {
                 <label className="block text-xs font-bold text-slate-400 mb-1">Support Email</label>
                 <input
                   type="email"
-                  value={cmsData.contact.email}
+                  value={cmsData.contact?.email ?? ''}
                   onChange={(e) => setCmsData({ ...cmsData, contact: { ...cmsData.contact, email: e.target.value } })}
                   className="w-full px-3 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF]"
                 />
@@ -997,7 +997,7 @@ export default function AdminCmsPage() {
                 <label className="block text-xs font-bold text-slate-400 mb-1">Meta Pixel ID</label>
                 <input
                   type="text"
-                  value={cmsData.pixels.meta_pixel_id}
+                  value={cmsData.pixels?.meta_pixel_id ?? ''}
                   onChange={(e) => setCmsData({ ...cmsData, pixels: { ...cmsData.pixels, meta_pixel_id: e.target.value } })}
                   className="w-full px-3 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF]"
                 />
@@ -1006,7 +1006,7 @@ export default function AdminCmsPage() {
                 <label className="block text-xs font-bold text-slate-400 mb-1">TikTok Pixel ID</label>
                 <input
                   type="text"
-                  value={cmsData.pixels.tiktok_pixel_id}
+                  value={cmsData.pixels?.tiktok_pixel_id ?? ''}
                   onChange={(e) => setCmsData({ ...cmsData, pixels: { ...cmsData.pixels, tiktok_pixel_id: e.target.value } })}
                   className="w-full px-3 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF]"
                 />
