@@ -78,14 +78,22 @@ export default function AdminCmsPage() {
   const [newFaq, setNewFaq] = useState({ q: '', a: '' });
 
   const fetchAllData = () => {
-    // Immediate hydrate from localStorage
+    // Immediate hydrate from localStorage for fastest render
     try {
       const cached = localStorage.getItem('sami_cms_content');
       if (cached) setCmsData(JSON.parse(cached));
     } catch (e) {}
 
-    // Fetch CMS
-    fetch('/api/cms/content')
+    const timestamp = Date.now();
+
+    // Dynamic fetch CMS directly from DB with zero cache
+    fetch(`/api/cms/content?t=${timestamp}`, {
+      cache: 'no-store',
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache'
+      }
+    })
       .then((r) => r.json())
       .then((res) => {
         if (res.success && res.content) {
@@ -95,23 +103,35 @@ export default function AdminCmsPage() {
           } catch (e) {}
         }
       })
-      .catch(() => {});
+      .catch((err) => console.error('CMS fetch notice:', err));
 
-    // Fetch LMS Modules
-    fetch('/api/lms/modules')
+    // Dynamic fetch LMS Modules with zero cache
+    fetch(`/api/lms/modules?t=${timestamp}`, {
+      cache: 'no-store',
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache'
+      }
+    })
       .then(r => r.json())
       .then(res => {
         if (res.success && res.modules) setModules(res.modules);
       })
-      .catch(() => {});
+      .catch((err) => console.error('Modules fetch notice:', err));
 
-    // Fetch Suppliers
-    fetch('/api/lms/suppliers')
+    // Dynamic fetch Suppliers with zero cache
+    fetch(`/api/lms/suppliers?t=${timestamp}`, {
+      cache: 'no-store',
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache'
+      }
+    })
       .then(r => r.json())
       .then(res => {
         if (res.success && res.suppliers) setSuppliers(res.suppliers);
       })
-      .catch(() => {});
+      .catch((err) => console.error('Suppliers fetch notice:', err));
   };
 
   useEffect(() => {
@@ -128,19 +148,29 @@ export default function AdminCmsPage() {
         window.dispatchEvent(new Event('sami_cms_updated'));
       } catch (e) {}
 
-      // 2. Persist to server API
+      // 2. Persist to server API & trigger revalidation across entire site
       const res = await fetch('/api/cms/content', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache'
+        },
         body: JSON.stringify(cmsData)
       });
       const json = await res.json();
       if (json.success) {
         setSavedSuccess(true);
+        if (json.content) {
+          setCmsData(json.content);
+          try {
+            localStorage.setItem('sami_cms_content', JSON.stringify(json.content));
+            window.dispatchEvent(new Event('sami_cms_updated'));
+          } catch (e) {}
+        }
         setTimeout(() => setSavedSuccess(false), 3000);
       }
     } catch (e) {
-      console.error(e);
+      console.error('Save error:', e);
     } finally {
       setLoading(false);
     }

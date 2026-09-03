@@ -22,7 +22,14 @@ export function CurriculumAccordion({ modules: initialCustomModules }: { modules
       setModuleList(initialCustomModules);
       return;
     }
-    fetch('/api/lms/modules')
+    const timestamp = Date.now();
+    fetch(`/api/lms/modules?t=${timestamp}`, {
+      cache: 'no-store',
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache'
+      }
+    })
       .then(r => r.json())
       .then(res => {
         if (res.success && res.modules && res.modules.length > 0) {

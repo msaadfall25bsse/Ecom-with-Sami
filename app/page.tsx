@@ -39,7 +39,14 @@ export default function HomePage() {
         }
       } catch (e) {}
 
-      fetch('/api/public/cms-content')
+      const timestamp = Date.now();
+      fetch(`/api/public/cms-content?t=${timestamp}`, {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache'
+        }
+      })
         .then((r) => r.json())
         .then((res) => {
           if (res.success && res.sections) {

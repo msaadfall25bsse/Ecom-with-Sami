@@ -57,8 +57,16 @@ export default function AdminDashboardPage() {
 
   const fetchDashboardData = () => {
     setLoading(true);
+    const timestamp = Date.now();
+
     // Overview
-    fetch('/api/admin/overview')
+    fetch(`/api/admin/overview?t=${timestamp}`, {
+      cache: 'no-store',
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache'
+      }
+    })
       .then(r => r.json())
       .then(res => {
         if (res.success && res.stats) {
@@ -68,7 +76,13 @@ export default function AdminDashboardPage() {
       .catch(() => {});
 
     // Enrollments
-    fetch('/api/admin/enrollments')
+    fetch(`/api/admin/enrollments?t=${timestamp}`, {
+      cache: 'no-store',
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache'
+      }
+    })
       .then(r => r.json())
       .then(res => {
         if (res.success && res.enrollments) {
@@ -78,7 +92,13 @@ export default function AdminDashboardPage() {
       .catch(() => {});
 
     // Students
-    fetch('/api/admin/students')
+    fetch(`/api/admin/students?t=${timestamp}`, {
+      cache: 'no-store',
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache'
+      }
+    })
       .then(r => r.json())
       .then(res => {
         if (res.success && res.students) {

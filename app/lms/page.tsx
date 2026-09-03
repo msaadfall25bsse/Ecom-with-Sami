@@ -45,8 +45,16 @@ export default function LmsClassroomPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
+    const timestamp = Date.now();
+
     // Check auth
-    fetch('/api/auth/me')
+    fetch(`/api/auth/me?t=${timestamp}`, {
+      cache: 'no-store',
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache'
+      }
+    })
       .then(r => r.json())
       .then(res => {
         if (res.authenticated && res.user) {
@@ -60,8 +68,14 @@ export default function LmsClassroomPage() {
         setUser({ name: 'Sami Student', email: 'student@samiecom.com' });
       });
 
-    // Fetch modules
-    fetch('/api/lms/modules')
+    // Fetch modules directly from DB
+    fetch(`/api/lms/modules?t=${timestamp}`, {
+      cache: 'no-store',
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache'
+      }
+    })
       .then(r => r.json())
       .then(res => {
         if (res.success && res.modules) {
@@ -72,15 +86,27 @@ export default function LmsClassroomPage() {
         }
       });
 
-    // Fetch suppliers
-    fetch('/api/lms/suppliers')
+    // Fetch suppliers directly from DB
+    fetch(`/api/lms/suppliers?t=${timestamp}`, {
+      cache: 'no-store',
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache'
+      }
+    })
       .then(r => r.json())
       .then(res => {
         if (res.success && res.suppliers) setSuppliers(res.suppliers);
       });
 
-    // Fetch resources
-    fetch('/api/lms/resources')
+    // Fetch resources directly from DB
+    fetch(`/api/lms/resources?t=${timestamp}`, {
+      cache: 'no-store',
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache'
+      }
+    })
       .then(r => r.json())
       .then(res => {
         if (res.success && res.resources) setResources(res.resources);

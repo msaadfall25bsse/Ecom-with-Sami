@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { 
   dbGetModules, 
   dbAddModule, 
@@ -10,6 +11,24 @@ import {
 } from '@/lib/database';
 
 export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
+
+const NO_CACHE_HEADERS = {
+  'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0, s-maxage=0',
+  'Pragma': 'no-cache',
+  'Expires': '0'
+};
+
+const triggerRevalidate = () => {
+  try {
+    revalidatePath('/', 'page');
+    revalidatePath('/', 'layout');
+    revalidatePath('/lms', 'page');
+    revalidatePath('/admin', 'page');
+    revalidatePath('/admin/cms', 'page');
+  } catch (e) {}
+};
 
 export async function GET() {
   try {
@@ -17,9 +36,9 @@ export async function GET() {
     return NextResponse.json({
       success: true,
       modules
-    });
+    }, { headers: NO_CACHE_HEADERS });
   } catch (error: any) {
-    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, message: error.message }, { status: 500, headers: NO_CACHE_HEADERS });
   }
 }
 
@@ -44,18 +63,20 @@ export async function POST(request: NextRequest) {
         lessons: newMod.lessons || []
       });
 
+      triggerRevalidate();
+
       return NextResponse.json({
         success: true,
         message: 'Module added to database successfully!',
         module: createdModule,
         modules: await dbGetModules()
-      });
+      }, { headers: NO_CACHE_HEADERS });
     }
 
     // Action: Add lesson to existing module
     if (action === 'ADD_LESSON') {
       if (!moduleId || !lesson) {
-        return NextResponse.json({ success: false, message: 'Missing moduleId or lesson data' }, { status: 400 });
+        return NextResponse.json({ success: false, message: 'Missing moduleId or lesson data' }, { status: 400, headers: NO_CACHE_HEADERS });
       }
 
       const lessonId = lesson.id || `m${moduleId}_l${Date.now()}`;
@@ -68,20 +89,22 @@ export async function POST(request: NextRequest) {
       });
 
       if (!createdLesson) {
-        return NextResponse.json({ success: false, message: 'Module not found in database' }, { status: 404 });
+        return NextResponse.json({ success: false, message: 'Module not found in database' }, { status: 404, headers: NO_CACHE_HEADERS });
       }
+
+      triggerRevalidate();
 
       return NextResponse.json({
         success: true,
         message: 'Lesson added to module in database successfully!',
         lesson: createdLesson,
         modules: await dbGetModules()
-      });
+      }, { headers: NO_CACHE_HEADERS });
     }
 
-    return NextResponse.json({ success: false, message: 'Invalid action payload' }, { status: 400 });
+    return NextResponse.json({ success: false, message: 'Invalid action payload' }, { status: 400, headers: NO_CACHE_HEADERS });
   } catch (error: any) {
-    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, message: error.message }, { status: 500, headers: NO_CACHE_HEADERS });
   }
 }
 
@@ -92,19 +115,23 @@ export async function PUT(request: NextRequest) {
 
     if (action === 'UPDATE_MODULE') {
       const updated = await dbUpdateModule(Number(moduleId), patch);
-      if (!updated) return NextResponse.json({ success: false, message: 'Module not found' }, { status: 404 });
-      return NextResponse.json({ success: true, message: 'Module updated in database', module: updated, modules: await dbGetModules() });
+      if (!updated) return NextResponse.json({ success: false, message: 'Module not found' }, { status: 404, headers: NO_CACHE_HEADERS });
+      
+      triggerRevalidate();
+      return NextResponse.json({ success: true, message: 'Module updated in database', module: updated, modules: await dbGetModules() }, { headers: NO_CACHE_HEADERS });
     }
 
     if (action === 'UPDATE_LESSON') {
       const updated = await dbUpdateLesson(Number(moduleId), lessonId, patch);
-      if (!updated) return NextResponse.json({ success: false, message: 'Lesson not found' }, { status: 404 });
-      return NextResponse.json({ success: true, message: 'Lesson updated in database', lesson: updated, modules: await dbGetModules() });
+      if (!updated) return NextResponse.json({ success: false, message: 'Lesson not found' }, { status: 404, headers: NO_CACHE_HEADERS });
+      
+      triggerRevalidate();
+      return NextResponse.json({ success: true, message: 'Lesson updated in database', lesson: updated, modules: await dbGetModules() }, { headers: NO_CACHE_HEADERS });
     }
 
-    return NextResponse.json({ success: false, message: 'Invalid update action' }, { status: 400 });
+    return NextResponse.json({ success: false, message: 'Invalid update action' }, { status: 400, headers: NO_CACHE_HEADERS });
   } catch (error: any) {
-    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, message: error.message }, { status: 500, headers: NO_CACHE_HEADERS });
   }
 }
 
@@ -117,19 +144,23 @@ export async function DELETE(request: NextRequest) {
     // Delete specific lesson
     if (moduleId && lessonId) {
       const removed = await dbDeleteLesson(Number(moduleId), lessonId);
-      if (!removed) return NextResponse.json({ success: false, message: 'Lesson not found' }, { status: 404 });
-      return NextResponse.json({ success: true, message: 'Lesson removed from database', modules: await dbGetModules() });
+      if (!removed) return NextResponse.json({ success: false, message: 'Lesson not found' }, { status: 404, headers: NO_CACHE_HEADERS });
+      
+      triggerRevalidate();
+      return NextResponse.json({ success: true, message: 'Lesson removed from database', modules: await dbGetModules() }, { headers: NO_CACHE_HEADERS });
     }
 
     // Delete entire module
     if (moduleId) {
       const removed = await dbDeleteModule(Number(moduleId));
-      if (!removed) return NextResponse.json({ success: false, message: 'Module not found' }, { status: 404 });
-      return NextResponse.json({ success: true, message: 'Module deleted from database', modules: await dbGetModules() });
+      if (!removed) return NextResponse.json({ success: false, message: 'Module not found' }, { status: 404, headers: NO_CACHE_HEADERS });
+      
+      triggerRevalidate();
+      return NextResponse.json({ success: true, message: 'Module deleted from database', modules: await dbGetModules() }, { headers: NO_CACHE_HEADERS });
     }
 
-    return NextResponse.json({ success: false, message: 'Missing moduleId or lessonId' }, { status: 400 });
+    return NextResponse.json({ success: false, message: 'Missing moduleId or lessonId' }, { status: 400, headers: NO_CACHE_HEADERS });
   } catch (error: any) {
-    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, message: error.message }, { status: 500, headers: NO_CACHE_HEADERS });
   }
 }
