@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { DynamicPixels } from '@/components/tracking';
-import { ScrollEffects } from '@/components/landing';
 import { WhatsAppWidget } from '@/components/common';
 import { StickyMobileCta } from '@/components/layout';
 
@@ -29,7 +28,6 @@ export default function RootLayout({
       </head>
       <body className="min-h-screen flex flex-col bg-white text-slate-900 antialiased selection:bg-[#00A0DF] selection:text-white">
         <DynamicPixels />
-        <ScrollEffects />
         {children}
         <WhatsAppWidget />
         <StickyMobileCta />
