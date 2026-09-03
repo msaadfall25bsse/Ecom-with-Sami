@@ -6,7 +6,14 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "verify": "npx tsx scripts/verify_all.ts",
+    "test:api": "npx tsx scripts/test_api.ts",
+    "test:cms": "npx tsx scripts/test_cms_api.ts",
+    "test:suite": "npx tsx scripts/test_complete_api_suite.ts",
+    "seed": "npx tsx scripts/seed_supabase_data.ts",
+    "backup": "npx tsx scripts/backup_database.ts",
+    "reset-admin": "npx tsx scripts/reset_admin_password.ts"
   },
   "dependencies": {
     "lucide-react": "^1.39.0",
@@ -22,6 +29,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.3.4",
     "tailwindcss": "^4",
+    "tsx": "^4.19.2",
     "typescript": "^5"
   }
 }
