@@ -1,10 +1,10 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Star, ShieldCheck, TrendingUp, ShoppingBag } from 'lucide-react';
 
-export function ProofWall() {
-  const testimonials = [
+export function ProofWall({ customTestimonials }: { customTestimonials?: any[] }) {
+  const defaultList = [
     {
       name: 'Raza Ali',
       city: 'Lahore',
@@ -61,64 +61,86 @@ export function ProofWall() {
     }
   ];
 
+  const [testimonials, setTestimonials] = useState<any[]>(customTestimonials || defaultList);
+
+  useEffect(() => {
+    if (customTestimonials && customTestimonials.length > 0) {
+      setTestimonials(customTestimonials);
+      return;
+    }
+    fetch('/api/public/cms-content')
+      .then(r => r.json())
+      .then(res => {
+        if (res.success && res.sections?.testimonials) {
+          setTestimonials(res.sections.testimonials);
+        }
+      })
+      .catch(() => {});
+  }, [customTestimonials]);
+
   return (
-    <div className="w-full">
-      {/* 3-Column Responsive Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-        {testimonials.map((item, idx) => (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+        {testimonials.map((t, index) => (
           <div
-            key={idx}
-            className="bg-slate-950 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between hover:border-[#00A0DF]/60 transition-all duration-200 shadow-xl"
+            key={index}
+            className="bg-slate-900 border border-slate-800 rounded-2xl p-5 sm:p-6 hover:border-[#00A0DF]/50 hover:shadow-xl hover:shadow-[#00A0DF]/10 transition-all flex flex-col justify-between"
           >
             <div>
-              {/* Card Header */}
-              <div className="flex items-center justify-between gap-2 mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-sm border border-emerald-500/30">
-                    {item.initials}
-                  </div>
-                  <div>
-                    <h4 className="text-sm sm:text-base font-bold text-white leading-tight">{item.name}</h4>
-                    <p className="text-xs text-slate-400">{item.city} &bull; {item.market}</p>
-                  </div>
-                </div>
-
-                {/* 5 Stars */}
-                <div className="flex gap-0.5 text-amber-400 flex-shrink-0">
+              {/* Stars & Market */}
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex gap-1 text-amber-400">
                   {[...Array(5)].map((_, i) => (
                     <Star key={i} size={14} className="fill-amber-400" />
                   ))}
                 </div>
-              </div>
-
-              {/* Earnings & Orders Badge */}
-              <div className="bg-emerald-950/40 border border-emerald-500/30 rounded-xl px-3.5 py-2 mb-4 flex items-center justify-between text-xs sm:text-sm">
-                <span className="text-emerald-400 font-black flex items-center gap-1.5">
-                  <TrendingUp size={15} />
-                  <span>{item.sales}</span>
+                <span className="text-[10px] font-extrabold uppercase tracking-wider bg-emerald-500/10 text-emerald-400 px-2.5 py-0.5 rounded-full border border-emerald-500/30">
+                  {t.market || 'Verified Student'}
                 </span>
-                <span className="text-[#00A0DF] font-bold">{item.orders}</span>
               </div>
 
               {/* Quote */}
-              <p className="text-xs sm:text-sm text-slate-300 leading-relaxed italic">
-                &ldquo;{item.quote}&rdquo;
+              <p className="text-slate-200 text-xs sm:text-sm leading-relaxed mb-6 italic">
+                &ldquo;{t.quote}&rdquo;
               </p>
             </div>
 
-            {/* Verified Student Footer */}
-            <div className="pt-4 mt-4 border-t border-slate-900 flex items-center justify-between text-[11px] text-slate-500 font-semibold">
-              <span className="flex items-center gap-1 text-emerald-400">
-                <ShieldCheck size={14} />
-                <span>Verified Enrollment</span>
-              </span>
-              <span>LMS Active</span>
+            {/* Student & Sales Box */}
+            <div className="pt-4 border-t border-slate-800 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#00A0DF] to-emerald-400 flex items-center justify-center font-bold text-white text-xs">
+                  {t.initials || t.name?.slice(0, 2).toUpperCase() || 'ST'}
+                </div>
+                <div>
+                  <h4 className="text-xs sm:text-sm font-bold text-white">{t.name}</h4>
+                  <p className="text-[10px] sm:text-xs text-slate-400">{t.city}</p>
+                </div>
+              </div>
+
+              <div className="text-right">
+                <span className="text-xs sm:text-sm font-black text-emerald-400 block">{t.sales}</span>
+                <span className="text-[10px] text-slate-400 font-medium">{t.orders}</span>
+              </div>
             </div>
           </div>
         ))}
       </div>
+
+      {/* Bottom Trust Badge */}
+      <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-8 pt-4 text-xs sm:text-sm text-slate-400">
+        <div className="flex items-center gap-2">
+          <ShieldCheck size={18} className="text-[#00A0DF]" />
+          <span>100% Genuine Student Proof</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <TrendingUp size={18} className="text-emerald-400" />
+          <span>Real Ad Accounts &amp; Stores</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <ShoppingBag size={18} className="text-amber-400" />
+          <span>Live UAE &amp; Saudi Orders</span>
+        </div>
+      </div>
     </div>
   );
 }
-
-export default ProofWall;

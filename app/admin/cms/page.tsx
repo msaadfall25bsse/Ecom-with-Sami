@@ -78,11 +78,22 @@ export default function AdminCmsPage() {
   const [newFaq, setNewFaq] = useState({ q: '', a: '' });
 
   const fetchAllData = () => {
+    // Immediate hydrate from localStorage
+    try {
+      const cached = localStorage.getItem('sami_cms_content');
+      if (cached) setCmsData(JSON.parse(cached));
+    } catch (e) {}
+
     // Fetch CMS
     fetch('/api/cms/content')
       .then((r) => r.json())
       .then((res) => {
-        if (res.success && res.content) setCmsData(res.content);
+        if (res.success && res.content) {
+          setCmsData(res.content);
+          try {
+            localStorage.setItem('sami_cms_content', JSON.stringify(res.content));
+          } catch (e) {}
+        }
       })
       .catch(() => {});
 
@@ -111,10 +122,13 @@ export default function AdminCmsPage() {
     setLoading(true);
     setSavedSuccess(false);
     try {
+      // 1. Immediately persist to localStorage for instant reflection
       try {
         localStorage.setItem('sami_cms_content', JSON.stringify(cmsData));
+        window.dispatchEvent(new Event('sami_cms_updated'));
       } catch (e) {}
 
+      // 2. Persist to server API
       const res = await fetch('/api/cms/content', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

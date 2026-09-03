@@ -31,26 +31,37 @@ export default function HomePage() {
   const [content, setContent] = useState<CmsContentSchema>(defaultCmsContent);
 
   useEffect(() => {
-    // Try immediate load from localStorage for zero-flicker custom data
-    try {
-      const cached = localStorage.getItem('sami_cms_content');
-      if (cached) {
-        setContent(JSON.parse(cached));
-      }
-    } catch (e) {}
-
-    // Fetch live permanent data from server
-    fetch('/api/public/cms-content')
-      .then((r) => r.json())
-      .then((res) => {
-        if (res.success && res.sections) {
-          setContent(res.sections);
-          try {
-            localStorage.setItem('sami_cms_content', JSON.stringify(res.sections));
-          } catch (e) {}
+    const syncData = () => {
+      try {
+        const cached = localStorage.getItem('sami_cms_content');
+        if (cached) {
+          setContent(JSON.parse(cached));
         }
-      })
-      .catch(() => {});
+      } catch (e) {}
+
+      fetch('/api/public/cms-content')
+        .then((r) => r.json())
+        .then((res) => {
+          if (res.success && res.sections) {
+            setContent(res.sections);
+            try {
+              localStorage.setItem('sami_cms_content', JSON.stringify(res.sections));
+            } catch (e) {}
+          }
+        })
+        .catch(() => {});
+    };
+
+    syncData();
+
+    // Listen for instant updates across tabs or windows
+    window.addEventListener('sami_cms_updated', syncData);
+    window.addEventListener('storage', syncData);
+
+    return () => {
+      window.removeEventListener('sami_cms_updated', syncData);
+      window.removeEventListener('storage', syncData);
+    };
   }, []);
 
   const hero = content.hero || defaultCmsContent.hero;
@@ -394,7 +405,7 @@ export default function HomePage() {
             </p>
           </div>
 
-          <ProofWall />
+          <ProofWall customTestimonials={content.testimonials} />
         </div>
       </section>
 

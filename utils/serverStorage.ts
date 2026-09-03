@@ -3,18 +3,22 @@ import path from 'path';
 import { defaultCmsContent, CmsContentSchema } from './cmsStore';
 import { initialStudents, initialEnrollments, initialModules, initialSuppliers, initialResources, initialTickets, Student, Enrollment, Module, Supplier, ResourceItem, SupportTicket } from './db';
 
-const DATA_DIR = path.join(process.cwd(), 'data');
-const CMS_FILE = path.join(DATA_DIR, 'cms_data.json');
-const DB_FILE = path.join(DATA_DIR, 'db_data.json');
+declare global {
+  var __serverCmsMemory: CmsContentSchema | undefined;
+  var __serverDbMemory: ServerDbSchema | undefined;
+}
 
-// Ensure data folder exists
-function ensureDataDir() {
+const DATA_FOLDER = path.join(process.cwd(), 'data');
+const CMS_FILE_PATH = path.join(process.cwd(), 'data', 'cms_data.json');
+const DB_FILE_PATH = path.join(process.cwd(), 'data', 'db_data.json');
+
+function ensureDataDirectory() {
   try {
-    if (!fs.existsSync(DATA_DIR)) {
-      fs.mkdirSync(DATA_DIR, { recursive: true });
+    if (!fs.existsSync(DATA_FOLDER)) {
+      fs.mkdirSync(DATA_FOLDER, { recursive: true });
     }
   } catch (e) {
-    console.error('Error creating data dir:', e);
+    // In serverless, fallback gracefully
   }
 }
 
@@ -22,35 +26,43 @@ function ensureDataDir() {
 // CMS Permanent Storage
 // -------------------------------------------------------------
 export function getServerCmsContent(): CmsContentSchema {
+  if (global.__serverCmsMemory) {
+    return global.__serverCmsMemory;
+  }
+
   try {
-    ensureDataDir();
-    if (fs.existsSync(CMS_FILE)) {
-      const content = fs.readFileSync(CMS_FILE, 'utf-8');
-      return JSON.parse(content);
-    } else {
-      fs.writeFileSync(CMS_FILE, JSON.stringify(defaultCmsContent, null, 2), 'utf-8');
-      return defaultCmsContent;
+    ensureDataDirectory();
+    if (fs.existsSync(CMS_FILE_PATH)) {
+      const content = fs.readFileSync(CMS_FILE_PATH, 'utf-8');
+      const parsed = JSON.parse(content);
+      global.__serverCmsMemory = parsed;
+      return parsed;
     }
   } catch (e) {
-    console.error('Failed reading cms_data.json:', e);
-    return defaultCmsContent;
+    console.warn('CMS read fallback to default:', e);
   }
+
+  global.__serverCmsMemory = { ...defaultCmsContent };
+  return global.__serverCmsMemory;
 }
 
 export function saveServerCmsContent(patch: Partial<CmsContentSchema>): CmsContentSchema {
+  const existing = getServerCmsContent();
+  const updated: CmsContentSchema = {
+    ...existing,
+    ...patch
+  };
+
+  global.__serverCmsMemory = updated;
+
   try {
-    const existing = getServerCmsContent();
-    const updated = {
-      ...existing,
-      ...patch
-    };
-    ensureDataDir();
-    fs.writeFileSync(CMS_FILE, JSON.stringify(updated, null, 2), 'utf-8');
-    return updated;
+    ensureDataDirectory();
+    fs.writeFileSync(CMS_FILE_PATH, JSON.stringify(updated, null, 2), 'utf-8');
   } catch (e) {
-    console.error('Failed saving cms_data.json:', e);
-    return { ...defaultCmsContent, ...patch };
+    console.warn('CMS write warning (in-memory preserved):', e);
   }
+
+  return updated;
 }
 
 // -------------------------------------------------------------
@@ -75,28 +87,33 @@ const defaultDbState: ServerDbSchema = {
 };
 
 export function getServerDb(): ServerDbSchema {
+  if (global.__serverDbMemory) {
+    return global.__serverDbMemory;
+  }
+
   try {
-    ensureDataDir();
-    if (fs.existsSync(DB_FILE)) {
-      const content = fs.readFileSync(DB_FILE, 'utf-8');
-      return JSON.parse(content);
-    } else {
-      fs.writeFileSync(DB_FILE, JSON.stringify(defaultDbState, null, 2), 'utf-8');
-      return defaultDbState;
+    ensureDataDirectory();
+    if (fs.existsSync(DB_FILE_PATH)) {
+      const content = fs.readFileSync(DB_FILE_PATH, 'utf-8');
+      const parsed = JSON.parse(content);
+      global.__serverDbMemory = parsed;
+      return parsed;
     }
   } catch (e) {
-    console.error('Failed reading db_data.json:', e);
-    return defaultDbState;
+    console.warn('DB read fallback:', e);
   }
+
+  global.__serverDbMemory = { ...defaultDbState };
+  return global.__serverDbMemory;
 }
 
 export function saveServerDb(data: ServerDbSchema): ServerDbSchema {
+  global.__serverDbMemory = data;
   try {
-    ensureDataDir();
-    fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2), 'utf-8');
-    return data;
+    ensureDataDirectory();
+    fs.writeFileSync(DB_FILE_PATH, JSON.stringify(data, null, 2), 'utf-8');
   } catch (e) {
-    console.error('Failed saving db_data.json:', e);
-    return data;
+    console.warn('DB write warning:', e);
   }
+  return data;
 }
