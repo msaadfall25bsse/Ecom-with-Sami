@@ -271,44 +271,44 @@ export default function AdminCmsPage() {
     <div className="min-h-screen bg-[#0B0F19] text-white pb-20 font-sans selection:bg-[#00A0DF] selection:text-white">
       
       {/* Top Admin Header Bar */}
-      <header className="sticky top-0 z-40 bg-[#111827] border-b border-white/10 px-4 sm:px-8 py-4 shadow-xl">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
+      <header className="sticky top-0 z-40 bg-[#111827] border-b border-white/10 px-3 sm:px-8 py-3 sm:py-4 shadow-xl">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5 sm:gap-3">
             <Link
               href="/admin"
               className="p-2 rounded-xl bg-[#1E293B] hover:bg-slate-700 text-slate-300 transition-colors border border-white/5"
               title="Back to Admin Dashboard"
             >
-              <ArrowLeft size={18} />
+              <ArrowLeft size={16} />
             </Link>
             <div>
-              <h1 className="text-lg sm:text-xl font-black text-white flex items-center gap-2">
-                <span>Website &amp; LMS Course Manager</span>
-                <span className="text-[10px] uppercase font-bold bg-[#00A0DF]/20 text-[#00A0DF] px-2.5 py-0.5 rounded-full border border-[#00A0DF]/40">
-                  Live Control
+              <h1 className="text-sm sm:text-lg font-black text-white flex items-center gap-1.5 sm:gap-2">
+                <span>Website &amp; LMS CMS</span>
+                <span className="text-[9px] sm:text-[10px] uppercase font-bold bg-[#00A0DF]/20 text-[#00A0DF] px-2 py-0.5 rounded-full border border-[#00A0DF]/40">
+                  Live
                 </span>
               </h1>
-              <p className="text-xs text-slate-400">Add modules, upload videos, edit prices &amp; suppliers with zero code</p>
+              <p className="text-[10px] sm:text-xs text-slate-400 hidden xs:block">Add modules, upload videos &amp; edit prices</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <Link
               href="/lms"
               target="_blank"
-              className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#1E293B] hover:bg-slate-700 text-xs font-bold text-slate-200 transition-colors border border-white/5"
+              className="hidden md:inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#1E293B] hover:bg-slate-700 text-xs font-bold text-slate-200 transition-colors border border-white/5"
             >
               <Eye size={14} />
-              <span>Preview Classroom</span>
+              <span>Preview LMS</span>
             </Link>
 
             <button
               onClick={handleSaveAll}
               disabled={loading}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#00A0DF] hover:bg-[#008ec7] disabled:opacity-50 text-white text-xs sm:text-sm font-black shadow-lg shadow-[#00A0DF]/30 transition-all"
+              className="inline-flex items-center gap-1.5 sm:gap-2 px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-xl bg-[#00A0DF] hover:bg-[#008ec7] disabled:opacity-50 text-white text-xs sm:text-sm font-black shadow-lg shadow-[#00A0DF]/30 transition-all active:scale-95"
             >
-              <Save size={16} />
-              <span>{loading ? 'Saving...' : 'Save All Changes'}</span>
+              <Save size={15} />
+              <span>{loading ? 'Saving...' : 'Save All'}</span>
             </button>
           </div>
         </div>
@@ -316,38 +316,38 @@ export default function AdminCmsPage() {
 
       {/* Floating Save Success Toast */}
       {savedSuccess && (
-        <div className="fixed bottom-6 right-6 z-50 bg-emerald-600 text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-2 text-sm font-bold animate-in fade-in slide-in-from-bottom">
-          <CheckCircle2 size={18} />
-          <span>Website &amp; LMS content updated successfully!</span>
+        <div className="fixed bottom-6 right-6 z-50 bg-emerald-600 text-white px-4 sm:px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-2 text-xs sm:text-sm font-bold animate-in fade-in slide-in-from-bottom">
+          <CheckCircle2 size={16} />
+          <span>Website &amp; LMS content updated!</span>
         </div>
       )}
 
       {/* Navigation Tabs Bar */}
-      <div className="bg-[#111827] border-b border-white/10 px-4 sm:px-8">
-        <div className="max-w-7xl mx-auto flex items-center gap-2 overflow-x-auto py-2.5 no-scrollbar text-xs font-bold">
+      <div className="bg-[#111827] border-b border-white/10 px-3 sm:px-8">
+        <div className="max-w-7xl mx-auto flex items-center gap-1.5 sm:gap-2 overflow-x-auto py-2.5 no-scrollbar text-xs font-bold">
           {[
-            { id: 'lms', label: '📚 LMS Modules & Lectures', icon: BookOpen },
-            { id: 'hero', label: '📣 Announcements & Hero', icon: Sparkles },
-            { id: 'stats', label: '⏱ Urgency & Stats', icon: Clock },
-            { id: 'bonuses', label: '🎁 6 Power Bonuses', icon: Gift },
-            { id: 'reviews', label: '🏆 Reviews & Proof', icon: Award },
-            { id: 'faqs', label: '❓ FAQs Manager', icon: HelpCircle },
-            { id: 'payments', label: '💳 Payment Accounts', icon: CreditCard },
-            { id: 'contact', label: '📱 Contact & WhatsApp', icon: Globe2 },
-            { id: 'pixels', label: '🎯 Tracking Pixels', icon: Settings }
+            { id: 'lms', label: '📚 LMS Modules', icon: BookOpen },
+            { id: 'hero', label: '📣 Hero Section', icon: Sparkles },
+            { id: 'stats', label: '⏱ Urgency Stats', icon: Clock },
+            { id: 'bonuses', label: '🎁 6 Bonuses', icon: Gift },
+            { id: 'reviews', label: '🏆 Reviews', icon: Award },
+            { id: 'faqs', label: '❓ FAQs', icon: HelpCircle },
+            { id: 'payments', label: '💳 Accounts', icon: CreditCard },
+            { id: 'contact', label: '📱 Contact', icon: Globe2 },
+            { id: 'pixels', label: '🎯 Pixels', icon: Settings }
           ].map((t) => {
             const Icon = t.icon;
             return (
               <button
                 key={t.id}
                 onClick={() => setActiveTab(t.id as any)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl whitespace-nowrap transition-colors ${
+                className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl whitespace-nowrap text-xs transition-colors ${
                   activeTab === t.id
                     ? 'bg-[#00A0DF] text-white shadow-md shadow-[#00A0DF]/20'
                     : 'text-slate-400 hover:text-white hover:bg-slate-800'
                 }`}
               >
-                <Icon size={15} />
+                <Icon size={14} />
                 <span>{t.label}</span>
               </button>
             );
@@ -356,99 +356,99 @@ export default function AdminCmsPage() {
       </div>
 
       {/* Main CMS Tab Views */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-8 pt-8">
+      <main className="max-w-7xl mx-auto px-3 sm:px-8 pt-6 sm:pt-8">
         
         {/* ========================================================================= */}
         {/* TAB 0: LMS COURSE & CURRICULUM MANAGER */}
         {/* ========================================================================= */}
         {activeTab === 'lms' && (
-          <div className="space-y-8">
+          <div className="space-y-6 sm:space-y-8">
             
             {/* Top LMS Action Bar */}
-            <div className="bg-[#111827] border border-white/10 rounded-3xl p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xl">
+            <div className="bg-[#111827] border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xl">
               <div>
-                <h2 className="text-lg sm:text-2xl font-black text-white flex items-center gap-2">
-                  <BookOpen size={22} className="text-[#00A0DF]" />
+                <h2 className="text-base sm:text-2xl font-black text-white flex items-center gap-2">
+                  <BookOpen size={20} className="text-[#00A0DF]" />
                   <span>LMS Course &amp; Video Lectures Manager</span>
                 </h2>
-                <p className="text-xs text-slate-400 mt-1">
+                <p className="text-xs text-slate-400 mt-0.5">
                   Add new modules, attach video URLs (YouTube / MP4), reorder, and manage wholesale suppliers.
                 </p>
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 w-full sm:w-auto">
                 <button
                   onClick={() => setShowAddModuleModal(true)}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-xs font-black text-white shadow-lg shadow-emerald-600/20 transition-all"
+                  className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-4 py-2 sm:py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-xs font-black text-white shadow-lg shadow-emerald-600/20 transition-all active:scale-95"
                 >
-                  <Plus size={16} />
-                  <span>Add New Module</span>
+                  <Plus size={15} />
+                  <span>Add Module</span>
                 </button>
                 <button
                   onClick={() => setShowAddSupplierModal(true)}
-                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#00A0DF] hover:bg-[#008ec7] text-xs font-black text-white shadow-lg shadow-[#00A0DF]/20 transition-all"
+                  className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3.5 py-2 sm:py-2.5 rounded-xl bg-[#00A0DF] hover:bg-[#008ec7] text-xs font-black text-white shadow-lg shadow-[#00A0DF]/20 transition-all active:scale-95"
                 >
-                  <Plus size={16} />
-                  <span>Add GCC Supplier</span>
+                  <Plus size={15} />
+                  <span>Add Supplier</span>
                 </button>
               </div>
             </div>
 
             {/* Modules Accordion List */}
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               {modules.map((m) => {
                 const isOpen = openModuleId === m.id;
 
                 return (
-                  <div key={m.id} className="bg-[#111827] border border-white/10 rounded-3xl overflow-hidden shadow-xl">
+                  <div key={m.id} className="bg-[#111827] border border-white/10 rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl">
                     {/* Module Header Bar */}
-                    <div className="p-4 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-[#111827]">
+                    <div className="p-3.5 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 bg-[#111827]">
                       <button
                         onClick={() => setOpenModuleId(isOpen ? 0 : m.id)}
-                        className="flex-1 flex items-center gap-3 text-left"
+                        className="flex-1 flex items-center gap-2.5 sm:gap-3 text-left w-full"
                       >
-                        <div className="w-8 h-8 rounded-xl bg-[#00A0DF]/20 text-[#00A0DF] flex items-center justify-center font-black text-sm flex-shrink-0 border border-[#00A0DF]/30">
+                        <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-[#00A0DF]/20 text-[#00A0DF] flex items-center justify-center font-black text-xs sm:text-sm flex-shrink-0 border border-[#00A0DF]/30">
                           {m.id}
                         </div>
-                        <div>
-                          <h3 className="text-sm sm:text-base font-bold text-white line-clamp-1">{m.title}</h3>
-                          <p className="text-xs text-slate-400 mt-0.5">{m.duration} &bull; {m.lessons.length} Lectures</p>
+                        <div className="min-w-0 flex-1">
+                          <h3 className="text-xs sm:text-base font-bold text-white truncate">{m.title}</h3>
+                          <p className="text-[11px] sm:text-xs text-slate-400 mt-0.5">{m.duration} &bull; {m.lessons.length} Lectures</p>
                         </div>
                       </button>
 
-                      <div className="flex items-center gap-2 self-end sm:self-center">
+                      <div className="flex items-center gap-1.5 sm:gap-2 self-end sm:self-center">
                         <button
                           onClick={() => setAddingLessonForModuleId(m.id)}
-                          className="px-3 py-1.5 rounded-xl bg-[#1E293B] hover:bg-[#00A0DF] text-slate-200 hover:text-white text-xs font-bold transition-colors flex items-center gap-1 border border-white/5"
+                          className="px-2.5 sm:px-3 py-1.5 rounded-xl bg-[#1E293B] hover:bg-[#00A0DF] text-slate-200 hover:text-white text-xs font-bold transition-colors flex items-center gap-1 border border-white/5 active:scale-95"
                         >
-                          <Plus size={13} />
+                          <Plus size={12} />
                           <span>Add Lecture</span>
                         </button>
                         <button
                           onClick={() => handleDeleteModule(m.id)}
-                          className="p-2 rounded-xl bg-red-500/10 hover:bg-red-500/30 text-red-400 transition-colors"
+                          className="p-1.5 sm:p-2 rounded-xl bg-red-500/10 hover:bg-red-500/30 text-red-400 transition-colors"
                           title="Delete Module"
                         >
-                          <Trash2 size={15} />
+                          <Trash2 size={14} />
                         </button>
                         <button
                           onClick={() => setOpenModuleId(isOpen ? 0 : m.id)}
-                          className="p-2 text-slate-400 hover:text-white"
+                          className="p-1.5 text-slate-400 hover:text-white"
                         >
-                          {isOpen ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
+                          {isOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
                         </button>
                       </div>
                     </div>
 
                     {/* Module Expanded Content */}
                     {isOpen && (
-                      <div className="p-4 sm:p-6 bg-[#0B0F19] border-t border-white/10 space-y-4">
+                      <div className="p-3.5 sm:p-6 bg-[#0B0F19] border-t border-white/10 space-y-3 sm:space-y-4">
                         
                         {/* Add Lecture Sub-Form */}
                         {addingLessonForModuleId === m.id && (
-                          <div className="bg-[#111827] border border-[#00A0DF]/40 rounded-2xl p-4 space-y-3">
+                          <div className="bg-[#111827] border border-[#00A0DF]/40 rounded-2xl p-3.5 sm:p-4 space-y-2.5">
                             <h4 className="text-xs font-bold text-[#00A0DF] uppercase">Add New Lecture to {m.title}</h4>
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                               <input
                                 type="text"
                                 placeholder="Lecture Title (e.g. 1.4 Setting Up Business Manager)"
@@ -480,7 +480,7 @@ export default function AdminCmsPage() {
                               </button>
                               <button
                                 onClick={() => handleAddLesson(m.id)}
-                                className="px-4 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-xs font-black text-white"
+                                className="px-4 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-xs font-black text-white active:scale-95"
                               >
                                 Save Lecture Video
                               </button>
@@ -493,26 +493,26 @@ export default function AdminCmsPage() {
                           {m.lessons.map((l) => (
                             <div
                               key={l.id}
-                              className="bg-[#111827] border border-white/5 rounded-2xl p-3.5 flex items-center justify-between gap-3 text-xs"
+                              className="bg-[#111827] border border-white/5 rounded-xl sm:rounded-2xl p-3 flex items-center justify-between gap-2.5 text-xs"
                             >
-                              <div className="flex items-center gap-3 min-w-0">
-                                <div className="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-slate-400 flex-shrink-0">
-                                  <Video size={15} />
+                              <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                                <div className="w-7 h-7 rounded-lg bg-slate-800 flex items-center justify-center text-slate-400 flex-shrink-0">
+                                  <Video size={14} />
                                 </div>
-                                <div className="min-w-0">
+                                <div className="min-w-0 flex-1">
                                   <div className="font-bold text-white truncate">{l.title}</div>
-                                  <div className="text-[11px] text-slate-400 font-mono truncate">{l.videoUrl}</div>
+                                  <div className="text-[10px] text-slate-400 font-mono truncate">{l.videoUrl}</div>
                                 </div>
                               </div>
 
-                              <div className="flex items-center gap-3 flex-shrink-0">
-                                <span className="text-slate-400">{l.duration}</span>
+                              <div className="flex items-center gap-2 flex-shrink-0">
+                                <span className="text-slate-400 text-[11px]">{l.duration}</span>
                                 <button
                                   onClick={() => handleDeleteLesson(m.id, l.id)}
                                   className="text-slate-500 hover:text-red-400 p-1 transition-colors"
                                   title="Delete Lecture"
                                 >
-                                  <Trash2 size={14} />
+                                  <Trash2 size={13} />
                                 </button>
                               </div>
                             </div>
@@ -527,21 +527,21 @@ export default function AdminCmsPage() {
             </div>
 
             {/* Wholesale Suppliers Management Box */}
-            <div className="bg-[#111827] border border-white/10 rounded-3xl p-6 sm:p-8 shadow-xl space-y-6">
+            <div className="bg-[#111827] border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-8 shadow-xl space-y-4 sm:space-y-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-base sm:text-lg font-bold text-white">Verified GCC Wholesale Suppliers Directory</h3>
+                  <h3 className="text-sm sm:text-lg font-bold text-white">Verified GCC Wholesale Suppliers</h3>
                   <p className="text-xs text-slate-400">Manage supplier cards shown to active LMS students</p>
                 </div>
                 <button
                   onClick={() => setShowAddSupplierModal(true)}
-                  className="px-3 py-1.5 rounded-xl bg-[#00A0DF] hover:bg-[#008ec7] text-xs font-black text-white"
+                  className="px-3 py-1.5 rounded-xl bg-[#00A0DF] hover:bg-[#008ec7] text-xs font-black text-white active:scale-95"
                 >
                   + Add Supplier
                 </button>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                 {suppliers.map((s) => (
                   <div key={s.id} className="bg-[#0B0F19] border border-white/5 rounded-2xl p-4 flex flex-col justify-between">
                     <div>
@@ -551,12 +551,12 @@ export default function AdminCmsPage() {
                           onClick={() => handleDeleteSupplier(s.id)}
                           className="text-slate-500 hover:text-red-400 p-1"
                         >
-                          <Trash2 size={14} />
+                          <Trash2 size={13} />
                         </button>
                       </div>
-                      <h4 className="text-sm font-bold text-white mb-1">{s.name}</h4>
+                      <h4 className="text-xs sm:text-sm font-bold text-white mb-1">{s.name}</h4>
                       <p className="text-xs text-slate-400 mb-2">{s.category}</p>
-                      <div className="text-[11px] text-slate-300 font-mono mb-2">Phone: {s.phone}</div>
+                      <div className="text-[11px] text-slate-300 font-mono">Phone: {s.phone}</div>
                     </div>
                   </div>
                 ))}
@@ -570,106 +570,104 @@ export default function AdminCmsPage() {
         {/* TAB 1: ANNOUNCEMENTS & HERO SECTION */}
         {/* ========================================================================= */}
         {activeTab === 'hero' && (
-          <div className="space-y-8">
-            <div className="bg-[#111827] border border-white/10 rounded-3xl p-6 sm:p-8 space-y-6">
-              <h3 className="text-base sm:text-lg font-bold text-white">Hero Section Headings &amp; Video Embed</h3>
+          <div className="space-y-6">
+            <div className="bg-[#111827] border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-8 space-y-4 sm:space-y-6">
+              <h3 className="text-sm sm:text-lg font-bold text-white">Hero Headings &amp; Video</h3>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-400 mb-1.5">Top Badge Text</label>
+                  <label className="block text-xs font-bold text-slate-400 mb-1">Top Badge Text</label>
                   <input
                     type="text"
                     value={cmsData.hero.badge}
                     onChange={(e) => setCmsData({ ...cmsData, hero: { ...cmsData.hero, badge: e.target.value } })}
-                    className="w-full px-4 py-3 rounded-xl bg-[#0B0F19] border border-white/10 text-sm text-white focus:outline-none focus:border-[#00A0DF]"
+                    className="w-full px-3 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF]"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-400 mb-1.5">Highlighted Text (Blue Color)</label>
+                  <label className="block text-xs font-bold text-slate-400 mb-1">Highlighted Text (Blue)</label>
                   <input
                     type="text"
                     value={cmsData.hero.title_highlight}
                     onChange={(e) => setCmsData({ ...cmsData, hero: { ...cmsData.hero, title_highlight: e.target.value } })}
-                    className="w-full px-4 py-3 rounded-xl bg-[#0B0F19] border border-white/10 text-sm text-white focus:outline-none focus:border-[#00A0DF]"
+                    className="w-full px-3 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF]"
                   />
                 </div>
               </div>
 
-              <div className="mb-4">
-                <label className="block text-xs font-bold text-slate-400 mb-1.5">Main Headline</label>
+              <div>
+                <label className="block text-xs font-bold text-slate-400 mb-1">Main Headline</label>
                 <input
                   type="text"
                   value={cmsData.hero.title_line1}
                   onChange={(e) => setCmsData({ ...cmsData, hero: { ...cmsData.hero, title_line1: e.target.value } })}
-                  className="w-full px-4 py-3 rounded-xl bg-[#0B0F19] border border-white/10 text-sm text-white focus:outline-none focus:border-[#00A0DF]"
+                  className="w-full px-3 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF]"
                 />
               </div>
 
-              <div className="mb-6">
-                <label className="block text-xs font-bold text-slate-400 mb-1.5">Sub-headline Description</label>
+              <div>
+                <label className="block text-xs font-bold text-slate-400 mb-1">Sub-headline Description</label>
                 <textarea
                   rows={2}
                   value={cmsData.hero.subtitle}
                   onChange={(e) => setCmsData({ ...cmsData, hero: { ...cmsData.hero, subtitle: e.target.value } })}
-                  className="w-full px-4 py-3 rounded-xl bg-[#0B0F19] border border-white/10 text-sm text-white focus:outline-none focus:border-[#00A0DF] resize-none"
+                  className="w-full px-3 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF] resize-none"
                 />
               </div>
 
-              {/* Video Embed URL Settings */}
-              <div className="bg-[#0B0F19] border border-white/10 rounded-2xl p-5 mb-6">
-                <div className="flex items-center gap-2 text-sm font-bold text-[#00A0DF] mb-3">
-                  <Video size={18} />
+              <div className="bg-[#0B0F19] border border-white/10 rounded-2xl p-4">
+                <div className="flex items-center gap-2 text-xs sm:text-sm font-bold text-[#00A0DF] mb-2.5">
+                  <Video size={16} />
                   <span>Preview Video Settings</span>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-bold text-slate-400 mb-1.5">Video Embed URL (YouTube / MP4)</label>
+                    <label className="block text-xs font-bold text-slate-400 mb-1">Video Embed URL</label>
                     <input
                       type="text"
                       value={cmsData.hero.video_url}
                       onChange={(e) => setCmsData({ ...cmsData, hero: { ...cmsData.hero, video_url: e.target.value } })}
-                      className="w-full px-4 py-3 rounded-xl bg-[#111827] border border-white/10 text-sm text-white focus:outline-none focus:border-[#00A0DF]"
+                      className="w-full px-3 py-2 rounded-xl bg-[#111827] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF]"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-slate-400 mb-1.5">Video Card Overlay Title</label>
+                    <label className="block text-xs font-bold text-slate-400 mb-1">Overlay Title</label>
                     <input
                       type="text"
                       value={cmsData.hero.video_title}
                       onChange={(e) => setCmsData({ ...cmsData, hero: { ...cmsData.hero, video_title: e.target.value } })}
-                      className="w-full px-4 py-3 rounded-xl bg-[#111827] border border-white/10 text-sm text-white focus:outline-none focus:border-[#00A0DF]"
+                      className="w-full px-3 py-2 rounded-xl bg-[#111827] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF]"
                     />
                   </div>
                 </div>
               </div>
 
-              {/* Pricing Controls */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-400 mb-1.5">Current Discount Price</label>
+                  <label className="block text-xs font-bold text-slate-400 mb-1">Discount Price</label>
                   <input
                     type="text"
                     value={cmsData.hero.current_price}
                     onChange={(e) => setCmsData({ ...cmsData, hero: { ...cmsData.hero, current_price: e.target.value } })}
-                    className="w-full px-4 py-3 rounded-xl bg-[#0B0F19] border border-white/10 text-sm font-black text-emerald-400 focus:outline-none"
+                    className="w-full px-3 py-2 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm font-black text-emerald-400 focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-400 mb-1.5">Original Strike Price</label>
+                  <label className="block text-xs font-bold text-slate-400 mb-1">Original Price</label>
                   <input
                     type="text"
                     value={cmsData.hero.original_price}
                     onChange={(e) => setCmsData({ ...cmsData, hero: { ...cmsData.hero, original_price: e.target.value } })}
-                    className="w-full px-4 py-3 rounded-xl bg-[#0B0F19] border border-white/10 text-sm text-red-400 line-through focus:outline-none"
+                    className="w-full px-3 py-2 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-red-400 line-through focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-400 mb-1.5">Button CTA Text</label>
+                  <label className="block text-xs font-bold text-slate-400 mb-1">Button CTA Text</label>
                   <input
                     type="text"
                     value={cmsData.hero.cta_text}
                     onChange={(e) => setCmsData({ ...cmsData, hero: { ...cmsData.hero, cta_text: e.target.value } })}
-                    className="w-full px-4 py-3 rounded-xl bg-[#0B0F19] border border-white/10 text-sm text-white focus:outline-none focus:border-[#00A0DF]"
+                    className="w-full px-3 py-2 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF]"
                   />
                 </div>
               </div>
@@ -682,43 +680,43 @@ export default function AdminCmsPage() {
         {/* TAB 2: STATS */}
         {/* ========================================================================= */}
         {activeTab === 'stats' && (
-          <div className="bg-[#111827] border border-white/10 rounded-3xl p-6 sm:p-8 space-y-6">
-            <h3 className="text-base sm:text-lg font-bold text-white">4 Platform Stats Row &amp; Urgency Counters</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="bg-[#111827] border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-8 space-y-4">
+            <h3 className="text-sm sm:text-lg font-bold text-white">4 Platform Stats Row</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
               <div>
-                <label className="block text-xs font-bold text-slate-400 mb-1.5">Box 1: Training Hours</label>
+                <label className="block text-xs font-bold text-slate-400 mb-1">Box 1: Training Hours</label>
                 <input
                   type="text"
                   value={cmsData.stats.training_hours}
                   onChange={(e) => setCmsData({ ...cmsData, stats: { ...cmsData.stats, training_hours: e.target.value } })}
-                  className="w-full px-4 py-3 rounded-xl bg-[#0B0F19] border border-white/10 text-sm text-white focus:outline-none focus:border-[#00A0DF]"
+                  className="w-full px-3 py-2 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF]"
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-400 mb-1.5">Box 2: Lectures Count</label>
+                <label className="block text-xs font-bold text-slate-400 mb-1">Box 2: Lectures Count</label>
                 <input
                   type="text"
                   value={cmsData.stats.lectures_count}
                   onChange={(e) => setCmsData({ ...cmsData, stats: { ...cmsData.stats, lectures_count: e.target.value } })}
-                  className="w-full px-4 py-3 rounded-xl bg-[#0B0F19] border border-white/10 text-sm text-white focus:outline-none focus:border-[#00A0DF]"
+                  className="w-full px-3 py-2 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF]"
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-400 mb-1.5">Box 3: Access Type</label>
+                <label className="block text-xs font-bold text-slate-400 mb-1">Box 3: Access Type</label>
                 <input
                   type="text"
                   value={cmsData.stats.access_type}
                   onChange={(e) => setCmsData({ ...cmsData, stats: { ...cmsData.stats, access_type: e.target.value } })}
-                  className="w-full px-4 py-3 rounded-xl bg-[#0B0F19] border border-white/10 text-sm text-white focus:outline-none focus:border-[#00A0DF]"
+                  className="w-full px-3 py-2 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF]"
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-400 mb-1.5">Box 4: Mentorship Type</label>
+                <label className="block text-xs font-bold text-slate-400 mb-1">Box 4: Mentorship Type</label>
                 <input
                   type="text"
                   value={cmsData.stats.mentorship_type}
                   onChange={(e) => setCmsData({ ...cmsData, stats: { ...cmsData.stats, mentorship_type: e.target.value } })}
-                  className="w-full px-4 py-3 rounded-xl bg-[#0B0F19] border border-white/10 text-sm text-white focus:outline-none focus:border-[#00A0DF]"
+                  className="w-full px-3 py-2 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF]"
                 />
               </div>
             </div>
@@ -729,11 +727,11 @@ export default function AdminCmsPage() {
         {/* TAB 3: BONUSES */}
         {/* ========================================================================= */}
         {activeTab === 'bonuses' && (
-          <div className="bg-[#111827] border border-white/10 rounded-3xl p-6 sm:p-8 space-y-6">
-            <h3 className="text-base sm:text-lg font-bold text-white">6 Power Bonuses Management</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="bg-[#111827] border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-8 space-y-4">
+            <h3 className="text-sm sm:text-lg font-bold text-white">6 Power Bonuses Management</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
               {cmsData.bonuses.items.map((b, idx) => (
-                <div key={idx} className="bg-[#0B0F19] border border-white/5 rounded-2xl p-4 space-y-3">
+                <div key={idx} className="bg-[#0B0F19] border border-white/5 rounded-2xl p-3.5 sm:p-4 space-y-2.5">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-[#00A0DF]">Bonus #{idx + 1}</span>
                     <input
@@ -744,7 +742,7 @@ export default function AdminCmsPage() {
                         updated[idx].value = e.target.value;
                         setCmsData({ ...cmsData, bonuses: { ...cmsData.bonuses, items: updated } });
                       }}
-                      className="px-3 py-1 rounded-lg bg-[#111827] border border-white/10 text-xs font-bold text-amber-400 focus:outline-none"
+                      className="px-2.5 py-1 rounded-lg bg-[#111827] border border-white/10 text-xs font-bold text-amber-400 focus:outline-none"
                     />
                   </div>
                   <input
@@ -777,30 +775,30 @@ export default function AdminCmsPage() {
         {/* TAB 4: REVIEWS */}
         {/* ========================================================================= */}
         {activeTab === 'reviews' && (
-          <div className="space-y-6">
-            <div className="bg-[#111827] border border-white/10 rounded-3xl p-6 sm:p-8 space-y-4">
-              <h3 className="text-base sm:text-lg font-bold text-white">Add New Student Testimonial Proof</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="space-y-4 sm:space-y-6">
+            <div className="bg-[#111827] border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-8 space-y-3">
+              <h3 className="text-sm sm:text-lg font-bold text-white">Add New Student Review</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                 <input
                   type="text"
-                  placeholder="Student Name (e.g. Raza Ali)"
+                  placeholder="Name (e.g. Raza Ali)"
                   value={newReview.name}
                   onChange={(e) => setNewReview({ ...newReview, name: e.target.value })}
-                  className="px-4 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF]"
+                  className="px-3 py-2 rounded-xl bg-[#0B0F19] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF]"
                 />
                 <input
                   type="text"
                   placeholder="City (e.g. Lahore)"
                   value={newReview.city}
                   onChange={(e) => setNewReview({ ...newReview, city: e.target.value })}
-                  className="px-4 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF]"
+                  className="px-3 py-2 rounded-xl bg-[#0B0F19] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF]"
                 />
                 <input
                   type="text"
-                  placeholder="Earnings (e.g. AED 4,850 in 6 Days)"
+                  placeholder="Sales (e.g. AED 4,850)"
                   value={newReview.sales}
                   onChange={(e) => setNewReview({ ...newReview, sales: e.target.value })}
-                  className="px-4 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs text-emerald-400 font-bold focus:outline-none focus:border-[#00A0DF]"
+                  className="px-3 py-2 rounded-xl bg-[#0B0F19] border border-white/10 text-xs text-emerald-400 font-bold focus:outline-none focus:border-[#00A0DF]"
                 />
               </div>
               <textarea
@@ -808,27 +806,27 @@ export default function AdminCmsPage() {
                 placeholder="Review quote..."
                 value={newReview.quote}
                 onChange={(e) => setNewReview({ ...newReview, quote: e.target.value })}
-                className="w-full px-4 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF] resize-none"
+                className="w-full px-3 py-2 rounded-xl bg-[#0B0F19] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF] resize-none"
               />
               <button
                 onClick={handleAddReview}
-                className="px-5 py-2.5 rounded-xl bg-[#00A0DF] hover:bg-[#008ec7] text-white text-xs font-bold"
+                className="px-4 py-2 rounded-xl bg-[#00A0DF] hover:bg-[#008ec7] text-white text-xs font-bold active:scale-95"
               >
                 + Add Testimonial
               </button>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {cmsData.testimonials.map((t, idx) => (
-                <div key={idx} className="bg-[#111827] border border-white/10 rounded-2xl p-5 flex flex-col justify-between">
+                <div key={idx} className="bg-[#111827] border border-white/10 rounded-2xl p-4 flex flex-col justify-between">
                   <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <strong className="text-sm text-white font-bold">{t.name}</strong>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <strong className="text-xs sm:text-sm text-white font-bold">{t.name}</strong>
                       <button onClick={() => handleDeleteReview(idx)} className="text-slate-500 hover:text-red-400 p-1">
-                        <Trash2 size={14} />
+                        <Trash2 size={13} />
                       </button>
                     </div>
-                    <div className="text-xs text-emerald-400 font-bold mb-2">{t.sales} &bull; {t.orders}</div>
+                    <div className="text-xs text-emerald-400 font-bold mb-1.5">{t.sales} &bull; {t.orders}</div>
                     <p className="text-xs text-slate-300 italic">&ldquo;{t.quote}&rdquo;</p>
                   </div>
                 </div>
@@ -841,40 +839,40 @@ export default function AdminCmsPage() {
         {/* TAB 5: FAQS */}
         {/* ========================================================================= */}
         {activeTab === 'faqs' && (
-          <div className="space-y-6">
-            <div className="bg-[#111827] border border-white/10 rounded-3xl p-6 sm:p-8 space-y-3">
-              <h3 className="text-base sm:text-lg font-bold text-white">Add New FAQ Accordion</h3>
+          <div className="space-y-4 sm:space-y-6">
+            <div className="bg-[#111827] border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-8 space-y-3">
+              <h3 className="text-sm sm:text-lg font-bold text-white">Add New FAQ</h3>
               <input
                 type="text"
                 placeholder="Question..."
                 value={newFaq.q}
                 onChange={(e) => setNewFaq({ ...newFaq, q: e.target.value })}
-                className="w-full px-4 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF]"
+                className="w-full px-3 py-2 rounded-xl bg-[#0B0F19] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF]"
               />
               <textarea
                 rows={2}
                 placeholder="Answer..."
                 value={newFaq.a}
                 onChange={(e) => setNewFaq({ ...newFaq, a: e.target.value })}
-                className="w-full px-4 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF] resize-none"
+                className="w-full px-3 py-2 rounded-xl bg-[#0B0F19] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF] resize-none"
               />
               <button
                 onClick={handleAddFaq}
-                className="px-5 py-2.5 rounded-xl bg-[#00A0DF] hover:bg-[#008ec7] text-white text-xs font-bold"
+                className="px-4 py-2 rounded-xl bg-[#00A0DF] hover:bg-[#008ec7] text-white text-xs font-bold active:scale-95"
               >
                 + Add FAQ
               </button>
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-2.5">
               {cmsData.faqs.map((f, idx) => (
-                <div key={idx} className="bg-[#111827] border border-white/10 rounded-2xl p-4 flex items-start justify-between gap-4">
+                <div key={idx} className="bg-[#111827] border border-white/10 rounded-2xl p-3.5 flex items-start justify-between gap-3">
                   <div>
-                    <h4 className="text-sm font-bold text-white mb-1">{f.q}</h4>
+                    <h4 className="text-xs sm:text-sm font-bold text-white mb-1">{f.q}</h4>
                     <p className="text-xs text-slate-400">{f.a}</p>
                   </div>
-                  <button onClick={() => handleDeleteFaq(idx)} className="text-slate-500 hover:text-red-400 p-2">
-                    <Trash2 size={16} />
+                  <button onClick={() => handleDeleteFaq(idx)} className="text-slate-500 hover:text-red-400 p-1.5">
+                    <Trash2 size={15} />
                   </button>
                 </div>
               ))}
@@ -886,12 +884,12 @@ export default function AdminCmsPage() {
         {/* TAB 6: PAYMENT ACCOUNTS */}
         {/* ========================================================================= */}
         {activeTab === 'payments' && (
-          <div className="bg-[#111827] border border-white/10 rounded-3xl p-6 sm:p-8 space-y-6">
-            <h3 className="text-base sm:text-lg font-bold text-white">Enrollment Payment Accounts</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="bg-[#111827] border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-8 space-y-4">
+            <h3 className="text-sm sm:text-lg font-bold text-white">Enrollment Payment Accounts</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {cmsData.payment_methods.map((pm, idx) => (
-                <div key={pm.id} className="bg-[#0B0F19] border border-white/10 rounded-2xl p-5 space-y-3">
-                  <span className="text-sm font-bold text-white">{pm.name}</span>
+                <div key={pm.id} className="bg-[#0B0F19] border border-white/10 rounded-2xl p-4 space-y-2.5">
+                  <span className="text-xs sm:text-sm font-bold text-white">{pm.name}</span>
                   <div>
                     <label className="block text-[11px] text-slate-400 mb-1">Account Title</label>
                     <input
@@ -928,16 +926,16 @@ export default function AdminCmsPage() {
         {/* TAB 7: CONTACT */}
         {/* ========================================================================= */}
         {activeTab === 'contact' && (
-          <div className="bg-[#111827] border border-white/10 rounded-3xl p-6 sm:p-8 space-y-4">
-            <h3 className="text-base sm:text-lg font-bold text-white">Contact &amp; WhatsApp Settings</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="bg-[#111827] border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-8 space-y-4">
+            <h3 className="text-sm sm:text-lg font-bold text-white">Contact &amp; WhatsApp</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-bold text-slate-400 mb-1">WhatsApp Phone</label>
                 <input
                   type="text"
                   value={cmsData.contact.phone}
                   onChange={(e) => setCmsData({ ...cmsData, contact: { ...cmsData.contact, phone: e.target.value } })}
-                  className="w-full px-4 py-3 rounded-xl bg-[#0B0F19] border border-white/10 text-sm text-emerald-400 font-bold focus:outline-none focus:border-[#00A0DF]"
+                  className="w-full px-3 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-emerald-400 font-bold focus:outline-none focus:border-[#00A0DF]"
                 />
               </div>
               <div>
@@ -946,7 +944,7 @@ export default function AdminCmsPage() {
                   type="email"
                   value={cmsData.contact.email}
                   onChange={(e) => setCmsData({ ...cmsData, contact: { ...cmsData.contact, email: e.target.value } })}
-                  className="w-full px-4 py-3 rounded-xl bg-[#0B0F19] border border-white/10 text-sm text-white focus:outline-none focus:border-[#00A0DF]"
+                  className="w-full px-3 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF]"
                 />
               </div>
             </div>
@@ -957,16 +955,16 @@ export default function AdminCmsPage() {
         {/* TAB 8: PIXELS */}
         {/* ========================================================================= */}
         {activeTab === 'pixels' && (
-          <div className="bg-[#111827] border border-white/10 rounded-3xl p-6 sm:p-8 space-y-4">
-            <h3 className="text-base sm:text-lg font-bold text-white">Tracking Pixels &amp; Analytics</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="bg-[#111827] border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-8 space-y-4">
+            <h3 className="text-sm sm:text-lg font-bold text-white">Tracking Pixels</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-bold text-slate-400 mb-1">Meta Pixel ID</label>
                 <input
                   type="text"
                   value={cmsData.pixels.meta_pixel_id}
                   onChange={(e) => setCmsData({ ...cmsData, pixels: { ...cmsData.pixels, meta_pixel_id: e.target.value } })}
-                  className="w-full px-4 py-3 rounded-xl bg-[#0B0F19] border border-white/10 text-sm text-white focus:outline-none focus:border-[#00A0DF]"
+                  className="w-full px-3 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF]"
                 />
               </div>
               <div>
@@ -975,7 +973,7 @@ export default function AdminCmsPage() {
                   type="text"
                   value={cmsData.pixels.tiktok_pixel_id}
                   onChange={(e) => setCmsData({ ...cmsData, pixels: { ...cmsData.pixels, tiktok_pixel_id: e.target.value } })}
-                  className="w-full px-4 py-3 rounded-xl bg-[#0B0F19] border border-white/10 text-sm text-white focus:outline-none focus:border-[#00A0DF]"
+                  className="w-full px-3 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF]"
                 />
               </div>
             </div>
@@ -986,16 +984,16 @@ export default function AdminCmsPage() {
 
       {/* Add Module Modal */}
       {showAddModuleModal && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-md bg-[#111827] border border-white/10 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-4">
-            <h3 className="text-lg font-bold text-white">Create New Course Module</h3>
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
+          <div className="w-full max-w-md bg-[#111827] border border-white/10 rounded-2xl sm:rounded-3xl p-5 sm:p-7 shadow-2xl space-y-3 max-h-[90vh] overflow-y-auto">
+            <h3 className="text-base sm:text-lg font-bold text-white">Create Course Module</h3>
             <form onSubmit={handleAddModule} className="space-y-3">
               <div>
                 <label className="block text-xs text-slate-400 mb-1">Module Title *</label>
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Module 12: Advanced SnapChat & Google Ads"
+                  placeholder="e.g. Module 12: Snapchat Ads Mastery"
                   value={newModTitle}
                   onChange={(e) => setNewModTitle(e.target.value)}
                   className="w-full px-3 py-2 rounded-xl bg-[#0B0F19] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF]"
@@ -1012,10 +1010,10 @@ export default function AdminCmsPage() {
                 />
               </div>
               <div>
-                <label className="block text-xs text-slate-400 mb-1">Short Description</label>
+                <label className="block text-xs text-slate-400 mb-1">Description</label>
                 <textarea
                   rows={2}
-                  placeholder="What will students learn in this module?"
+                  placeholder="What will students learn?"
                   value={newModDesc}
                   onChange={(e) => setNewModDesc(e.target.value)}
                   className="w-full px-3 py-2 rounded-xl bg-[#0B0F19] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF] resize-none"
@@ -1026,13 +1024,13 @@ export default function AdminCmsPage() {
                 <button
                   type="button"
                   onClick={() => setShowAddModuleModal(false)}
-                  className="px-4 py-2 rounded-xl bg-slate-800 text-xs text-slate-300"
+                  className="px-3.5 py-2 rounded-xl bg-slate-800 text-xs text-slate-300"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-xs font-black text-white"
+                  className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-xs font-black text-white active:scale-95"
                 >
                   Create Module
                 </button>
@@ -1044,22 +1042,22 @@ export default function AdminCmsPage() {
 
       {/* Add Supplier Modal */}
       {showAddSupplierModal && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-md bg-[#111827] border border-white/10 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-4">
-            <h3 className="text-lg font-bold text-white">Add Verified Wholesale Supplier</h3>
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
+          <div className="w-full max-w-md bg-[#111827] border border-white/10 rounded-2xl sm:rounded-3xl p-5 sm:p-7 shadow-2xl space-y-3 max-h-[90vh] overflow-y-auto">
+            <h3 className="text-base sm:text-lg font-bold text-white">Add Wholesale Supplier</h3>
             <form onSubmit={handleAddSupplier} className="space-y-3">
               <div>
-                <label className="block text-xs text-slate-400 mb-1">Supplier / Warehouse Name *</label>
+                <label className="block text-xs text-slate-400 mb-1">Supplier Name *</label>
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Dubai Smart Watches Hub"
+                  placeholder="e.g. Dubai Watches Hub"
                   value={newSup.name}
                   onChange={(e) => setNewSup({ ...newSup, name: e.target.value })}
                   className="w-full px-3 py-2 rounded-xl bg-[#0B0F19] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF]"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-2.5">
                 <div>
                   <label className="block text-xs text-slate-400 mb-1">Country</label>
                   <select
@@ -1072,7 +1070,7 @@ export default function AdminCmsPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs text-slate-400 mb-1">City / Market</label>
+                  <label className="block text-xs text-slate-400 mb-1">City</label>
                   <input
                     type="text"
                     placeholder="Dubai / Riyadh"
@@ -1083,7 +1081,7 @@ export default function AdminCmsPage() {
                 </div>
               </div>
               <div>
-                <label className="block text-xs text-slate-400 mb-1">WhatsApp / Phone Number</label>
+                <label className="block text-xs text-slate-400 mb-1">WhatsApp Phone</label>
                 <input
                   type="text"
                   placeholder="+971501234567"
@@ -1097,13 +1095,13 @@ export default function AdminCmsPage() {
                 <button
                   type="button"
                   onClick={() => setShowAddSupplierModal(false)}
-                  className="px-4 py-2 rounded-xl bg-slate-800 text-xs text-slate-300"
+                  className="px-3.5 py-2 rounded-xl bg-slate-800 text-xs text-slate-300"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl bg-[#00A0DF] hover:bg-[#008ec7] text-xs font-black text-white"
+                  className="px-4 py-2 rounded-xl bg-[#00A0DF] hover:bg-[#008ec7] text-xs font-black text-white active:scale-95"
                 >
                   Add Supplier
                 </button>

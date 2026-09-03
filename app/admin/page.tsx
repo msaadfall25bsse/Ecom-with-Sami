@@ -21,7 +21,8 @@ import {
   ShieldCheck,
   KeyRound,
   Filter,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Menu
 } from 'lucide-react';
 import { Enrollment, Student } from '@/utils/db';
 
@@ -39,6 +40,7 @@ export default function AdminDashboardPage() {
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'pending' | 'approved' | 'rejected'>('ALL');
   const [searchStudent, setSearchStudent] = useState('');
   const [loading, setLoading] = useState(true);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Selected Receipt Preview modal state
   const [previewReceipt, setPreviewReceipt] = useState<Enrollment | null>(null);
@@ -156,25 +158,71 @@ export default function AdminDashboardPage() {
   return (
     <div className="min-h-screen bg-[#0B0F19] text-white flex flex-col md:flex-row font-sans selection:bg-[#00A0DF] selection:text-white">
       
-      {/* Sidebar */}
-      <aside className="w-full md:w-64 bg-[#111827] border-b md:border-b-0 md:border-r border-white/10 p-6 flex flex-col justify-between shadow-2xl">
-        <div>
-          <div className="flex items-center gap-3 mb-8">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#00A0DF] to-[#0077aa] flex items-center justify-center font-black text-white shadow-lg shadow-[#00A0DF]/30">
+      {/* Mobile Top Header */}
+      <header className="md:hidden bg-[#111827] border-b border-white/10 px-4 py-3 flex items-center justify-between sticky top-0 z-30">
+        <div className="flex items-center gap-2.5">
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="p-2 rounded-xl bg-slate-800 text-slate-300"
+          >
+            {mobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
+          </button>
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-[#00A0DF] to-[#0077aa] flex items-center justify-center font-black text-white text-xs">
               S
             </div>
-            <div>
-              <span className="font-extrabold text-sm block">Sami Admin</span>
-              <span className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                Live Control
-              </span>
+            <span className="font-extrabold text-sm text-white">Sami Admin</span>
+          </div>
+        </div>
+
+        <Link
+          href="/admin/cms"
+          className="px-3 py-1.5 rounded-xl bg-[#00A0DF] text-xs font-black text-white"
+        >
+          CMS
+        </Link>
+      </header>
+
+      {/* Mobile Backdrop */}
+      {mobileMenuOpen && (
+        <div
+          onClick={() => setMobileMenuOpen(false)}
+          className="fixed inset-0 z-40 bg-black/80 md:hidden backdrop-blur-sm"
+        />
+      )}
+
+      {/* Sidebar */}
+      <aside
+        className={`fixed md:static inset-y-0 left-0 z-50 w-72 md:w-64 bg-[#111827] border-r border-white/10 p-5 sm:p-6 flex flex-col justify-between transition-transform duration-300 transform ${
+          mobileMenuOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full md:translate-x-0'
+        }`}
+      >
+        <div>
+          <div className="flex items-center justify-between mb-6 sm:mb-8">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#00A0DF] to-[#0077aa] flex items-center justify-center font-black text-white shadow-lg shadow-[#00A0DF]/30">
+                S
+              </div>
+              <div>
+                <span className="font-extrabold text-sm block">Sami Admin</span>
+                <span className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  Live Control
+                </span>
+              </div>
             </div>
+
+            <button
+              onClick={() => setMobileMenuOpen(false)}
+              className="md:hidden text-slate-400 hover:text-white p-1"
+            >
+              <X size={18} />
+            </button>
           </div>
 
           <nav className="space-y-1.5 text-xs font-bold text-slate-400">
             <button
-              onClick={() => setActiveTab('overview')}
+              onClick={() => { setActiveTab('overview'); setMobileMenuOpen(false); }}
               className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-colors ${
                 activeTab === 'overview' ? 'bg-[#00A0DF] text-white shadow-md shadow-[#00A0DF]/20' : 'hover:bg-slate-800 hover:text-white'
               }`}
@@ -188,12 +236,12 @@ export default function AdminDashboardPage() {
             >
               <div className="flex items-center gap-2.5">
                 <Sparkles size={16} />
-                <span>Website CMS Editor</span>
+                <span>Website &amp; LMS CMS</span>
               </div>
               <ArrowRight size={14} />
             </Link>
             <button
-              onClick={() => setActiveTab('enrollments')}
+              onClick={() => { setActiveTab('enrollments'); setMobileMenuOpen(false); }}
               className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-colors ${
                 activeTab === 'enrollments' ? 'bg-[#00A0DF] text-white shadow-md shadow-[#00A0DF]/20' : 'hover:bg-slate-800 hover:text-white'
               }`}
@@ -209,7 +257,7 @@ export default function AdminDashboardPage() {
               )}
             </button>
             <button
-              onClick={() => setActiveTab('students')}
+              onClick={() => { setActiveTab('students'); setMobileMenuOpen(false); }}
               className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-colors ${
                 activeTab === 'students' ? 'bg-[#00A0DF] text-white shadow-md shadow-[#00A0DF]/20' : 'hover:bg-slate-800 hover:text-white'
               }`}
@@ -229,8 +277,16 @@ export default function AdminDashboardPage() {
             <span>View Public Website</span>
           </Link>
           <Link
+            href="/lms"
+            target="_blank"
+            className="flex items-center gap-2 text-xs text-[#00A0DF] hover:underline"
+          >
+            <ShieldCheck size={14} />
+            <span>Open Student LMS</span>
+          </Link>
+          <Link
             href="/admin/login"
-            className="flex items-center gap-2 text-xs text-red-400 hover:text-red-300 transition-colors"
+            className="flex items-center gap-2 text-xs text-red-400 hover:text-red-300 transition-colors pt-1"
           >
             <LogOut size={14} />
             <span>Sign Out Admin</span>
@@ -239,84 +295,84 @@ export default function AdminDashboardPage() {
       </aside>
 
       {/* Main Stage */}
-      <main className="flex-1 p-6 md:p-10 overflow-y-auto max-h-screen">
-        <div className="max-w-6xl mx-auto space-y-8">
+      <main className="flex-1 p-4 sm:p-6 md:p-10 overflow-y-auto max-h-screen">
+        <div className="max-w-6xl mx-auto space-y-6 sm:space-y-8">
           
           {/* Header */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div>
-              <h1 className="text-2xl sm:text-3xl font-black text-white">Platform Control Panel</h1>
-              <p className="text-xs text-slate-400 mt-1">Ecom With Sami Mentorship &bull; Real-time Operations</p>
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-white">Platform Control Panel</h1>
+              <p className="text-xs text-slate-400 mt-0.5">Ecom With Sami Mentorship &bull; Real-time Operations</p>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
               <button
                 onClick={fetchDashboardData}
-                className="p-2.5 rounded-xl bg-[#111827] border border-white/10 hover:bg-slate-800 text-slate-300 transition-colors"
+                className="p-2 sm:p-2.5 rounded-xl bg-[#111827] border border-white/10 hover:bg-slate-800 text-slate-300 transition-colors"
                 title="Refresh Live Data"
               >
                 <RotateCcw size={15} />
               </button>
               <button
                 onClick={() => setShowAddStudent(true)}
-                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-xs font-black text-white shadow-lg shadow-emerald-500/20 transition-all"
+                className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 sm:gap-2 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-xs font-black text-white shadow-lg shadow-emerald-500/20 transition-all active:scale-95"
               >
-                <Plus size={15} />
-                <span>Add Student Manually</span>
+                <Plus size={14} />
+                <span>Add Student</span>
               </button>
               <Link
                 href="/admin/cms"
-                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#00A0DF] hover:bg-[#008ec7] text-xs font-black text-white shadow-lg shadow-[#00A0DF]/30 transition-all"
+                className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 sm:gap-2 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl bg-[#00A0DF] hover:bg-[#008ec7] text-xs font-black text-white shadow-lg shadow-[#00A0DF]/30 transition-all active:scale-95"
               >
-                <Sparkles size={15} />
-                <span>Open Website CMS</span>
+                <Sparkles size={14} />
+                <span>Open CMS</span>
               </Link>
             </div>
           </div>
 
           {/* Metric Cards Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="bg-[#111827] border border-white/10 rounded-2xl p-5 shadow-xl">
-              <div className="flex items-center justify-between text-xs text-slate-400 mb-2">
-                <span>Total Students</span>
-                <Users size={16} className="text-[#00A0DF]" />
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            <div className="bg-[#111827] border border-white/10 rounded-2xl p-4 sm:p-5 shadow-xl">
+              <div className="flex items-center justify-between text-xs text-slate-400 mb-1 sm:mb-2">
+                <span className="text-[11px] sm:text-xs">Students</span>
+                <Users size={15} className="text-[#00A0DF]" />
               </div>
-              <div className="text-2xl font-black text-white">{stats.totalStudents}</div>
-              <span className="text-[10px] text-emerald-400 font-bold mt-1 block">Trained &amp; Active</span>
+              <div className="text-lg sm:text-2xl font-black text-white">{stats.totalStudents}</div>
+              <span className="text-[9px] sm:text-[10px] text-emerald-400 font-bold mt-1 block">Trained &amp; Active</span>
             </div>
 
-            <div className="bg-[#111827] border border-white/10 rounded-2xl p-5 shadow-xl">
-              <div className="flex items-center justify-between text-xs text-slate-400 mb-2">
-                <span>Pending Approvals</span>
-                <Clock size={16} className="text-amber-400" />
+            <div className="bg-[#111827] border border-white/10 rounded-2xl p-4 sm:p-5 shadow-xl">
+              <div className="flex items-center justify-between text-xs text-slate-400 mb-1 sm:mb-2">
+                <span className="text-[11px] sm:text-xs">Pending</span>
+                <Clock size={15} className="text-amber-400" />
               </div>
-              <div className="text-2xl font-black text-amber-400">{stats.pendingApprovals}</div>
-              <span className="text-[10px] text-slate-400 font-bold mt-1 block">1-click LMS activation</span>
+              <div className="text-lg sm:text-2xl font-black text-amber-400">{stats.pendingApprovals}</div>
+              <span className="text-[9px] sm:text-[10px] text-slate-400 font-bold mt-1 block">1-click LMS activation</span>
             </div>
 
-            <div className="bg-[#111827] border border-white/10 rounded-2xl p-5 shadow-xl">
-              <div className="flex items-center justify-between text-xs text-slate-400 mb-2">
-                <span>Active LMS Users</span>
-                <CheckCircle2 size={16} className="text-emerald-400" />
+            <div className="bg-[#111827] border border-white/10 rounded-2xl p-4 sm:p-5 shadow-xl">
+              <div className="flex items-center justify-between text-xs text-slate-400 mb-1 sm:mb-2">
+                <span className="text-[11px] sm:text-xs">Active LMS</span>
+                <CheckCircle2 size={15} className="text-emerald-400" />
               </div>
-              <div className="text-2xl font-black text-emerald-400">{stats.approvedEnrollments}</div>
-              <span className="text-[10px] text-slate-400 font-bold mt-1 block">Classroom Access Enabled</span>
+              <div className="text-lg sm:text-2xl font-black text-emerald-400">{stats.approvedEnrollments}</div>
+              <span className="text-[9px] sm:text-[10px] text-slate-400 font-bold mt-1 block">Access Enabled</span>
             </div>
 
-            <div className="bg-[#111827] border border-white/10 rounded-2xl p-5 shadow-xl">
-              <div className="flex items-center justify-between text-xs text-slate-400 mb-2">
-                <span>Total Revenue</span>
-                <TrendingUp size={16} className="text-indigo-400" />
+            <div className="bg-[#111827] border border-white/10 rounded-2xl p-4 sm:p-5 shadow-xl">
+              <div className="flex items-center justify-between text-xs text-slate-400 mb-1 sm:mb-2">
+                <span className="text-[11px] sm:text-xs">Revenue</span>
+                <TrendingUp size={15} className="text-indigo-400" />
               </div>
-              <div className="text-xl sm:text-2xl font-black text-white">{stats.totalRevenueFormatted}</div>
-              <span className="text-[10px] text-indigo-400 font-bold mt-1 block">Fee: PKR 3,900</span>
+              <div className="text-base sm:text-2xl font-black text-white">{stats.totalRevenueFormatted}</div>
+              <span className="text-[9px] sm:text-[10px] text-indigo-400 font-bold mt-1 block">Fee: PKR 3,900</span>
             </div>
           </div>
 
           {/* TAB 1: OVERVIEW QUEUE */}
           {activeTab === 'overview' && (
-            <div className="bg-[#111827] border border-white/10 rounded-3xl p-6 shadow-2xl space-y-4">
+            <div className="bg-[#111827] border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-2xl space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-base font-bold text-white">Live Student Enrollment Requests</h3>
+                <h3 className="text-sm sm:text-base font-bold text-white">Live Student Enrollment Requests</h3>
                 <button
                   onClick={() => setActiveTab('enrollments')}
                   className="text-xs text-[#00A0DF] font-bold hover:underline"
@@ -325,16 +381,16 @@ export default function AdminDashboardPage() {
                 </button>
               </div>
 
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
+              <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
+                <table className="w-full text-left text-xs min-w-[650px]">
                   <thead>
                     <tr className="border-b border-white/10 text-slate-400">
                       <th className="pb-3">Tracking Code</th>
                       <th className="pb-3">Student Name</th>
                       <th className="pb-3">WhatsApp</th>
-                      <th className="pb-3">Payment Method</th>
+                      <th className="pb-3">Payment</th>
                       <th className="pb-3">Source</th>
-                      <th className="pb-3">Proof</th>
+                      <th className="pb-3">Proof Slip</th>
                       <th className="pb-3">Status</th>
                       <th className="pb-3 text-right">Quick Action</th>
                     </tr>
@@ -342,16 +398,16 @@ export default function AdminDashboardPage() {
                   <tbody className="divide-y divide-white/5 text-slate-300">
                     {enrollments.slice(0, 6).map((r) => (
                       <tr key={r.id}>
-                        <td className="py-3.5 font-mono text-[11px] text-[#00A0DF] font-bold">{r.trackingCode}</td>
-                        <td className="py-3.5 font-bold text-white">{r.name}</td>
-                        <td className="py-3.5 text-slate-400">{r.phone}</td>
-                        <td className="py-3.5">{r.paymentMethod}</td>
-                        <td className="py-3.5">
+                        <td className="py-3 font-mono text-[11px] text-[#00A0DF] font-bold">{r.trackingCode}</td>
+                        <td className="py-3 font-bold text-white">{r.name}</td>
+                        <td className="py-3 text-slate-400">{r.phone}</td>
+                        <td className="py-3">{r.paymentMethod}</td>
+                        <td className="py-3">
                           <span className="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded-md">
                             {r.whereHeard || 'TikTok'}
                           </span>
                         </td>
-                        <td className="py-3.5">
+                        <td className="py-3">
                           {r.receiptUrl ? (
                             <button
                               onClick={() => setPreviewReceipt(r)}
@@ -363,9 +419,9 @@ export default function AdminDashboardPage() {
                             <span className="text-[11px] text-slate-500">No Slip</span>
                           )}
                         </td>
-                        <td className="py-3.5">
+                        <td className="py-3">
                           <span
-                            className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase ${
+                            className={`px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold uppercase ${
                               r.status === 'approved'
                                 ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
                                 : r.status === 'rejected'
@@ -376,12 +432,12 @@ export default function AdminDashboardPage() {
                             {r.status}
                           </span>
                         </td>
-                        <td className="py-3.5 text-right">
+                        <td className="py-3 text-right">
                           {r.status === 'pending' ? (
                             <div className="inline-flex gap-1.5">
                               <button
                                 onClick={() => handleUpdateStatus(r.id, 'approved')}
-                                className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-[11px] flex items-center gap-1 shadow-sm"
+                                className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-[11px] flex items-center gap-1 shadow-sm active:scale-95"
                               >
                                 <Check size={12} /> Approve
                               </button>
@@ -406,9 +462,9 @@ export default function AdminDashboardPage() {
 
           {/* TAB 2: ENROLLMENTS */}
           {activeTab === 'enrollments' && (
-            <div className="bg-[#111827] border border-white/10 rounded-3xl p-6 shadow-2xl space-y-4">
+            <div className="bg-[#111827] border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-2xl space-y-4">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                <h3 className="text-base font-bold text-white">Enrollments &amp; Receipt Records</h3>
+                <h3 className="text-sm sm:text-base font-bold text-white">Enrollments &amp; Receipt Records</h3>
                 
                 <div className="flex items-center gap-2 w-full sm:w-auto">
                   <div className="relative flex-1 sm:w-64">
@@ -424,7 +480,7 @@ export default function AdminDashboardPage() {
                   <select
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value as any)}
-                    className="px-3 py-1.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs text-white focus:outline-none"
+                    className="px-2.5 py-1.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs text-white focus:outline-none"
                   >
                     <option value="ALL">All Status</option>
                     <option value="pending">Pending</option>
@@ -434,8 +490,8 @@ export default function AdminDashboardPage() {
                 </div>
               </div>
 
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
+              <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
+                <table className="w-full text-left text-xs min-w-[700px]">
                   <thead>
                     <tr className="border-b border-white/10 text-slate-400">
                       <th className="pb-3">Tracking Code</th>
@@ -452,23 +508,23 @@ export default function AdminDashboardPage() {
                   <tbody className="divide-y divide-white/5 text-slate-300">
                     {filteredEnrollments.map((r) => (
                       <tr key={r.id}>
-                        <td className="py-3.5 font-mono text-[11px] text-[#00A0DF] font-bold">{r.trackingCode}</td>
-                        <td className="py-3.5 font-bold text-white">{r.name}</td>
-                        <td className="py-3.5 text-slate-400">{r.email}</td>
-                        <td className="py-3.5">
+                        <td className="py-3 font-mono text-[11px] text-[#00A0DF] font-bold">{r.trackingCode}</td>
+                        <td className="py-3 font-bold text-white">{r.name}</td>
+                        <td className="py-3 text-slate-400">{r.email}</td>
+                        <td className="py-3">
                           <div>{r.phone}</div>
                           <div className="text-[10px] text-slate-500">{r.city}</div>
                         </td>
-                        <td className="py-3.5">
+                        <td className="py-3">
                           <span className="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded-md">
                             {r.whereHeard || 'TikTok'}
                           </span>
                         </td>
-                        <td className="py-3.5">
+                        <td className="py-3">
                           <div>{r.paymentMethod}</div>
                           <div className="text-[10px] text-slate-400 font-mono">{r.transactionId}</div>
                         </td>
-                        <td className="py-3.5">
+                        <td className="py-3">
                           {r.receiptUrl ? (
                             <button
                               onClick={() => setPreviewReceipt(r)}
@@ -480,9 +536,9 @@ export default function AdminDashboardPage() {
                             <span className="text-[11px] text-slate-500">No Slip</span>
                           )}
                         </td>
-                        <td className="py-3.5">
+                        <td className="py-3">
                           <span
-                            className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase ${
+                            className={`px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold uppercase ${
                               r.status === 'approved'
                                 ? 'bg-emerald-500/10 text-emerald-400'
                                 : r.status === 'rejected'
@@ -493,12 +549,12 @@ export default function AdminDashboardPage() {
                             {r.status}
                           </span>
                         </td>
-                        <td className="py-3.5 text-right">
+                        <td className="py-3 text-right">
                           <div className="inline-flex gap-1.5">
                             {r.status !== 'approved' && (
                               <button
                                 onClick={() => handleUpdateStatus(r.id, 'approved')}
-                                className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-[11px]"
+                                className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-[11px] active:scale-95"
                               >
                                 Activate
                               </button>
@@ -523,9 +579,9 @@ export default function AdminDashboardPage() {
 
           {/* TAB 3: STUDENTS DIRECTORY */}
           {activeTab === 'students' && (
-            <div className="bg-[#111827] border border-white/10 rounded-3xl p-6 shadow-2xl space-y-4">
+            <div className="bg-[#111827] border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-2xl space-y-4">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                <h3 className="text-base font-bold text-white">Registered Students ({students.length})</h3>
+                <h3 className="text-sm sm:text-base font-bold text-white">Registered Students ({students.length})</h3>
                 <div className="relative w-full sm:w-64">
                   <Search size={14} className="absolute left-3 top-2.5 text-slate-400" />
                   <input
@@ -538,8 +594,8 @@ export default function AdminDashboardPage() {
                 </div>
               </div>
 
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
+              <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
+                <table className="w-full text-left text-xs min-w-[650px]">
                   <thead>
                     <tr className="border-b border-white/10 text-slate-400">
                       <th className="pb-3">Student Name</th>
@@ -553,11 +609,11 @@ export default function AdminDashboardPage() {
                   <tbody className="divide-y divide-white/5 text-slate-300">
                     {filteredStudents.map((s) => (
                       <tr key={s.id}>
-                        <td className="py-3.5 font-bold text-white">{s.name}</td>
-                        <td className="py-3.5 text-[#00A0DF] font-mono">{s.email}</td>
-                        <td className="py-3.5">{s.phone}</td>
-                        <td className="py-3.5">{s.city}</td>
-                        <td className="py-3.5">
+                        <td className="py-3 font-bold text-white">{s.name}</td>
+                        <td className="py-3 text-[#00A0DF] font-mono">{s.email}</td>
+                        <td className="py-3">{s.phone}</td>
+                        <td className="py-3">{s.city}</td>
+                        <td className="py-3">
                           <span
                             className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
                               s.isActive ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'
@@ -566,7 +622,7 @@ export default function AdminDashboardPage() {
                             {s.isActive ? 'Active' : 'Suspended'}
                           </span>
                         </td>
-                        <td className="py-3.5 text-slate-400">
+                        <td className="py-3 text-slate-400">
                           {s.completedLessons?.length || 0} / 36 Lectures
                         </td>
                       </tr>
@@ -582,27 +638,27 @@ export default function AdminDashboardPage() {
 
       {/* Payment Receipt Image Preview Modal */}
       {previewReceipt && (
-        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-lg bg-[#111827] border border-white/10 rounded-3xl p-6 shadow-2xl space-y-4">
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
+          <div className="w-full max-w-lg bg-[#111827] border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-2xl space-y-3 sm:space-y-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-base font-bold text-white">Payment Screenshot Proof</h3>
-                <p className="text-xs text-slate-400">Student: {previewReceipt.name} &bull; {previewReceipt.trackingCode}</p>
+                <h3 className="text-sm sm:text-base font-bold text-white">Payment Screenshot Proof</h3>
+                <p className="text-[11px] sm:text-xs text-slate-400">{previewReceipt.name} &bull; {previewReceipt.trackingCode}</p>
               </div>
-              <button onClick={() => setPreviewReceipt(null)} className="text-slate-400 hover:text-white">
-                <X size={20} />
+              <button onClick={() => setPreviewReceipt(null)} className="text-slate-400 hover:text-white p-1">
+                <X size={18} />
               </button>
             </div>
 
-            <div className="bg-[#0B0F19] rounded-2xl p-2 border border-white/10 max-h-96 overflow-auto flex items-center justify-center">
+            <div className="bg-[#0B0F19] rounded-2xl p-2 border border-white/10 max-h-72 sm:max-h-80 overflow-auto flex items-center justify-center">
               {previewReceipt.receiptUrl ? (
                 <img
                   src={previewReceipt.receiptUrl}
                   alt="Payment Receipt"
-                  className="max-h-80 w-auto rounded-xl object-contain shadow-md"
+                  className="max-h-64 sm:max-h-72 w-auto rounded-xl object-contain shadow-md"
                 />
               ) : (
-                <div className="py-12 text-slate-500 text-xs">No screenshot image attached</div>
+                <div className="py-8 text-slate-500 text-xs">No screenshot image attached</div>
               )}
             </div>
 
@@ -616,13 +672,13 @@ export default function AdminDashboardPage() {
             <div className="flex items-center gap-2 justify-end pt-2">
               <button
                 onClick={() => handleUpdateStatus(previewReceipt.id, 'rejected')}
-                className="px-4 py-2 rounded-xl bg-red-600/20 hover:bg-red-600/40 text-red-400 text-xs font-bold"
+                className="px-3.5 py-2 rounded-xl bg-red-600/20 hover:bg-red-600/40 text-red-400 text-xs font-bold"
               >
                 Reject Proof
               </button>
               <button
                 onClick={() => handleUpdateStatus(previewReceipt.id, 'approved')}
-                className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black"
+                className="px-4 sm:px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black"
               >
                 Approve &amp; Activate LMS
               </button>
@@ -633,12 +689,12 @@ export default function AdminDashboardPage() {
 
       {/* Manual Student Add Modal */}
       {showAddStudent && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-md bg-[#111827] border border-white/10 rounded-3xl p-6 sm:p-8 shadow-2xl">
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
+          <div className="w-full max-w-md bg-[#111827] border border-white/10 rounded-2xl sm:rounded-3xl p-5 sm:p-7 shadow-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-base sm:text-lg font-bold text-white">Add Student Manually</h3>
-              <button onClick={() => setShowAddStudent(false)} className="text-slate-400 hover:text-white">
-                <X size={20} />
+              <h3 className="text-sm sm:text-base font-bold text-white">Add Student Manually</h3>
+              <button onClick={() => setShowAddStudent(false)} className="text-slate-400 hover:text-white p-1">
+                <X size={18} />
               </button>
             </div>
 
@@ -692,7 +748,7 @@ export default function AdminDashboardPage() {
 
               <button
                 type="submit"
-                className="w-full py-3 px-4 rounded-xl text-xs font-black text-white bg-emerald-600 hover:bg-emerald-700 transition-colors shadow-lg shadow-emerald-600/20 mt-4"
+                className="w-full py-3 px-4 rounded-xl text-xs font-black text-white bg-emerald-600 hover:bg-emerald-700 transition-colors shadow-lg shadow-emerald-600/20 mt-4 active:scale-95"
               >
                 Grant Instant LMS Access
               </button>
