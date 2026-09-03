@@ -8,4 +8,17 @@ if (supabaseUrl && supabaseKey) {
   supabase = createClient(supabaseUrl, supabaseKey);
 }
 
-module.exports = { supabase, createClient };
+// Function to query table (replaces 'your_table' with 'cms_settings')
+async function getData() {
+  if (!supabase) return null;
+  const { data, error } = await supabase
+    .from('cms_settings')
+    .select('*');
+  if (error) {
+    console.error('Error fetching data from Supabase:', error);
+    return null;
+  }
+  return data;
+}
+
+module.exports = { supabase, createClient, getData };
