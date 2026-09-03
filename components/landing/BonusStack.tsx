@@ -6,17 +6,17 @@ import { Gift, ArrowRight, Sparkles, CheckCircle2 } from 'lucide-react';
 
 export function BonusStack({ customData }: { customData?: any }) {
   const [bonusData, setBonusData] = useState<any>(customData || {
-    tag: 'EXCLUSIVE POWER BONUSES',
-    title: 'Get 6 Game-Changing Bonuses Worth Over',
-    highlight_value: 'Rs 30,000 Free',
-    subtitle: 'When you enroll today for PKR 3,900, you get all software tools, supplier contacts, and ad blueprints completely free of charge.',
+    tag: '🎁 FREE BONUSES',
+    title: 'Free Bonuses Worth',
+    highlight_value: 'Rs 30,000+',
+    subtitle: 'Get these exclusive tools and resources absolutely FREE with your enrollment.',
     items: [
-      { title: 'Verified UAE & Saudi Arabia Suppliers Directory', desc: 'Direct WhatsApp contacts of trusted wholesale suppliers in Dubai (Deira), Sharjah, and Riyadh with 24-48 hours COD delivery.', value: 'Rs 10,000 Value' },
-      { title: 'High-Converting Premium Shopify Theme (ZIP)', desc: 'The exact custom-coded, ultra-fast converting theme used on our 7-figure stores. Clean, mobile-first design with 1-click upsells.', value: 'Rs 8,500 Value' },
-      { title: 'Ready-to-Use Facebook & TikTok Ads Blueprint', desc: 'Pre-written ad copy templates, campaign testing structures, targeting setups, and hook scripts in Arabic & English.', value: 'Rs 5,000 Value' },
-      { title: 'E-Commerce P&L Margin & Profit Calculator (Excel)', desc: 'Track advertising spend, product cost, shipping courier fees, COD delivery rates, and net profit margins automatically.', value: 'Rs 3,000 Value' },
-      { title: 'Winning Product Hunt Checklist & Spy Prompts', desc: '15-point criteria checklist to discover untapped winning products with high profit margins before your competitors do.', value: 'Rs 2,500 Value' },
-      { title: 'Direct WhatsApp Mentorship Desk Access', desc: 'Private direct WhatsApp assistance for account verification, ad troubleshooting, pixel errors, and scaling questions.', value: 'Priceless' }
+      { title: 'Weekly 2-Hour Live Class', desc: 'Join live training sessions every week to learn, ask questions & stay on track.', value: 'FREE' },
+      { title: 'Live Campaign Checking', desc: 'Get your live ad campaigns reviewed so you know exactly what to fix and scale.', value: 'FREE' },
+      { title: 'Facebook Zero to Hero E-Book', desc: 'A complete guide that takes you from total beginner to confident Facebook advertiser.', value: 'FREE' },
+      { title: 'Dropshipping Profit & Loss Calculator', desc: 'Know your real numbers — calculate profit, cost & margins before you spend.', value: 'FREE' },
+      { title: 'Premium Shopify Themes', desc: 'Ready-to-use premium store themes so your shop looks professional from day one.', value: 'FREE' },
+      { title: 'ChatGPT Prompts Pack', desc: '30+ ready prompts to instantly write product descriptions, ad copy & emails with AI.', value: 'FREE' }
     ]
   });
 
@@ -38,22 +38,21 @@ export function BonusStack({ customData }: { customData?: any }) {
   const items = bonusData.items || [];
 
   return (
-    <div className="relative bg-gradient-to-b from-slate-900 to-[#070A12] border-2 border-[#00A0DF]/40 rounded-3xl p-6 sm:p-10 md:p-12 shadow-2xl overflow-hidden">
-      {/* Top Radiant Gradient Line */}
-      <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-[#00A0DF] via-emerald-400 to-amber-400" />
+    <div className="relative bg-slate-900/90 border border-slate-800 rounded-3xl p-6 sm:p-10 md:p-12 shadow-2xl overflow-hidden">
+      {/* Top Cyan Neon Line */}
+      <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-[#00A0DF] via-emerald-400 to-[#00A0DF]" />
 
       {/* Header */}
       <div className="text-center max-w-3xl mx-auto mb-10 sm:mb-12">
-        <span className="inline-flex items-center gap-2 bg-[#00A0DF]/20 text-[#00A0DF] border border-[#00A0DF]/40 text-xs font-black uppercase tracking-wider px-4 py-1.5 rounded-full mb-3 shadow-inner">
-          <Gift size={15} className="text-[#00A0DF] animate-bounce" />
-          <span>{bonusData.tag || 'EXCLUSIVE POWER BONUSES'}</span>
+        <span className="section-tag-pill mb-3">
+          {bonusData.tag || '🎁 FREE BONUSES'}
         </span>
-        <h2 className="text-2xl sm:text-3xl md:text-5xl font-black text-white tracking-tight mb-3">
-          {bonusData.title || 'Get 6 Game-Changing Bonuses Worth Over'}{' '}
-          <span className="text-emerald-400">{bonusData.highlight_value || 'Rs 30,000 Free'}</span>
+        <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-white tracking-tight mb-2">
+          {bonusData.title || 'Free Bonuses Worth'}{' '}
+          <span className="text-[#00A0DF]">{bonusData.highlight_value || 'Rs 30,000+'}</span>
         </h2>
-        <p className="text-xs sm:text-sm md:text-base text-slate-300 leading-relaxed max-w-2xl mx-auto">
-          {bonusData.subtitle || 'When you enroll today for PKR 3,900, you get all software tools, supplier contacts, and ad blueprints completely free of charge.'}
+        <p className="text-xs sm:text-sm md:text-base text-slate-300 leading-relaxed font-medium">
+          {bonusData.subtitle || 'Get these exclusive tools and resources absolutely FREE with your enrollment.'}
         </p>
       </div>
 
@@ -62,40 +61,47 @@ export function BonusStack({ customData }: { customData?: any }) {
         {items.map((b: any, idx: number) => (
           <div
             key={idx}
-            className="bg-slate-950/90 border border-slate-800 rounded-2xl p-5 sm:p-6 flex flex-col justify-between hover:border-[#00A0DF]/60 hover:shadow-xl hover:shadow-[#00A0DF]/10 transition-all duration-300"
+            className="bg-slate-950/80 border border-slate-800/90 rounded-2xl p-5 sm:p-6 flex flex-col justify-between hover:border-[#00A0DF]/60 transition-colors"
           >
-            <div className="flex items-start gap-4 mb-4">
-              <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-[#00A0DF]/20 to-emerald-400/10 text-[#00A0DF] flex items-center justify-center flex-shrink-0 border border-[#00A0DF]/30">
-                <Gift size={22} />
+            <div className="flex items-start gap-4 mb-3">
+              <div className="w-10 h-10 rounded-xl bg-[#00A0DF]/15 text-[#00A0DF] flex items-center justify-center flex-shrink-0 border border-[#00A0DF]/30">
+                <Gift size={20} />
               </div>
               <div>
-                <h3 className="text-sm sm:text-base font-extrabold text-white mb-1.5">{b.title}</h3>
+                <h3 className="text-sm sm:text-base font-extrabold text-white mb-1">{b.title}</h3>
                 <p className="text-xs text-slate-400 leading-relaxed font-medium">{b.desc}</p>
               </div>
             </div>
 
-            <div className="flex items-center justify-between pt-3.5 border-t border-slate-800/80 text-xs">
-              <span className="line-through text-slate-500 font-semibold">
-                {b.value || b.val || 'Rs 5,000 Value'}
-              </span>
-              <span className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 font-black px-3 py-1 rounded-full text-[11px] uppercase tracking-wider">
-                100% Free With Enrollment
+            <div className="flex items-center justify-end pt-3 border-t border-slate-800/80">
+              <span className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-black px-3 py-0.5 rounded-full text-[11px] uppercase tracking-wider">
+                {b.value || 'FREE'}
               </span>
             </div>
           </div>
         ))}
       </div>
 
-      {/* Total Value Summary Bar */}
-      <div className="bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border border-slate-800 rounded-2xl p-5 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left mb-6">
-        <div className="flex items-center gap-2.5 text-white font-extrabold text-sm sm:text-base">
-          <Sparkles size={18} className="text-amber-400 flex-shrink-0 animate-spin" style={{ animationDuration: '6s' }} />
-          <span>TOTAL POWER BONUS VALUE: <span className="text-[#00A0DF]">Rs 30,000+ FREE</span></span>
+      {/* Total Bonus Value Bar */}
+      <div className="bg-slate-950/90 border border-slate-800 rounded-2xl p-5 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left mb-6">
+        <div className="text-white font-extrabold text-sm sm:text-base">
+          🎁 Total Bonus Value: <span className="line-through text-slate-500">Rs 30,000</span>
         </div>
-        <div className="text-xs sm:text-sm font-bold text-emerald-400">
-          Included 100% FREE with your PKR 3,900 enrollment
+        <div className="text-sm sm:text-base font-black text-emerald-400">
+          Yours FREE Today
         </div>
+      </div>
+
+      <div className="text-center">
+        <Link
+          href="/enrollment"
+          className="lwa-btn px-10 py-4 text-sm sm:text-base font-black rounded-xl"
+        >
+          YES! I WANT TO LEARN THIS
+        </Link>
       </div>
     </div>
   );
 }
+
+export default BonusStack;

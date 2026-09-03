@@ -2,22 +2,18 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #0f172a;
+  --foreground: #0b0f19;
   --primary: #00a0df;
-  --primary-hover: #0084ba;
-  --primary-dark: #006699;
-  --primary-glow: rgba(0, 160, 223, 0.35);
-  --accent-green: #10b981;
-  --accent-emerald: #059669;
-  --accent-amber: #f59e0b;
-  --accent-red: #ef4444;
+  --primary-hover: #008ac2;
+  --primary-dark: #0074a6;
+  --primary-glow: rgba(0, 160, 223, 0.4);
+  --accent-green: #16a34a;
+  --accent-emerald: #10b981;
+  --accent-amber: #f5a623;
+  --accent-red: #e94b4b;
   --dark-bg: #0b0f19;
   --dark-card: #111827;
   --dark-card-hover: #1e293b;
-  --radius-sm: 8px;
-  --radius-md: 14px;
-  --radius-lg: 20px;
-  --radius-xl: 28px;
 }
 
 html {
@@ -35,7 +31,7 @@ body {
 
 /* Custom Sleek Scrollbar */
 ::-webkit-scrollbar {
-  width: 9px;
+  width: 8px;
 }
 
 ::-webkit-scrollbar-track {
@@ -52,62 +48,88 @@ body {
   background: #00a0df;
 }
 
-/* Glassmorphism & UI Utilities */
-.glass-panel {
-  background: rgba(255, 255, 255, 0.75);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(226, 232, 240, 0.8);
+/* ========================================================================= */
+/* LearnWithAfaq Visual Design Language Tokens & Utilities */
+/* ========================================================================= */
+
+/* Dropshipping Badge */
+.dropshipping-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #0b0f19;
+  color: #ffffff;
+  border-radius: 9999px;
+  padding: 0.4rem 1.1rem 0.4rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+  transition: transform 0.2s ease;
 }
 
-.glass-panel-dark {
-  background: rgba(17, 24, 39, 0.75);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+.dropshipping-badge:hover {
+  transform: scale(1.03);
 }
 
-.glass-card-hover {
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+.badge-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  background: #00a0df;
+  box-shadow: 0 0 10px #00a0df;
+  animation: pulse 2s infinite;
 }
 
-.glass-card-hover:hover {
-  transform: translateY(-4px) scale(1.01);
-  box-shadow: 0 20px 40px -15px rgba(0, 160, 223, 0.2);
-  border-color: rgba(0, 160, 223, 0.5);
+.badge-blue {
+  color: #00a0df;
+  font-weight: 900;
 }
 
-/* Gradient Borders */
-.gradient-border-blue {
-  position: relative;
-  background: linear-gradient(135deg, #111827, #0b0f19);
-  border: 1px solid transparent;
+.badge-dark {
+  color: #e2e8f0;
 }
 
-.gradient-border-blue::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  padding: 1px;
-  background: linear-gradient(135deg, rgba(0, 160, 223, 0.6), rgba(16, 185, 129, 0.3), rgba(245, 158, 11, 0.2));
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  pointer-events: none;
-}
-
-/* High-Converting CTA Button */
+/* Primary High-Converting CTA Button */
+.lwa-btn,
+.btn-primary-lwa,
 .btn-glow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  background: #00a0df;
+  color: #ffffff !important;
+  font-weight: 800;
+  font-size: 0.95rem;
+  letter-spacing: 0.04em;
+  padding: 1rem 2.5rem;
+  border-radius: 0.75rem;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 12px 30px -8px rgba(0, 160, 223, 0.55);
   position: relative;
   overflow: hidden;
-  background: linear-gradient(135deg, #00a0df 0%, #0084ba 50%, #006699 100%);
-  color: #ffffff;
-  font-weight: 800;
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 10px 30px -5px rgba(0, 160, 223, 0.5);
+  text-transform: uppercase;
 }
 
+.lwa-btn:hover,
+.btn-primary-lwa:hover,
+.btn-glow:hover {
+  background: #008ac2;
+  transform: translateY(-2px);
+  box-shadow: 0 18px 40px -8px rgba(0, 160, 223, 0.75);
+}
+
+.lwa-btn:active,
+.btn-primary-lwa:active,
+.btn-glow:active {
+  transform: translateY(0);
+}
+
+/* Shimmer Light Sweep on Buttons */
+.lwa-btn::after,
+.btn-primary-lwa::after,
 .btn-glow::after {
   content: '';
   position: absolute;
@@ -118,53 +140,108 @@ body {
   background: linear-gradient(
     90deg,
     rgba(255, 255, 255, 0) 0%,
-    rgba(255, 255, 255, 0.35) 50%,
+    rgba(255, 255, 255, 0.3) 50%,
     rgba(255, 255, 255, 0) 100%
   );
   transform: rotate(25deg);
-  animation: shimmerButton 4s infinite linear;
+  animation: shimmerSweep 4.5s infinite linear;
 }
 
-.btn-glow:hover {
-  transform: translateY(-2px) scale(1.02);
-  box-shadow: 0 15px 40px -5px rgba(0, 160, 223, 0.7);
-}
-
-.btn-glow:active {
-  transform: translateY(0) scale(0.98);
-}
-
-/* Keyframe Animations */
-@keyframes shimmerButton {
+@keyframes shimmerSweep {
   0% { transform: translateX(-150%) rotate(25deg); }
-  35% { transform: translateX(350%) rotate(25deg); }
+  25% { transform: translateX(350%) rotate(25deg); }
   100% { transform: translateX(350%) rotate(25deg); }
 }
 
-@keyframes floatGentle {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-8px); }
+/* Glassmorphism & UI Panels */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(226, 232, 240, 0.9);
 }
 
-.animate-float {
-  animation: floatGentle 5s ease-in-out infinite;
+.glass-panel-dark {
+  background: rgba(17, 24, 39, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-@keyframes pulseGlow {
-  0%, 100% {
-    opacity: 0.4;
-    transform: scale(1);
+/* Section Tag Pills */
+.section-tag-pill {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #00a0df;
+  background: rgba(0, 160, 223, 0.1);
+  padding: 0.4rem 1rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(0, 160, 223, 0.25);
+  margin-bottom: 0.75rem;
+}
+
+.section-tag-green {
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.25);
+}
+
+.section-tag-amber {
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.1);
+  border-color: rgba(245, 158, 11, 0.25);
+}
+
+/* Stats Lite Bar */
+.lwa-stats-lite {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .lwa-stats-lite {
+    grid-template-columns: repeat(4, 1fr);
   }
-  50% {
-    opacity: 0.8;
-    transform: scale(1.08);
-  }
 }
 
-.animate-pulse-glow {
-  animation: pulseGlow 4s ease-in-out infinite;
+.lwa-stat-lite {
+  background: rgba(17, 24, 39, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 1.25rem 1rem;
+  border-radius: 1rem;
+  text-align: center;
+  transition: all 0.3s ease;
 }
 
+.lwa-stat-lite:hover {
+  border-color: rgba(0, 160, 223, 0.6);
+  transform: translateY(-2px);
+}
+
+.lwa-stat-icon-lite {
+  font-size: 1.5rem;
+  margin-bottom: 0.35rem;
+}
+
+.lwa-stat-big-lite {
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: #ffffff;
+  letter-spacing: -0.02em;
+}
+
+.lwa-stat-sub-lite {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #94a3b8;
+  margin-top: 0.15rem;
+}
+
+/* Marquee Animation */
 @keyframes marquee {
   0% { transform: translateX(0%); }
   100% { transform: translateX(-50%); }
@@ -180,6 +257,22 @@ body {
   animation-play-state: paused;
 }
 
+@keyframes pulseGlow {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.06);
+  }
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 5s ease-in-out infinite;
+}
+
+/* WhatsApp Floating Pulse */
 @keyframes whatsappPulse {
   0% {
     box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.7);
@@ -194,10 +287,4 @@ body {
 
 .animate-whatsapp-pulse {
   animation: whatsappPulse 2s infinite;
-}
-
-/* Safe Scroll Fade (Always Visible by default) */
-.fade-in-section {
-  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
-  will-change: opacity, transform;
 }

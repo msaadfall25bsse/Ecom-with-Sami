@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Star, ShieldCheck, TrendingUp, Sparkles } from 'lucide-react';
+import { Star, ShieldCheck } from 'lucide-react';
 
 export function ProofWall({ customTestimonials }: { customTestimonials?: any[] }) {
   const defaultList = [
@@ -84,50 +84,46 @@ export function ProofWall({ customTestimonials }: { customTestimonials?: any[] }
         {testimonials.map((t, index) => (
           <div
             key={index}
-            className="group relative bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 rounded-3xl p-6 hover:border-[#00A0DF]/60 shadow-xl hover:shadow-2xl hover:shadow-[#00A0DF]/15 transition-all duration-300 flex flex-col justify-between"
+            className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm hover:shadow-md hover:border-[#00A0DF]/40 transition-all flex flex-col justify-between"
           >
             <div>
               {/* Stars & Market */}
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center justify-between mb-3">
                 <div className="flex gap-1 text-amber-400">
                   {[...Array(5)].map((_, i) => (
-                    <Star key={i} size={15} className="fill-amber-400 text-amber-400 drop-shadow-[0_0_6px_rgba(251,191,36,0.5)]" />
+                    <Star key={i} size={15} className="fill-amber-400 text-amber-400" />
                   ))}
                 </div>
-                <span className="text-[10px] font-black uppercase tracking-wider bg-emerald-500/15 text-emerald-400 px-3 py-1 rounded-full border border-emerald-500/30">
+                <span className="text-[10px] font-black uppercase tracking-wider bg-[#00A0DF]/10 text-[#00A0DF] px-2.5 py-0.5 rounded-full border border-[#00A0DF]/20">
                   {t.market || 'Verified Student'}
                 </span>
               </div>
 
               {/* Quote */}
-              <p className="text-xs sm:text-sm text-slate-300 font-medium leading-relaxed mb-6 italic">
+              <p className="text-xs sm:text-sm text-slate-700 font-medium leading-relaxed mb-6">
                 &ldquo;{t.quote}&rdquo;
               </p>
             </div>
 
             {/* Student Details & Revenue Pill */}
-            <div className="pt-4 border-t border-slate-800/80 flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#00A0DF] to-emerald-400 p-0.5 shadow-md">
-                  <div className="w-full h-full rounded-full bg-slate-900 flex items-center justify-center font-black text-xs text-white">
-                    {t.initials || t.name?.substring(0, 2).toUpperCase() || 'ST'}
-                  </div>
+            <div className="pt-3.5 border-t border-gray-100 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-full bg-[#00A0DF] text-white flex items-center justify-center font-black text-xs">
+                  {t.initials || t.name?.substring(0, 2).toUpperCase() || 'ST'}
                 </div>
                 <div>
-                  <h4 className="text-xs sm:text-sm font-bold text-white flex items-center gap-1">
+                  <h4 className="text-xs sm:text-sm font-bold text-slate-900 flex items-center gap-1">
                     <span>{t.name}</span>
-                    <ShieldCheck size={14} className="text-[#00A0DF]" />
+                    <ShieldCheck size={13} className="text-[#00A0DF]" />
                   </h4>
-                  <p className="text-[11px] text-slate-400">{t.city}</p>
+                  <p className="text-[11px] text-slate-500 font-semibold">{t.city}</p>
                 </div>
               </div>
 
               {t.sales && (
-                <div className="text-right">
-                  <span className="inline-block text-[11px] sm:text-xs font-black text-emerald-400 bg-emerald-950/60 border border-emerald-500/40 px-2.5 py-1 rounded-lg">
-                    {t.sales}
-                  </span>
-                </div>
+                <span className="inline-block text-[11px] font-extrabold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md">
+                  {t.sales}
+                </span>
               )}
             </div>
           </div>
@@ -136,3 +132,5 @@ export function ProofWall({ customTestimonials }: { customTestimonials?: any[] }
     </div>
   );
 }
+
+export default ProofWall;
