@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Zap } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 
 export function StickyMobileCta() {
@@ -12,11 +12,7 @@ export function StickyMobileCta() {
   useEffect(() => {
     const handleScroll = () => {
       // Show sticky CTA after scrolling past 260px on mobile
-      if (window.scrollY > 260) {
-        setVisible(true);
-      } else {
-        setVisible(false);
-      }
+      setVisible(window.scrollY > 260);
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
@@ -31,57 +27,25 @@ export function StickyMobileCta() {
   if (!visible) return null;
 
   return (
-    <div
-      className="mobile-sticky-cta"
-      style={{
-        position: 'fixed',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        backgroundColor: '#FFFFFF',
-        borderTop: '1.5px solid rgba(0, 160, 223, 0.25)',
-        boxShadow: '0 -8px 25px rgba(0, 0, 0, 0.12)',
-        padding: '10px 16px',
-        zIndex: 9998,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        gap: '12px'
-      }}
-    >
-      <div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <span style={{ fontSize: '1.15rem', fontWeight: '800', color: 'var(--text-dark)' }}>PKR 3,900</span>
-          <span style={{ fontSize: '0.76rem', textDecoration: 'line-through', color: '#EF4444', fontWeight: '600' }}>32,500</span>
+    <div className="fixed bottom-0 inset-x-0 md:hidden z-40 bg-white/95 backdrop-blur-md border-t border-slate-200/80 shadow-2xl px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] flex items-center justify-between gap-3 animate-in slide-in-from-bottom duration-200">
+      <div className="flex flex-col">
+        <div className="flex items-center gap-2">
+          <span className="text-lg font-black text-slate-900">PKR 3,900</span>
+          <span className="text-xs line-through text-red-500 font-semibold">PKR 32,500</span>
         </div>
-        <div style={{ fontSize: '0.68rem', color: 'var(--accent-green)', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
-          🔥 88% Discount Active
+        <div className="flex items-center gap-1 text-[11px] font-bold text-emerald-600">
+          <Zap size={12} className="fill-emerald-600" />
+          <span>88% OFF &bull; Lifetime Access</span>
         </div>
       </div>
 
       <Link
         href="/enrollment"
-        className="btn-primary"
-        style={{
-          padding: '10px 18px',
-          fontSize: '0.88rem',
-          fontWeight: '800',
-          whiteSpace: 'nowrap',
-          borderRadius: 'var(--radius-md)',
-          boxShadow: '0 4px 14px rgba(0, 160, 223, 0.4)'
-        }}
+        className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-sm font-black text-white bg-[#00A0DF] hover:bg-[#008ec7] shadow-lg shadow-[#00A0DF]/30 whitespace-nowrap"
       >
-        <span>Join Now</span>
+        <span>Enroll Now</span>
         <ArrowRight size={15} />
       </Link>
-
-      <style>{`
-        @media (min-width: 769px) {
-          .mobile-sticky-cta {
-            display: none !important;
-          }
-        }
-      `}</style>
     </div>
   );
 }

@@ -12,11 +12,7 @@ export function Navbar() {
 
   useEffect(() => {
     const handleScroll = () => {
-      if (window.scrollY > 15) {
-        setScrolled(true);
-      } else {
-        setScrolled(false);
-      }
+      setScrolled(window.scrollY > 15);
     };
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
@@ -33,294 +29,121 @@ export function Navbar() {
 
   return (
     <header
-      style={{
-        position: 'sticky',
-        top: 0,
-        zIndex: 1000,
-        backgroundColor: scrolled ? 'rgba(255, 255, 255, 0.96)' : 'rgba(255, 255, 255, 0.92)',
-        backdropFilter: 'blur(16px)',
-        WebkitBackdropFilter: 'blur(16px)',
-        borderBottom: '1px solid rgba(226, 232, 240, 0.85)',
-        boxShadow: scrolled ? '0 4px 20px -2px rgba(15, 23, 42, 0.08)' : '0 2px 8px rgba(0, 0, 0, 0.02)',
-        transition: 'all 0.25s ease'
-      }}
+      className={`sticky top-0 z-50 w-full transition-all duration-300 ${
+        scrolled
+          ? 'bg-white/95 backdrop-blur-md shadow-md border-b border-slate-200'
+          : 'bg-white/90 backdrop-blur-sm border-b border-slate-100'
+      }`}
     >
-      <div
-        className="nav-inner-container"
-        style={{
-          width: '100%',
-          maxWidth: '1440px',
-          margin: '0 auto',
-          padding: '0 32px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          height: '70px'
-        }}
-      >
-        {/* 1. BRAND LOGO */}
-        <Link
-          href="/"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '10px',
-            textDecoration: 'none',
-            flexShrink: 0
-          }}
-          className="brand-logo-group"
-        >
-          {/* Logo Icon Box with Gradient & Glow */}
-          <div
-            style={{
-              width: '38px',
-              height: '38px',
-              borderRadius: '9px',
-              background: 'linear-gradient(135deg, #00A0DF 0%, #0077B6 100%)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#FFFFFF',
-              boxShadow: '0 4px 12px rgba(0, 160, 223, 0.35)',
-              transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-              flexShrink: 0
-            }}
-            className="brand-icon-box"
-          >
-            <ShoppingBag size={19} strokeWidth={2.2} />
-          </div>
-
-          {/* Logo Typography */}
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <div
-              style={{
-                fontSize: '1.2rem',
-                fontWeight: '800',
-                letterSpacing: '-0.02em',
-                lineHeight: 1.1,
-                color: '#0F172A',
-                whiteSpace: 'nowrap'
-              }}
-              className="brand-title-text"
-            >
-              Ecom <span style={{ color: 'var(--primary)' }}>With Sami</span>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16 sm:h-20">
+          
+          {/* Brand Logo */}
+          <Link href="/" className="flex items-center gap-2.5 sm:gap-3 group flex-shrink-0">
+            <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-tr from-[#00A0DF] to-[#0077B6] flex items-center justify-center text-white shadow-md shadow-[#00A0DF]/30 group-hover:scale-105 transition-transform duration-200">
+              <ShoppingBag size={20} className="stroke-[2.2]" />
             </div>
-            <div
-              style={{
-                fontSize: '0.66rem',
-                fontWeight: '700',
-                color: '#64748B',
-                textTransform: 'uppercase',
-                letterSpacing: '0.06em',
-                marginTop: '2px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px',
-                whiteSpace: 'nowrap'
-              }}
-              className="brand-sub-badge"
-            >
-              <span style={{ width: '5px', height: '5px', borderRadius: '50%', backgroundColor: 'var(--accent-green)', display: 'inline-block' }} />
-              Dropshipping Academy
+            <div className="flex flex-col">
+              <span className="text-lg sm:text-xl font-black text-slate-900 tracking-tight leading-tight">
+                Ecom <span className="text-[#00A0DF]">With Sami</span>
+              </span>
+              <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span>Dropshipping Academy</span>
+              </div>
             </div>
-          </div>
-        </Link>
-
-        {/* 2. DESKTOP NAVIGATION LINKS */}
-        <nav
-          style={{
-            display: 'none',
-            alignItems: 'center',
-            gap: '4px'
-          }}
-          className="desktop-nav"
-        >
-          {navLinks.map((item, idx) => {
-            const isActive = item.href === '/' ? pathname === '/' : pathname.startsWith(item.href);
-            return (
-              <Link
-                key={idx}
-                href={item.href}
-                className="nav-link-item"
-                style={{
-                  fontSize: '0.88rem',
-                  fontWeight: isActive ? '700' : '600',
-                  color: isActive ? 'var(--primary)' : '#334155',
-                  padding: '7px 12px',
-                  borderRadius: '8px',
-                  transition: 'all 0.2s ease',
-                  textDecoration: 'none',
-                  display: 'inline-block',
-                  whiteSpace: 'nowrap'
-                }}
-              >
-                {item.label}
-              </Link>
-            );
-          })}
-
-          {/* Student LMS Login Pill */}
-          <Link
-            href="/login"
-            className="nav-link-item lms-app-link"
-            style={{
-              fontSize: '0.88rem',
-              fontWeight: '700',
-              color: 'var(--primary)',
-              padding: '6px 12px',
-              borderRadius: '8px',
-              backgroundColor: 'rgba(0, 160, 223, 0.08)',
-              border: '1px solid rgba(0, 160, 223, 0.25)',
-              transition: 'all 0.2s ease',
-              textDecoration: 'none',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px',
-              marginLeft: '4px',
-              whiteSpace: 'nowrap'
-            }}
-          >
-            <GraduationCap size={15} />
-            <span>Student LMS</span>
-          </Link>
-        </nav>
-
-        {/* 3. RIGHT ACTION BUTTONS */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
-          {/* Top Bar "Enroll Now" Button */}
-          <Link
-            href="/enrollment"
-            className="header-enroll-btn"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px',
-              color: '#FFFFFF',
-              background: 'linear-gradient(135deg, #00A0DF 0%, #0084BA 100%)',
-              borderRadius: '8px',
-              border: 'none',
-              boxShadow: '0 2px 8px rgba(0, 160, 223, 0.3)',
-              transition: 'all 0.2s ease',
-              textDecoration: 'none',
-              whiteSpace: 'nowrap',
-              cursor: 'pointer',
-              fontWeight: '700'
-            }}
-          >
-            <span className="btn-label-desktop">Enroll Now</span>
-            <span className="btn-label-mobile">Enroll</span>
-            <span
-              style={{
-                backgroundColor: 'rgba(255, 255, 255, 0.22)',
-                padding: '2px 6px',
-                borderRadius: '4px',
-                fontSize: '0.72rem',
-                fontWeight: '800'
-              }}
-              className="price-tag-badge"
-            >
-              PKR 3,900
-            </span>
-            <ArrowRight size={13} strokeWidth={2.4} />
           </Link>
 
-          {/* Mobile & Tablet Hamburger Toggle Button */}
-          <button
-            onClick={() => setMobileOpen(!mobileOpen)}
-            style={{
-              display: 'none',
-              alignItems: 'center',
-              justifyContent: 'center',
-              borderRadius: '8px',
-              backgroundColor: mobileOpen ? 'rgba(0, 160, 223, 0.1)' : '#F8FAFC',
-              border: '1px solid var(--border-light)',
-              cursor: 'pointer',
-              color: '#0F172A',
-              padding: 0,
-              transition: 'all 0.2s ease',
-              flexShrink: 0
-            }}
-            className="mobile-nav-toggle"
-            aria-label="Toggle Navigation Menu"
-          >
-            {mobileOpen ? <X size={19} color="var(--primary)" /> : <Menu size={19} />}
-          </button>
+          {/* Desktop Navigation Links */}
+          <nav className="hidden lg:flex items-center gap-1 xl:gap-2">
+            {navLinks.map((item, idx) => {
+              const isActive = item.href === '/' ? pathname === '/' : pathname.startsWith(item.href);
+              return (
+                <Link
+                  key={idx}
+                  href={item.href}
+                  className={`px-3 py-2 rounded-lg text-sm font-bold transition-colors duration-150 ${
+                    isActive
+                      ? 'text-[#00A0DF] bg-[#00A0DF]/10'
+                      : 'text-slate-700 hover:text-[#00A0DF] hover:bg-slate-50'
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
+
+            {/* Student LMS Login Link */}
+            <Link
+              href="/login"
+              className="ml-2 flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-bold text-[#00A0DF] bg-[#00A0DF]/10 hover:bg-[#00A0DF]/20 border border-[#00A0DF]/30 transition-colors duration-150"
+            >
+              <GraduationCap size={16} />
+              <span>Student LMS</span>
+            </Link>
+          </nav>
+
+          {/* Right Action & Mobile Toggle */}
+          <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+            {/* Header Enrollment CTA */}
+            <Link
+              href="/enrollment"
+              className="inline-flex items-center gap-1.5 sm:gap-2 px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-black text-white bg-gradient-to-r from-[#00A0DF] to-[#0084BA] hover:from-[#008ec7] hover:to-[#0073a3] shadow-md shadow-[#00A0DF]/30 transition-all duration-200"
+            >
+              <span>Enroll</span>
+              <span className="hidden sm:inline bg-white/20 px-2 py-0.5 rounded text-[11px] font-bold">
+                PKR 3,900
+              </span>
+              <ArrowRight size={14} className="stroke-[2.5]" />
+            </Link>
+
+            {/* Mobile Hamburger Toggle */}
+            <button
+              onClick={() => setMobileOpen(!mobileOpen)}
+              className="lg:hidden p-2 rounded-xl text-slate-700 hover:text-[#00A0DF] hover:bg-slate-100 transition-colors focus:outline-none"
+              aria-label="Toggle navigation menu"
+            >
+              {mobileOpen ? <X size={22} className="text-[#00A0DF]" /> : <Menu size={22} />}
+            </button>
+          </div>
+
         </div>
       </div>
 
-      {/* 4. MOBILE & TABLET DRAWER NAVIGATION */}
+      {/* Mobile Drawer Menu */}
       {mobileOpen && (
-        <div
-          style={{
-            backgroundColor: '#FFFFFF',
-            borderBottom: '1px solid var(--border-light)',
-            boxShadow: '0 12px 30px rgba(0,0,0,0.1)',
-            padding: '16px 20px 24px 20px',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '10px'
-          }}
-          className="mobile-drawer-menu"
-        >
-          {navLinks.map((item, idx) => (
+        <div className="lg:hidden bg-white border-b border-slate-200 px-4 sm:px-6 pt-3 pb-6 shadow-xl animate-in slide-in-from-top duration-200">
+          <div className="flex flex-col gap-1.5">
+            {navLinks.map((item, idx) => (
+              <Link
+                key={idx}
+                href={item.href}
+                onClick={() => setMobileOpen(false)}
+                className="flex items-center justify-between py-3 px-3 rounded-lg text-sm sm:text-base font-bold text-slate-800 hover:text-[#00A0DF] hover:bg-slate-50 transition-colors border-b border-slate-100"
+              >
+                <span>{item.label}</span>
+                <ArrowRight size={16} className="text-slate-400" />
+              </Link>
+            ))}
+
+            {/* Student LMS Mobile Link */}
             <Link
-              key={idx}
-              href={item.href}
+              href="/login"
               onClick={() => setMobileOpen(false)}
-              style={{
-                fontSize: '0.96rem',
-                fontWeight: '600',
-                color: '#1E293B',
-                padding: '10px 4px',
-                borderBottom: '1px solid #F1F5F9',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                textDecoration: 'none'
-              }}
+              className="flex items-center gap-2 mt-2 py-3 px-3 rounded-xl bg-[#00A0DF]/10 text-[#00A0DF] font-bold text-sm sm:text-base"
             >
-              <span>{item.label}</span>
-              <ArrowRight size={14} color="#94A3B8" />
+              <GraduationCap size={20} />
+              <span>Student LMS Portal Login</span>
             </Link>
-          ))}
 
-          {/* Student LMS Classroom Login */}
-          <Link
-            href="/login"
-            onClick={() => setMobileOpen(false)}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              padding: '10px 14px',
-              backgroundColor: 'rgba(0, 160, 223, 0.08)',
-              borderRadius: '8px',
-              color: 'var(--primary)',
-              fontWeight: '700',
-              fontSize: '0.92rem',
-              textDecoration: 'none',
-              marginTop: '4px'
-            }}
-          >
-            <GraduationCap size={18} />
-            <span>Student LMS Classroom Login</span>
-          </Link>
-
-          {/* Mobile Full Checkout Action */}
-          <div style={{ paddingTop: '8px' }}>
+            {/* Full Width Mobile CTA */}
             <Link
               href="/enrollment"
               onClick={() => setMobileOpen(false)}
-              className="btn-primary"
-              style={{
-                width: '100%',
-                padding: '13px',
-                fontSize: '0.96rem',
-                justifyContent: 'center'
-              }}
+              className="mt-3 w-full flex items-center justify-center gap-2 py-3.5 rounded-xl text-white bg-[#00A0DF] font-extrabold text-sm sm:text-base shadow-lg shadow-[#00A0DF]/30"
             >
-              <span>Enroll in Mentorship (PKR 3,900)</span>
-              <ArrowRight size={16} />
+              <span>Enroll in Mentorship &bull; PKR 3,900</span>
+              <ArrowRight size={18} />
             </Link>
           </div>
         </div>

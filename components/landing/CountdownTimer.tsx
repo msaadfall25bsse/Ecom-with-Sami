@@ -30,51 +30,29 @@ export function CountdownTimer({
   const pad = (n: number) => String(n).padStart(2, '0');
 
   return (
-    <div style={{
-      backgroundColor: '#FFFFFF',
-      borderRadius: 'var(--radius-lg)',
-      border: '1.5px solid rgba(0, 160, 223, 0.3)',
-      boxShadow: '0 10px 30px rgba(0, 160, 223, 0.1)',
-      padding: '24px 28px',
-      maxWidth: '780px',
-      margin: '0 auto 36px auto'
-    }}>
-      {/* Clock Row */}
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        flexWrap: 'wrap',
-        gap: '16px',
-        marginBottom: '20px'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#EF4444', fontWeight: '700', fontSize: '1.05rem' }}>
-          <Clock size={22} className="animate-pulse" />
-          <span>Offer ends in:</span>
+    <div className="w-full max-w-2xl mx-auto bg-white rounded-2xl border-2 border-[#00A0DF]/30 shadow-xl shadow-[#00A0DF]/10 p-4 sm:p-6 md:p-7 mb-8">
+      {/* Clock Header Row */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4 mb-5">
+        <div className="flex items-center gap-2 text-red-600 font-extrabold text-sm sm:text-base">
+          <Clock size={20} className="animate-pulse flex-shrink-0" />
+          <span>Discount Offer Ends In:</span>
         </div>
 
-        <div style={{ display: 'flex', gap: '8px' }}>
+        {/* 3 Box Digital Countdown Timer */}
+        <div className="flex items-center gap-2">
           {[
-            { val: mounted ? pad(hours) : pad(initialHours), lbl: 'HRS' },
-            { val: mounted ? pad(minutes) : pad(initialMinutes), lbl: 'MIN' },
-            { val: mounted ? pad(seconds) : pad(initialSeconds), lbl: 'SEC' }
+            { val: mounted ? pad(hours) : pad(initialHours), lbl: 'HOURS' },
+            { val: mounted ? pad(minutes) : pad(initialMinutes), lbl: 'MINS' },
+            { val: mounted ? pad(seconds) : pad(initialSeconds), lbl: 'SECS' }
           ].map((unit, idx) => (
             <div
               key={idx}
-              style={{
-                backgroundColor: '#0B0F19',
-                color: '#FFFFFF',
-                borderRadius: '8px',
-                padding: '8px 14px',
-                textAlign: 'center',
-                minWidth: '60px',
-                border: '1px solid rgba(0, 160, 223, 0.3)'
-              }}
+              className="bg-slate-950 text-white rounded-xl py-2 px-3 sm:px-4 text-center min-w-[58px] sm:min-w-[68px] border border-[#00A0DF]/30 shadow-inner"
             >
-              <div style={{ fontSize: '1.4rem', fontWeight: '800', fontFamily: 'monospace', color: 'var(--primary)', lineHeight: 1 }}>
+              <div className="text-xl sm:text-2xl font-black font-mono text-[#00A0DF] leading-none">
                 {unit.val}
               </div>
-              <div style={{ fontSize: '0.65rem', fontWeight: '700', color: '#94A3B8', letterSpacing: '0.05em', marginTop: '3px' }}>
+              <div className="text-[9px] sm:text-[10px] font-bold text-slate-400 tracking-wider mt-1">
                 {unit.lbl}
               </div>
             </div>
@@ -82,46 +60,33 @@ export function CountdownTimer({
         </div>
       </div>
 
-      {/* Seats Left Bar */}
-      <div style={{ marginBottom: '20px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.88rem', fontWeight: '700', marginBottom: '8px' }}>
-          <span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#B91C1C' }}>
-            <Flame size={18} color="#EF4444" /> Only 12 seats left at this price
+      {/* Seats Left Progress Bar */}
+      <div className="mb-5">
+        <div className="flex items-center justify-between text-xs sm:text-sm font-bold mb-2">
+          <span className="flex items-center gap-1.5 text-red-600">
+            <Flame size={16} className="text-red-500 flex-shrink-0" />
+            <span>Only 12 seats left at this price</span>
           </span>
-          <span style={{ color: 'var(--primary)' }}>88% Filled</span>
+          <span className="text-[#00A0DF]">88% Filled</span>
         </div>
-        <div style={{ height: '8px', backgroundColor: '#E2E8F0', borderRadius: '999px', overflow: 'hidden' }}>
-          <div style={{
-            height: '100%',
-            width: '88%',
-            background: 'linear-gradient(90deg, var(--primary), #EF4444)',
-            borderRadius: '999px'
-          }} />
+        <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden p-0.5 border border-slate-200">
+          <div className="h-full w-[88%] bg-gradient-to-r from-[#00A0DF] to-red-500 rounded-full animate-pulse" />
         </div>
       </div>
 
-      {/* 3 Trust Badges */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-        gap: '12px',
-        paddingTop: '16px',
-        borderTop: '1px solid #F1F5F9',
-        fontSize: '0.85rem',
-        fontWeight: '600',
-        color: 'var(--text-dark)'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <ShieldCheck size={18} color="var(--accent-green)" />
+      {/* 3 Trust Badges Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-4 border-t border-slate-100 text-xs sm:text-sm font-bold text-slate-700 text-center sm:text-left">
+        <div className="flex items-center justify-center sm:justify-start gap-2">
+          <ShieldCheck size={18} className="text-emerald-500 flex-shrink-0" />
           <span>Lifetime Access</span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Zap size={18} color="var(--primary)" />
+        <div className="flex items-center justify-center sm:justify-start gap-2">
+          <Zap size={18} className="text-[#00A0DF] flex-shrink-0" />
           <span>Instant LMS Activation</span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Users size={18} color="var(--accent-amber)" />
-          <span>9,700+ Enrolled Students</span>
+        <div className="flex items-center justify-center sm:justify-start gap-2">
+          <Users size={18} className="text-amber-500 flex-shrink-0" />
+          <span>9,700+ Students</span>
         </div>
       </div>
     </div>

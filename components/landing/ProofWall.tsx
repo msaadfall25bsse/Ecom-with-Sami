@@ -1,33 +1,36 @@
 'use client';
 
 import React from 'react';
-import { Star } from 'lucide-react';
+import { Star, ShieldCheck, TrendingUp, ShoppingBag } from 'lucide-react';
 
 export function ProofWall() {
-  const col1 = [
+  const testimonials = [
     {
       name: 'Raza Ali',
       city: 'Lahore',
-      sales: '€662 in 6 Days',
+      sales: 'AED 4,850 in 6 Days',
       orders: '24 Orders',
       quote: 'Launched my first TikTok test ad campaign following Sami’s hook formula. First sale within 18 hours!',
-      market: 'UAE & Europe'
+      market: 'UAE Market',
+      initials: 'RA'
     },
     {
       name: 'Hamza Tariq',
       city: 'Islamabad',
       sales: 'AED 5,000 / Week',
       orders: '56 Orders',
-      quote: 'The direct supplier contacts in Dubai changed everything. Fast 2-day delivery and cash flow payout on time.',
-      market: 'UAE Market'
+      quote: 'The direct supplier contacts in Dubai changed everything. Fast 2-day delivery and COD payout on time.',
+      market: 'UAE Market',
+      initials: 'HT'
     },
     {
       name: 'Bilal Farooq',
       city: 'Karachi',
-      sales: 'AED 1,485 in 3 Days',
+      sales: 'SAR 3,485 in 3 Days',
       orders: '19 Orders',
       quote: 'Started as a total beginner with zero Shopify knowledge. The 11 modules are so easy and step-by-step.',
-      market: 'Saudi Arabia'
+      market: 'Saudi Arabia',
+      initials: 'BF'
     },
     {
       name: 'Zainab Bibi',
@@ -35,18 +38,17 @@ export function ProofWall() {
       sales: 'PKR 480,000 / Mo',
       orders: '110+ Orders',
       quote: 'The WhatsApp mentorship answered every question I had during my ad setup. Never felt alone.',
-      market: 'UAE & KSA'
-    }
-  ];
-
-  const col2 = [
+      market: 'UAE & KSA',
+      initials: 'ZB'
+    },
     {
       name: 'Usman Ghani',
       city: 'Rawalpindi',
-      sales: 'AED 8,200',
+      sales: 'SAR 8,200',
       orders: '78 Orders',
       quote: 'Scaled my product using Advantage+ CBO scaling taught in Module 8. Best investment of my life.',
-      market: 'KSA Market'
+      market: 'Saudi Market',
+      initials: 'UG'
     },
     {
       name: 'Saad Ahmed',
@@ -54,190 +56,67 @@ export function ProofWall() {
       sales: 'PKR 320,000 Profit',
       orders: '42 Orders',
       quote: 'Verified suppliers with Arabic packaging makes local buyers trust the store. Return rate dropped to 11%.',
-      market: 'UAE Market'
-    },
-    {
-      name: 'Farhan Zaheer',
-      city: 'Peshawar',
-      sales: 'AED 3,100',
-      orders: '35 Orders',
-      quote: 'I wasted money on other YouTube videos, but this practical course actually showed how to run ads.',
-      market: 'Dubai & Sharjah'
-    },
-    {
-      name: 'Tariq Mehmood',
-      city: 'Sialkot',
-      sales: '€1,150 in 10 Days',
-      orders: '49 Orders',
-      quote: 'The Windows LMS app allows me to watch lectures offline. Super convenient and high quality!',
-      market: 'UAE / GCC'
+      market: 'UAE Market',
+      initials: 'SA'
     }
   ];
 
   return (
-    <div style={{ position: 'relative', overflow: 'hidden', height: '620px', borderRadius: 'var(--radius-xl)', backgroundColor: '#0B0F19', padding: '24px', border: '1px solid rgba(255,255,255,0.08)' }}>
-      {/* Top & Bottom Gradient Fades */}
-      <div style={{
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        height: '90px',
-        background: 'linear-gradient(to bottom, #0B0F19 10%, transparent 100%)',
-        zIndex: 10,
-        pointerEvents: 'none'
-      }} />
-      <div style={{
-        position: 'absolute',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        height: '90px',
-        background: 'linear-gradient(to top, #0B0F19 10%, transparent 100%)',
-        zIndex: 10,
-        pointerEvents: 'none'
-      }} />
-
-      {/* 2-Column Animated Slider */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', height: '100%' }}>
-        
-        {/* Column 1 */}
-        <div style={{ overflow: 'hidden' }}>
-          <div className="animate-scroll-up" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            {[...col1, ...col1].map((item, idx) => (
-              <div
-                key={idx}
-                style={{
-                  backgroundColor: '#111827',
-                  border: '1px solid rgba(255,255,255,0.08)',
-                  borderRadius: 'var(--radius-md)',
-                  padding: '20px',
-                  color: '#FFFFFF',
-                  boxShadow: '0 4px 15px rgba(0,0,0,0.3)'
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <div style={{
-                      width: '34px',
-                      height: '34px',
-                      borderRadius: '50%',
-                      backgroundColor: 'rgba(0, 160, 223, 0.2)',
-                      color: 'var(--primary)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontWeight: '700',
-                      fontSize: '0.85rem'
-                    }}>
-                      {item.name[0]}
-                    </div>
-                    <div>
-                      <div style={{ fontWeight: '700', fontSize: '0.92rem' }}>{item.name}</div>
-                      <div style={{ fontSize: '0.75rem', color: '#94A3B8' }}>{item.city} • {item.market}</div>
-                    </div>
+    <div className="w-full">
+      {/* 3-Column Responsive Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+        {testimonials.map((item, idx) => (
+          <div
+            key={idx}
+            className="bg-slate-950 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between hover:border-[#00A0DF]/60 transition-all duration-200 shadow-xl"
+          >
+            <div>
+              {/* Card Header */}
+              <div className="flex items-center justify-between gap-2 mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-sm border border-emerald-500/30">
+                    {item.initials}
                   </div>
-                  <div style={{ display: 'flex', gap: '2px', color: '#F59E0B' }}>
-                    {[...Array(5)].map((_, i) => <Star key={i} size={13} fill="#F59E0B" />)}
+                  <div>
+                    <h4 className="text-sm sm:text-base font-bold text-white leading-tight">{item.name}</h4>
+                    <p className="text-xs text-slate-400">{item.city} &bull; {item.market}</p>
                   </div>
                 </div>
 
-                <div style={{
-                  backgroundColor: 'rgba(0, 160, 223, 0.1)',
-                  border: '1px solid rgba(0, 160, 223, 0.2)',
-                  borderRadius: '6px',
-                  padding: '8px 12px',
-                  marginBottom: '12px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  fontSize: '0.85rem'
-                }}>
-                  <span style={{ color: 'var(--primary)', fontWeight: '800' }}>{item.sales}</span>
-                  <span style={{ color: 'var(--accent-green)', fontWeight: '700' }}>{item.orders}</span>
+                {/* 5 Stars */}
+                <div className="flex gap-0.5 text-amber-400 flex-shrink-0">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} size={14} className="fill-amber-400" />
+                  ))}
                 </div>
-
-                <p style={{ fontSize: '0.85rem', color: 'var(--text-subtle)', lineHeight: 1.5, fontStyle: 'italic', margin: 0 }}>
-                  &ldquo;{item.quote}&rdquo;
-                </p>
               </div>
-            ))}
-          </div>
-        </div>
 
-        {/* Column 2 */}
-        <div style={{ overflow: 'hidden' }} className="proof-col-2">
-          <div className="animate-scroll-down" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            {[...col2, ...col2].map((item, idx) => (
-              <div
-                key={idx}
-                style={{
-                  backgroundColor: '#111827',
-                  border: '1px solid rgba(255,255,255,0.08)',
-                  borderRadius: 'var(--radius-md)',
-                  padding: '20px',
-                  color: '#FFFFFF',
-                  boxShadow: '0 4px 15px rgba(0,0,0,0.3)'
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <div style={{
-                      width: '34px',
-                      height: '34px',
-                      borderRadius: '50%',
-                      backgroundColor: 'rgba(16, 185, 129, 0.2)',
-                      color: 'var(--accent-green)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontWeight: '700',
-                      fontSize: '0.85rem'
-                    }}>
-                      {item.name[0]}
-                    </div>
-                    <div>
-                      <div style={{ fontWeight: '700', fontSize: '0.92rem' }}>{item.name}</div>
-                      <div style={{ fontSize: '0.75rem', color: '#94A3B8' }}>{item.city} • {item.market}</div>
-                    </div>
-                  </div>
-                  <div style={{ display: 'flex', gap: '2px', color: '#F59E0B' }}>
-                    {[...Array(5)].map((_, i) => <Star key={i} size={13} fill="#F59E0B" />)}
-                  </div>
-                </div>
-
-                <div style={{
-                  backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                  border: '1px solid rgba(16, 185, 129, 0.2)',
-                  borderRadius: '6px',
-                  padding: '8px 12px',
-                  marginBottom: '12px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  fontSize: '0.85rem'
-                }}>
-                  <span style={{ color: 'var(--accent-green)', fontWeight: '800' }}>{item.sales}</span>
-                  <span style={{ color: 'var(--primary)', fontWeight: '700' }}>{item.orders}</span>
-                </div>
-
-                <p style={{ fontSize: '0.85rem', color: 'var(--text-subtle)', lineHeight: 1.5, fontStyle: 'italic', margin: 0 }}>
-                  &ldquo;{item.quote}&rdquo;
-                </p>
+              {/* Earnings & Orders Badge */}
+              <div className="bg-emerald-950/40 border border-emerald-500/30 rounded-xl px-3.5 py-2 mb-4 flex items-center justify-between text-xs sm:text-sm">
+                <span className="text-emerald-400 font-black flex items-center gap-1.5">
+                  <TrendingUp size={15} />
+                  <span>{item.sales}</span>
+                </span>
+                <span className="text-[#00A0DF] font-bold">{item.orders}</span>
               </div>
-            ))}
-          </div>
-        </div>
 
+              {/* Quote */}
+              <p className="text-xs sm:text-sm text-slate-300 leading-relaxed italic">
+                &ldquo;{item.quote}&rdquo;
+              </p>
+            </div>
+
+            {/* Verified Student Footer */}
+            <div className="pt-4 mt-4 border-t border-slate-900 flex items-center justify-between text-[11px] text-slate-500 font-semibold">
+              <span className="flex items-center gap-1 text-emerald-400">
+                <ShieldCheck size={14} />
+                <span>Verified Enrollment</span>
+              </span>
+              <span>LMS Active</span>
+            </div>
+          </div>
+        ))}
       </div>
-
-      <style>{`
-        @media (max-width: 640px) {
-          .proof-col-2 {
-            display: none !important;
-          }
-        }
-      `}</style>
     </div>
   );
 }

@@ -10,143 +10,116 @@ export function Footer() {
   const whatsappUrl = getWhatsAppUrl('Hi Sami! I want to enroll in the UAE & KSA Dropshipping Course (PKR 3,900). Can you help me?');
 
   return (
-    <footer style={{ backgroundColor: '#0B0F19', color: '#FFFFFF', paddingTop: '64px', paddingBottom: '36px', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-      <div className="site-container">
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '40px', marginBottom: '50px' }}>
+    <footer className="bg-slate-950 text-white pt-16 pb-12 border-t border-slate-800">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        {/* Main Grid: 1 col on mobile, 2 cols on tablet, 4 cols on desktop */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-10 mb-12">
           
           {/* Column 1: Brand & Contact */}
-          <div>
-            <div style={{ fontSize: '1.3rem', fontWeight: '800', marginBottom: '14px' }}>
-              Ecom <span style={{ color: 'var(--primary)' }}>With Sami</span>
+          <div className="flex flex-col">
+            <div className="text-xl sm:text-2xl font-black mb-3">
+              Ecom <span className="text-[#00A0DF]">With Sami</span>
             </div>
-            <p style={{ color: 'var(--text-subtle)', fontSize: '0.9rem', marginBottom: '20px', lineHeight: 1.6 }}>
-              Pakistan’s premier practical e-commerce academy helping students build profitable dropshipping stores in the UAE and Saudi Arabia.
+            <p className="text-slate-400 text-sm leading-relaxed mb-6">
+              Pakistan’s premier practical e-commerce academy helping students build profitable dropshipping stores in UAE and Saudi Arabia.
             </p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '0.88rem' }}>
-              <a href={`mailto:${email}`} style={{ display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--text-subtle)', textDecoration: 'none' }}>
-                <Mail size={16} color="var(--primary)" /> {email}
+            <div className="flex flex-col gap-3 text-sm">
+              <a
+                href={`mailto:${email}`}
+                className="flex items-center gap-2.5 text-slate-300 hover:text-[#00A0DF] transition-colors"
+              >
+                <Mail size={16} className="text-[#00A0DF] flex-shrink-0" />
+                <span className="truncate">{email}</span>
               </a>
-              <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--text-subtle)', textDecoration: 'none' }}>
-                <Phone size={16} color="var(--primary)" /> {displayPhone} (WhatsApp)
+              <a
+                href={whatsappUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2.5 text-slate-300 hover:text-[#00A0DF] transition-colors"
+              >
+                <Phone size={16} className="text-[#00A0DF] flex-shrink-0" />
+                <span>{displayPhone} (WhatsApp)</span>
               </a>
             </div>
           </div>
 
-          {/* Column 2: Head Office & Regional */}
-          <div>
-            <h4 style={{ fontSize: '1rem', fontWeight: '700', marginBottom: '16px', color: '#FFFFFF' }}>Offices & Locations</h4>
-            <div style={{ display: 'flex', gap: '10px', marginBottom: '16px' }}>
-              <MapPin size={18} color="var(--primary)" style={{ flexShrink: 0, marginTop: '3px' }} />
+          {/* Column 2: Offices & Locations */}
+          <div className="flex flex-col">
+            <h4 className="text-base font-extrabold text-white mb-4 uppercase tracking-wider text-xs text-[#00A0DF]">
+              Offices &amp; Locations
+            </h4>
+            <div className="flex items-start gap-3 mb-4">
+              <MapPin size={18} className="text-[#00A0DF] flex-shrink-0 mt-0.5" />
               <div>
-                <strong style={{ display: 'block', fontSize: '0.9rem', color: '#F1F5F9' }}>Head Office:</strong>
-                <span style={{ fontSize: '0.85rem', color: 'var(--text-subtle)' }}>{headOffice}</span>
+                <strong className="block text-sm text-slate-200">Head Office:</strong>
+                <span className="text-xs sm:text-sm text-slate-400 leading-relaxed">{headOffice}</span>
               </div>
             </div>
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <Globe size={18} color="var(--primary)" style={{ flexShrink: 0, marginTop: '3px' }} />
+            <div className="flex items-start gap-3">
+              <Globe size={18} className="text-[#00A0DF] flex-shrink-0 mt-0.5" />
               <div>
-                <strong style={{ display: 'block', fontSize: '0.9rem', color: '#F1F5F9' }}>Regional Presence:</strong>
-                <span style={{ fontSize: '0.85rem', color: 'var(--text-subtle)' }}>{regionalOffice}</span>
+                <strong className="block text-sm text-slate-200">Regional Presence:</strong>
+                <span className="text-xs sm:text-sm text-slate-400 leading-relaxed">{regionalOffice}</span>
               </div>
             </div>
           </div>
 
-          {/* Column 3: Quick Navigation */}
-          <div>
-            <h4 style={{ fontSize: '1rem', fontWeight: '700', marginBottom: '16px', color: '#FFFFFF' }}>Quick Links</h4>
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '0.88rem' }}>
-              <li><Link href="/" style={{ color: 'var(--text-subtle)', textDecoration: 'none' }}>Home &amp; Overview</Link></li>
-              <li><Link href="/#curriculum" style={{ color: 'var(--text-subtle)', textDecoration: 'none' }}>11-Module Curriculum</Link></li>
-              <li><Link href="/success" style={{ color: 'var(--text-subtle)', textDecoration: 'none' }}>Student Success &amp; Proof</Link></li>
-              <li><Link href="/about" style={{ color: 'var(--text-subtle)', textDecoration: 'none' }}>About Mentor Sami</Link></li>
-              <li><Link href="/blogs" style={{ color: 'var(--text-subtle)', textDecoration: 'none' }}>Dropshipping Guides &amp; Blog</Link></li>
-              <li><Link href="/support" style={{ color: 'var(--text-subtle)', textDecoration: 'none' }}>Student Support</Link></li>
-              <li><Link href="/login" style={{ color: 'var(--primary)', fontWeight: '700', textDecoration: 'none' }}>🎓 Student LMS Login</Link></li>
-              <li><Link href="/admin/login" style={{ color: '#94A3B8', fontSize: '0.82rem', textDecoration: 'none' }}>🔒 Admin Portal</Link></li>
+          {/* Column 3: Quick Links */}
+          <div className="flex flex-col">
+            <h4 className="text-base font-extrabold text-white mb-4 uppercase tracking-wider text-xs text-[#00A0DF]">
+              Quick Navigation
+            </h4>
+            <ul className="flex flex-col gap-2.5 text-sm text-slate-400">
+              <li><Link href="/" className="hover:text-white transition-colors">Home &amp; Overview</Link></li>
+              <li><Link href="/#curriculum" className="hover:text-white transition-colors">11-Module Curriculum</Link></li>
+              <li><Link href="/success" className="hover:text-white transition-colors">Student Success &amp; Proof</Link></li>
+              <li><Link href="/about" className="hover:text-white transition-colors">About Mentor Sami</Link></li>
+              <li><Link href="/blogs" className="hover:text-white transition-colors">Dropshipping Guides &amp; Blog</Link></li>
+              <li><Link href="/support" className="hover:text-white transition-colors">Student Support Help Desk</Link></li>
+              <li>
+                <Link href="/login" className="text-[#00A0DF] font-bold hover:underline inline-flex items-center gap-1.5">
+                  🎓 Student LMS Login
+                </Link>
+              </li>
             </ul>
           </div>
 
           {/* Column 4: Trust & Guarantee */}
-          <div>
-            <h4 style={{ fontSize: '1rem', fontWeight: '700', marginBottom: '16px', color: '#FFFFFF' }}>100% Secure &amp; Verified</h4>
-            <div style={{
-              background: 'rgba(255,255,255,0.04)',
-              border: '1px solid rgba(255,255,255,0.08)',
-              borderRadius: 'var(--radius-md)',
-              padding: '16px',
-              marginBottom: '16px'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--accent-green)', fontWeight: '700', fontSize: '0.9rem', marginBottom: '6px' }}>
-                <ShieldCheck size={18} /> Verified Mentorship
+          <div className="flex flex-col">
+            <h4 className="text-base font-extrabold text-white mb-4 uppercase tracking-wider text-xs text-[#00A0DF]">
+              Verified Mentorship
+            </h4>
+            <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 mb-4">
+              <div className="flex items-center gap-2 text-emerald-400 font-bold text-sm mb-1.5">
+                <ShieldCheck size={18} /> Verified Program
               </div>
-              <p style={{ fontSize: '0.82rem', color: 'var(--text-subtle)', lineHeight: 1.5, margin: 0 }}>
+              <p className="text-xs text-slate-400 leading-relaxed">
                 Lifetime access to curriculum updates, supplier lists, and direct WhatsApp troubleshooting.
               </p>
             </div>
-            <Link href="/enrollment" className="btn-primary" style={{ width: '100%', padding: '10px', fontSize: '0.86rem' }}>
+            <Link
+              href="/enrollment"
+              className="w-full text-center py-3 px-4 rounded-xl text-sm font-extrabold text-white bg-[#00A0DF] hover:bg-[#008ec7] shadow-lg shadow-[#00A0DF]/30 transition-all duration-200"
+            >
               Enroll for PKR 3,900
             </Link>
           </div>
 
         </div>
 
-        {/* Legal & Earnings Disclaimer */}
-        <div style={{
-          borderTop: '1px solid rgba(255,255,255,0.08)',
-          paddingTop: '28px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '16px',
-          fontSize: '0.8rem',
-          color: '#64748B',
-          textAlign: 'center'
-        }}>
-          <p style={{ maxWidth: '960px', margin: '0 auto', lineHeight: 1.6 }}>
-            <strong>Earnings &amp; Results Disclaimer:</strong> Results presented in student case studies and testimonials are not typical and will vary based on individual effort, budget, consistency, and market execution. Success in e-commerce requires dedicated practice, continuous testing, and adherence to proven operational guidelines.
+        {/* Legal Disclaimer & Agency Tag */}
+        <div className="pt-8 border-t border-slate-800/80 flex flex-col gap-4 text-xs text-slate-500 text-center">
+          <p className="max-w-4xl mx-auto leading-relaxed">
+            <strong>Earnings &amp; Results Disclaimer:</strong> Results presented in student case studies and testimonials are individual results and will vary based on effort, budget, consistency, and market execution.
           </p>
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '24px', flexWrap: 'wrap', color: '#94A3B8' }}>
+          <div className="flex items-center justify-center gap-4 flex-wrap text-slate-400">
             <span>&copy; {new Date().getFullYear()} Ecom With Sami. All rights reserved.</span>
-            <span>Made with passion for Pakistani Entrepreneurs.</span>
-          </div>
-
-          {/* Developer & Web Creation Agency Credit */}
-          <div style={{
-            marginTop: '16px',
-            paddingTop: '16px',
-            borderTop: '1px solid rgba(255,255,255,0.06)',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            flexWrap: 'wrap',
-            gap: '10px',
-            fontSize: '0.82rem',
-            color: '#94A3B8'
-          }}>
-            <span>Presented &amp; Crafted by <strong>Professional Web Development</strong></span>
-            <span style={{ color: '#475569' }}>•</span>
-            <span>Need a custom website for your business?</span>
-            <a
-              href="https://wa.me/923158960026?text=Hi%2C%20I%20saw%20the%20Ecom%20With%20Sami%20website%20and%20want%20to%20develop%20a%20website%20for%20my%20business."
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '6px',
-                color: '#00A0DF',
-                fontWeight: '700',
-                textDecoration: 'none',
-                backgroundColor: 'rgba(0, 160, 223, 0.1)',
-                padding: '4px 12px',
-                borderRadius: '6px',
-                border: '1px solid rgba(0, 160, 223, 0.3)',
-                transition: 'all 0.2s ease'
-              }}
-            >
-              <Phone size={13} color="#00A0DF" /> 03158960026 (WhatsApp)
-            </a>
+            <span>&bull;</span>
+            <span>Pakistan’s #1 GCC Dropshipping Training.</span>
           </div>
         </div>
+
       </div>
     </footer>
   );

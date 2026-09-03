@@ -59,184 +59,146 @@ export function CurriculumAccordion({ modules }: { modules?: ModuleItem[] }) {
     },
     {
       module_number: '05',
-      title: 'TikTok Ads — From First Campaign to Pro',
-      description: 'TikTok Agency Ad account setup for free, Business Center, Pixel integration, and campaign architecture.',
+      title: 'Mastering Ads - Facebook & TikTok (Beginner to Pro)',
+      description: 'The 3-second hook framework, CBO scaling, Advantage+ campaigns, pixel tracking, and avoiding bans.',
       lessons: [
-        { title: 'How to get a TikTok Agency Account for free', duration: '16:20' },
-        { title: 'Connecting TikTok Pixel to Shopify flawlessly', duration: '19:40' },
-        { title: 'Launching your first test campaign step-by-step', duration: '28:15' },
-        { title: 'Analyzing TikTok Ad metrics and identifying winning creatives', duration: '23:30' }
+        { title: 'Setting up Facebook Pixel & TikTok Events API correctly', duration: '26:40' },
+        { title: 'The 3-second hook formula for viral video ads', duration: '22:10' },
+        { title: 'Scaling profitable ad sets with CBO & ABO budgets', duration: '31:15' }
       ]
     },
     {
       module_number: '06',
-      title: 'Facebook & Instagram Ads Mastery (2026 Strategy)',
-      description: 'Meta Business Suite, Conversion API (CAPI) setup, audience targeting, and creative testing.',
+      title: 'Order Fulfillment & Local Delivery Setup',
+      description: 'Managing Cash on Delivery (COD), order confirmation WhatsApp scripts, reducing returns & RTO rate.',
       lessons: [
-        { title: 'Setting up Meta Business Suite & avoiding account bans', duration: '25:10' },
-        { title: 'Facebook Pixel + Conversions API (CAPI) setup', duration: '21:00' },
-        { title: 'Broad vs Interest targeting in UAE & Saudi Arabia', duration: '24:45' },
-        { title: 'Retargeting campaigns to recover abandoned checkouts', duration: '18:30' }
+        { title: 'Handling Cash on Delivery without cash flow leaks', duration: '16:30' },
+        { title: 'WhatsApp order confirmation scripts to cut cancellations', duration: '19:40' },
+        { title: 'Packaging, tracking numbers, and fast dispatch setup', duration: '15:20' }
       ]
     },
     {
       module_number: '07',
-      title: 'Making Scroll-Stopping Video Ads on Your Phone',
-      description: '3-second hook formula, AI video scripts, CapCut editing templates, and Arabic voiceovers.',
+      title: 'Customer Service & Building Real Brand Loyalty',
+      description: 'WhatsApp autoresponders, complaint resolution scripts, and getting 5-star reviews.',
       lessons: [
-        { title: 'The 3-second hook formula that stops the scroll', duration: '15:25' },
-        { title: 'Filming and editing engaging UGC video ads on mobile', duration: '22:10' },
-        { title: 'Using AI voiceovers and Arabic subtitles for GCC buyers', duration: '17:40' }
+        { title: 'Setting up automated WhatsApp customer greetings', duration: '13:50' },
+        { title: 'Turning an unhappy customer into a repeat buyer', duration: '17:15' }
       ]
     },
     {
       module_number: '08',
-      title: '5 Proven Scaling Strategies (CBO & Horizontal Scaling)',
-      description: 'Budget doubling rules, lookalike audiences, Advantage+ campaigns, and multi-market expansion.',
+      title: 'Scaling from First 10 Orders to 100+ Orders/Day',
+      description: 'Horizontal vs vertical scaling, retargeting funnels, bulk supplier inventory negotiations.',
       lessons: [
-        { title: 'Vertical vs Horizontal scaling explained simply', duration: '20:50' },
-        { title: 'Advantage+ Campaign Budget Optimization (CBO) scaling', duration: '26:15' },
-        { title: 'Expanding winning products from UAE into Saudi Arabia', duration: '19:30' }
+        { title: 'Horizontal ad scaling without spiking CPA', duration: '25:10' },
+        { title: 'Setting up retargeting ads for cart abandoners', duration: '20:45' }
       ]
     },
     {
       module_number: '09',
-      title: 'Turning Visitors Into Real Cash Orders (COD Optimization)',
-      description: 'Cash on Delivery checkout optimization, WhatsApp order confirmation, and reducing return rates.',
+      title: 'Money Management & Bank Setup',
+      description: 'Managing cash flow cycles, currency exchange, tracking net profit in Excel, withdrawing to Pakistan.',
       lessons: [
-        { title: 'Building trust for Cash on Delivery (COD) shoppers', duration: '21:15' },
-        { title: 'Setting up 1-click COD checkout forms on Shopify', duration: '18:40' },
-        { title: 'Automating WhatsApp order confirmation to boost delivery rate to 85%+', duration: '24:00' }
+        { title: 'Withdrawing UAE/KSA profits into Pakistani bank accounts', duration: '18:20' },
+        { title: 'Mastering the Cash-on-Delivery cash cycle', duration: '21:00' }
       ]
     },
     {
       module_number: '10',
-      title: 'Verified UAE & Saudi Arabia Suppliers Directory',
-      description: 'Direct supplier contacts, fast shipping fulfillment centers, and private packaging agreements.',
+      title: 'Direct Verified Suppliers Directory (UAE, KSA & Pakistan)',
+      description: 'Direct contact phone numbers, warehouse addresses, WhatsApp groups, and zero-risk supplier terms.',
       lessons: [
-        { title: 'How local dropshipping fulfillment works in Dubai and Riyadh', duration: '23:10' },
-        { title: 'Direct supplier contacts directory & negotiation scripts', duration: '27:45' },
-        { title: 'Managing cash flow and courier payouts', duration: '19:15' }
+        { title: 'Verified UAE warehouse suppliers & 2-day delivery contacts', duration: '23:15' },
+        { title: 'Verified Saudi Arabia COD supplier directory', duration: '27:40' },
+        { title: 'Pakistan local dropshipping supplier contacts', duration: '19:50' }
       ]
     },
     {
       module_number: '11',
-      title: 'Lifetime Mentorship & Live Support Ecosystem',
-      description: 'Weekly live coaching calls, community networking, and ad account troubleshooting.',
+      title: 'Scaling to $10k-$50k/Month & Long-Term Brand Building',
+      description: 'Transitioning from generic dropshipping to private labeling, custom packaging, and automated teams.',
       lessons: [
-        { title: 'Joining the private Discord and WhatsApp mastermind groups', duration: '11:20' },
-        { title: 'How to participate in weekly live ad audits with Sami', duration: '14:50' }
+        { title: 'Private labeling your winning product with custom boxes', duration: '26:10' },
+        { title: 'Hiring virtual assistants (VAs) for order management', duration: '21:30' }
       ]
     }
   ];
 
-  const list = (modules && modules.length > 0) ? modules : defaultModules;
+  const list = modules && modules.length > 0 ? modules : defaultModules;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxWidth: '920px', margin: '0 auto', width: '100%' }}>
+    <div className="w-full max-w-4xl mx-auto flex flex-col gap-3 sm:gap-4">
       {list.map((m, idx) => {
         const isOpen = openIndex === idx;
-        const num = m.module_number || String(idx + 1).padStart(2, '0');
-        const lessonItems = m.lessons || [
-          { title: 'Step-by-step practical implementation', duration: '18:00' },
-          { title: 'Live store demo & action items', duration: '22:30' }
-        ];
+        const lessonItems = m.lessons && m.lessons.length > 0
+          ? m.lessons
+          : [
+              { title: `${m.title} - Full Masterclass Lecture`, duration: '24:10' },
+              { title: 'Practical Screen Walkthrough & Action Steps', duration: '18:35' }
+            ];
 
         return (
           <div
             key={idx}
-            style={{
-              backgroundColor: '#FFFFFF',
-              borderRadius: '14px',
-              border: isOpen ? '1.5px solid #00A0DF' : '1px solid #E2E8F0',
-              boxShadow: isOpen ? '0 8px 24px rgba(0, 160, 223, 0.12)' : '0 2px 4px rgba(0,0,0,0.02)',
-              overflow: 'hidden',
-              transition: 'all 0.25s ease'
-            }}
+            className={`border rounded-2xl overflow-hidden transition-all duration-200 ${
+              isOpen
+                ? 'border-[#00A0DF] bg-white shadow-md'
+                : 'border-slate-200 bg-slate-50/70 hover:bg-white hover:border-slate-300'
+            }`}
           >
-            {/* Accordion Header */}
+            {/* Accordion Toggle Header */}
             <button
-              type="button"
               onClick={() => setOpenIndex(isOpen ? null : idx)}
-              className="curriculum-item-btn"
-              style={{
-                width: '100%',
-                padding: '16px 20px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                gap: '12px',
-                background: 'transparent',
-                border: 'none',
-                cursor: 'pointer',
-                textAlign: 'left'
-              }}
+              className="w-full text-left p-4 sm:p-5 flex items-center justify-between gap-3 sm:gap-4 focus:outline-none"
+              aria-expanded={isOpen}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                <div style={{
-                  width: '36px',
-                  height: '36px',
-                  borderRadius: '10px',
-                  backgroundColor: isOpen ? '#00A0DF' : 'rgba(0, 160, 223, 0.1)',
-                  color: isOpen ? '#FFFFFF' : '#00A0DF',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontWeight: '800',
-                  fontSize: '0.92rem',
-                  flexShrink: 0
-                }}>
-                  {num}
+              <div className="flex items-start gap-3 sm:gap-4">
+                <div
+                  className={`w-9 h-9 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center font-black text-xs sm:text-sm flex-shrink-0 transition-colors ${
+                    isOpen
+                      ? 'bg-[#00A0DF] text-white shadow-md shadow-[#00A0DF]/30'
+                      : 'bg-slate-200 text-slate-700'
+                  }`}
+                >
+                  {m.module_number || String(idx + 1).padStart(2, '0')}
                 </div>
                 <div>
-                  <h3 style={{ fontSize: '1rem', fontWeight: '700', color: '#0F172A', marginBottom: '2px', lineHeight: 1.3 }}>
+                  <h3 className="text-sm sm:text-base md:text-lg font-bold text-slate-900 leading-snug mb-1">
                     {m.title}
                   </h3>
-                  <p style={{ fontSize: '0.82rem', color: '#64748B', lineHeight: 1.4, margin: 0 }}>
+                  <p className="text-xs sm:text-sm text-slate-600 line-clamp-2 leading-relaxed">
                     {m.description}
                   </p>
                 </div>
               </div>
 
-              <div style={{
-                color: isOpen ? '#00A0DF' : '#64748B',
-                transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
-                transition: 'transform 0.25s ease',
-                flexShrink: 0
-              }}>
+              <div
+                className={`p-1.5 rounded-full flex-shrink-0 transition-transform duration-200 ${
+                  isOpen ? 'text-[#00A0DF] rotate-180 bg-[#00A0DF]/10' : 'text-slate-400'
+                }`}
+              >
                 <ChevronDown size={20} />
               </div>
             </button>
 
-            {/* Accordion Content */}
+            {/* Accordion Content Panel */}
             {isOpen && (
-              <div style={{
-                padding: '0 20px 18px 20px',
-                borderTop: '1px solid #F1F5F9',
-                backgroundColor: '#FAFCFE'
-              }}>
-                <div style={{ paddingTop: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div className="px-4 sm:px-5 pb-5 pt-2 border-t border-slate-100 bg-slate-50/50">
+                <div className="flex flex-col gap-2 pt-2">
                   {lessonItems.map((les, lIdx) => (
                     <div
                       key={lIdx}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        padding: '10px 12px',
-                        backgroundColor: '#FFFFFF',
-                        borderRadius: '8px',
-                        border: '1px solid #EDF2F7',
-                        fontSize: '0.84rem'
-                      }}
+                      className="flex items-center justify-between gap-3 p-3 rounded-xl bg-white border border-slate-200/80 text-xs sm:text-sm shadow-sm"
                     >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#0F172A' }}>
-                        <PlayCircle size={16} color="#00A0DF" style={{ flexShrink: 0 }} />
-                        <span>{les.title}</span>
+                      <div className="flex items-center gap-2.5 text-slate-900 font-medium truncate">
+                        <PlayCircle size={18} className="text-[#00A0DF] flex-shrink-0" />
+                        <span className="truncate">{les.title}</span>
                       </div>
                       {les.duration && (
-                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#64748B', fontSize: '0.76rem', fontWeight: '600', flexShrink: 0 }}>
-                          <Clock size={12} /> {les.duration}
+                        <span className="flex items-center gap-1.5 text-slate-500 text-[11px] sm:text-xs font-semibold flex-shrink-0">
+                          <Clock size={13} />
+                          <span>{les.duration}</span>
                         </span>
                       )}
                     </div>
