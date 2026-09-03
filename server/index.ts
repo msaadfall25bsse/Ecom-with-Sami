@@ -3,7 +3,6 @@ import cors from 'cors';
 import path from 'path';
 import fs from 'fs';
 import dotenv from 'dotenv';
-import { renderPage } from 'vike/server';
 import { initDatabase, db } from './db/index.js';
 import { authRouter } from './routes/auth.js';
 import { enrollmentRouter } from './routes/enrollments.js';
@@ -18,7 +17,6 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-const isProduction = process.env.NODE_ENV === 'production';
 
 // Initialize Database & Seeds
 initDatabase();
@@ -39,13 +37,12 @@ if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
 
-// Receipt Screenshot fallback SVG handler for any missing receipt images
-app.get(['/uploads/receipts/:filename', '/api/uploads/receipts/:filename'], (req, res, next) => {
+// Receipt Screenshot fallback SVG handler
+app.get(['/uploads/receipts/:filename', '/api/uploads/receipts/:filename'], (req, res) => {
   const filePath = path.join(process.cwd(), 'public', 'uploads', 'receipts', req.params.filename);
   if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
     return res.sendFile(filePath);
   }
-  // High quality SVG receipt fallback
   res.setHeader('Content-Type', 'image/svg+xml');
   return res.send(`<svg xmlns="http://www.w3.org/2000/svg" width="600" height="320" viewBox="0 0 600 320">
     <rect width="600" height="320" fill="#0F172A" rx="16" stroke="#00A0DF" stroke-width="2"/>
@@ -64,12 +61,6 @@ app.use('/uploads', express.static(path.join(process.cwd(), 'public', 'uploads')
 app.use('/api/uploads', express.static(path.join(process.cwd(), 'public', 'uploads')));
 app.use('/assets', express.static(path.join(process.cwd(), 'assets')));
 app.use('/apps', express.static(path.join(process.cwd(), 'public', 'apps')));
-
-// Serve built Vike client assets in production or when dist/client exists
-const clientDist = path.join(process.cwd(), 'dist', 'client');
-if (fs.existsSync(clientDist)) {
-  app.use(express.static(clientDist));
-}
 
 // Secure Video Streaming Handler (HTTP 206 Partial Content Range Requests)
 app.get(['/api/stream/video', '/stream/video', '/api/lms/stream/video'], (req, res) => {
@@ -159,31 +150,12 @@ app.get('/api/health', (_req, res) => {
   });
 });
 
-// Catch-all for undefined /api routes (returns JSON instead of HTML error)
+// Catch-all for undefined /api routes
 app.use('/api', (req, res) => {
   res.status(404).json({
     success: false,
     message: `Endpoint ${req.method} ${req.originalUrl} not found on Node.js / Express API Gateway`
   });
-});
-
-// Vike SSR Catch-All Middleware for Web Pages (Express 5 compatible)
-app.use(async (req, res, next) => {
-  if (req.path.startsWith('/api') || req.path.startsWith('/uploads') || req.path.startsWith('/apps')) {
-    return next();
-  }
-  try {
-    const pageContext = await renderPage({ urlOriginal: req.originalUrl });
-    const { httpResponse } = pageContext;
-    if (!httpResponse) {
-      return next();
-    }
-    const { statusCode, headers, body } = httpResponse;
-    headers.forEach(([name, value]) => res.setHeader(name, value));
-    res.status(statusCode).send(body);
-  } catch (err) {
-    next(err);
-  }
 });
 
 app.listen(PORT, () => {
