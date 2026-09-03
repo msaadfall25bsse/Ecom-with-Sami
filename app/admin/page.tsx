@@ -5,14 +5,13 @@ import Link from 'next/link';
 import { 
   Users, 
   CreditCard, 
-  BookOpen, 
   Settings, 
   LogOut, 
   CheckCircle2, 
   Clock, 
   TrendingUp, 
-  Search,
-  ShieldCheck,
+  Sparkles,
+  ArrowRight,
   Eye
 } from 'lucide-react';
 
@@ -52,6 +51,16 @@ export default function AdminDashboardPage() {
               <TrendingUp size={16} />
               <span>Dashboard Overview</span>
             </button>
+            <Link
+              href="/admin/cms"
+              className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[#00A0DF] bg-[#00A0DF]/10 border border-[#00A0DF]/30 hover:bg-[#00A0DF]/20 transition-colors"
+            >
+              <div className="flex items-center gap-2.5">
+                <Sparkles size={16} />
+                <span>Website CMS Editor</span>
+              </div>
+              <ArrowRight size={14} />
+            </Link>
             <button
               onClick={() => setActiveTab('enrollments')}
               className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-colors ${
@@ -73,13 +82,20 @@ export default function AdminDashboardPage() {
           </nav>
         </div>
 
-        <div className="pt-6 border-t border-slate-800 mt-6">
+        <div className="pt-6 border-t border-slate-800 mt-6 flex flex-col gap-2">
           <Link
             href="/"
             className="flex items-center gap-2 text-xs text-slate-400 hover:text-white transition-colors"
           >
+            <Eye size={14} />
+            <span>View Public Store</span>
+          </Link>
+          <Link
+            href="/admin/login"
+            className="flex items-center gap-2 text-xs text-red-400 hover:text-red-300 transition-colors"
+          >
             <LogOut size={14} />
-            <span>Exit to Storefront</span>
+            <span>Sign Out</span>
           </Link>
         </div>
       </aside>
@@ -91,12 +107,38 @@ export default function AdminDashboardPage() {
           {/* Header */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
             <div>
-              <h1 className="text-2xl sm:text-3xl font-black text-white">Platform Dashboard</h1>
+              <h1 className="text-2xl sm:text-3xl font-black text-white">Platform Control Panel</h1>
               <p className="text-xs text-slate-400 mt-1">Real-time statistics &bull; Ecom With Sami Mentorship</p>
             </div>
-            <div className="bg-slate-900 border border-slate-800 rounded-xl px-4 py-2 text-xs font-bold text-slate-300">
-              Admin: <span className="text-[#00A0DF]">Muhammad Sami</span>
+            <div className="flex items-center gap-3">
+              <Link
+                href="/admin/cms"
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#00A0DF] hover:bg-[#008ec7] text-xs font-black text-white shadow-lg shadow-[#00A0DF]/30 transition-all"
+              >
+                <Sparkles size={15} />
+                <span>Open Website CMS Manager</span>
+              </Link>
             </div>
+          </div>
+
+          {/* Quick CMS Jump Banner */}
+          <div className="bg-gradient-to-r from-slate-900 to-slate-950 border border-[#00A0DF]/40 rounded-2xl p-5 mb-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div>
+              <h3 className="text-sm sm:text-base font-bold text-white flex items-center gap-2">
+                <Sparkles size={16} className="text-[#00A0DF]" />
+                <span>Full Website Content Management Available</span>
+              </h3>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Edit announcements, hero video, price, payment accounts, testimonials, and FAQs live.
+              </p>
+            </div>
+            <Link
+              href="/admin/cms"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-[#00A0DF] border border-slate-700 whitespace-nowrap"
+            >
+              <span>Manage Content</span>
+              <ArrowRight size={14} />
+            </Link>
           </div>
 
           {/* Metric Cards Grid */}

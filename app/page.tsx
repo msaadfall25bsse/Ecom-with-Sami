@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { 
   Navbar, 
@@ -22,50 +22,29 @@ import {
   Building2, 
   TrendingUp, 
   WalletCards,
-  XCircle,
-  Clock,
-  Video,
-  Award,
-  Users
+  XCircle
 } from 'lucide-react';
+import { defaultCmsContent, CmsContentSchema } from '@/utils/cmsStore';
 
 export default function HomePage() {
   const [isVideoOpen, setIsVideoOpen] = useState(false);
+  const [content, setContent] = useState<CmsContentSchema>(defaultCmsContent);
 
-  const faqs = [
-    {
-      q: 'Is this course suitable for beginners?',
-      a: 'Absolutely. This course is built from absolute scratch for complete beginners and guides you step by step through the entire process — no prior coding, Shopify, or digital marketing experience is needed.'
-    },
-    {
-      q: 'How much investment do I need to start dropshipping in UAE & KSA?',
-      a: 'You can get started in the UAE, KSA, and Pakistani markets with as little as 15,000 to 20,000 PKR using the organic & low-budget testing strategies taught in the course.'
-    },
-    {
-      q: 'How do I get LMS portal access after paying?',
-      a: 'After completing payment on the enrollment page, upload your payment receipt or message our support team on WhatsApp. Your dedicated LMS portal credentials will be activated instantly via email.'
-    },
-    {
-      q: 'Do you provide verified UAE & KSA supplier contacts?',
-      a: 'Yes! Inside Module 10, you get direct contact numbers, warehouse locations, and negotiation scripts for verified suppliers with fast 2-day delivery and cash-on-delivery (COD) payout options.'
-    },
-    {
-      q: 'Do you provide mentorship and live ad support?',
-      a: 'Yes — we provide lifetime support. You can ask questions directly on WhatsApp from 9AM to 5PM, plus attend weekly live coaching sessions to audit your ad campaigns and solve issues.'
-    },
-    {
-      q: 'How long is the course and how many lectures?',
-      a: 'The course consists of approximately 8 hours of step-by-step practical training, organized into 11 modules and 36 easy-to-follow HD video lectures you can watch at your own pace.'
-    },
-    {
-      q: 'Is this a one-time fee or monthly subscription?',
-      a: 'It is a strictly one-time fee of PKR 3,900 with lifetime access. All future updates, newly added supplier lists, and live coaching calls are included without any extra charges.'
-    },
-    {
-      q: 'Can I do this from my mobile phone while working a full-time job?',
-      a: 'Yes. You only need a smartphone or laptop and an internet connection. Most of our 9,700+ students are job holders and manage their stores during their free evening hours.'
-    }
-  ];
+  useEffect(() => {
+    fetch('/api/public/cms-content')
+      .then((r) => r.json())
+      .then((res) => {
+        if (res.success && res.sections) {
+          setContent(res.sections);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const hero = content.hero || defaultCmsContent.hero;
+  const stats = content.stats || defaultCmsContent.stats;
+  const mentor = content.mentor || defaultCmsContent.mentor;
+  const faqs = content.faqs || defaultCmsContent.faqs;
 
   return (
     <div className="relative min-h-screen bg-white text-slate-900 selection:bg-[#00A0DF] selection:text-white">
@@ -79,8 +58,8 @@ export default function HomePage() {
       <VideoModal
         isOpen={isVideoOpen}
         onClose={() => setIsVideoOpen(false)}
-        title="128-Second Dropshipping Blueprint Overview"
-        videoUrl="https://www.youtube.com/embed/dQw4w9WgXcQ"
+        title={hero.video_title || '128-Second Dropshipping Blueprint Overview'}
+        videoUrl={hero.video_url || 'https://www.youtube.com/embed/dQw4w9WgXcQ'}
       />
 
       {/* ========================================================================= */}
@@ -93,20 +72,18 @@ export default function HomePage() {
             {/* Pill Badge */}
             <div className="inline-flex items-center gap-2 bg-slate-900 text-white rounded-full p-1 pr-3 sm:pr-4 mb-4 sm:mb-6 shadow-md border border-slate-700 text-xs sm:text-sm">
               <span className="w-2 h-2 rounded-full bg-[#00A0DF] animate-pulse ml-2" />
-              <span className="text-[#00A0DF] font-black">PAKISTAN&rsquo;S #1</span>
-              <span className="text-slate-300 font-bold hidden xs:inline">&bull;</span>
-              <span className="text-slate-200 font-bold text-[11px] sm:text-xs">UAE / KSA DROPSHIPPING TRAINING</span>
+              <span className="text-[#00A0DF] font-black">{hero.badge || "PAKISTAN'S #1"}</span>
             </div>
 
             {/* Main Headline */}
             <h1 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-slate-900 tracking-tight leading-[1.18] mb-4 sm:mb-6">
-              Learn How to Start Online Dropshipping Store in UAE &amp; KSA{' '}
-              <span className="text-[#00A0DF]">Step-by-Step Training</span>
+              {hero.title_line1 || 'Learn How to Start Online Dropshipping Store in UAE & KSA'}{' '}
+              <span className="text-[#00A0DF]">{hero.title_highlight || 'Step-by-Step Training'}</span>
             </h1>
 
             {/* Sub-headline */}
             <p className="text-sm sm:text-base md:text-xl text-slate-600 font-medium max-w-2xl mx-auto mb-6 sm:mb-8 leading-relaxed">
-              Beginner Friendly Practical Training &bull; Direct Verified GCC Suppliers &bull; 9,700+ Students Mentored
+              {hero.subtitle}
             </p>
 
             {/* Video Preview Card */}
@@ -119,7 +96,7 @@ export default function HomePage() {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent z-10 flex flex-col justify-end p-4 sm:p-6 text-left">
                   <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-[#00A0DF] mb-1">Preview Video</span>
                   <h3 className="text-white text-xs sm:text-base md:text-lg font-bold line-clamp-2">
-                    Watch this 128 seconds video to see how simple it is to launch
+                    {hero.video_title}
                   </h3>
                 </div>
 
@@ -136,16 +113,16 @@ export default function HomePage() {
                 href="/enrollment" 
                 className="w-full py-3.5 sm:py-4 px-6 text-sm sm:text-base md:text-lg font-black uppercase tracking-wide rounded-xl sm:rounded-2xl text-white bg-[#00A0DF] hover:bg-[#008ec7] shadow-xl shadow-[#00A0DF]/30 flex items-center justify-center gap-2 transition-all duration-200"
               >
-                <span>YES! I WANT TO LEARN THIS</span>
+                <span>{hero.cta_text || 'YES! I WANT TO LEARN THIS'}</span>
                 <ArrowRight size={20} />
               </Link>
             </div>
 
             {/* Pricing Comparison Tag */}
             <div className="inline-flex items-center gap-2 bg-white border border-slate-200 rounded-full px-4 sm:px-5 py-1.5 sm:py-2 text-xs sm:text-sm md:text-base font-semibold text-slate-800 shadow-sm mb-8 sm:mb-10">
-              <span>Originally <span className="line-through text-red-500 font-bold">PKR 32,500</span></span>
+              <span>Originally <span className="line-through text-red-500 font-bold">{hero.original_price}</span></span>
               <span>&mdash;</span>
-              <span>Get Instant Access Today for Just <span className="text-[#00A0DF] font-black">PKR 3,900</span></span>
+              <span>Get Instant Access Today for Just <span className="text-[#00A0DF] font-black">{hero.current_price}</span></span>
             </div>
 
             {/* Live Countdown Urgency Timer */}
@@ -165,25 +142,25 @@ export default function HomePage() {
           <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
             <div className="bg-slate-900 border border-slate-800 rounded-xl sm:rounded-2xl p-4 sm:p-5 text-center">
               <div className="text-xl sm:text-2xl mb-1 text-[#00A0DF]">⏱</div>
-              <div className="text-lg sm:text-2xl font-black text-white">8 Hours</div>
+              <div className="text-lg sm:text-2xl font-black text-white">{stats.training_hours}</div>
               <div className="text-[10px] sm:text-xs font-semibold text-slate-400 uppercase tracking-wider mt-1">Practical Training</div>
             </div>
 
             <div className="bg-slate-900 border border-slate-800 rounded-xl sm:rounded-2xl p-4 sm:p-5 text-center">
               <div className="text-xl sm:text-2xl mb-1 text-emerald-400">▶</div>
-              <div className="text-lg sm:text-2xl font-black text-white">36 Lectures</div>
+              <div className="text-lg sm:text-2xl font-black text-white">{stats.lectures_count}</div>
               <div className="text-[10px] sm:text-xs font-semibold text-slate-400 uppercase tracking-wider mt-1">Full HD Video Portal</div>
             </div>
 
             <div className="bg-slate-900 border border-slate-800 rounded-xl sm:rounded-2xl p-4 sm:p-5 text-center">
               <div className="text-xl sm:text-2xl mb-1 text-amber-400">🔒</div>
-              <div className="text-lg sm:text-2xl font-black text-white">Lifetime Access</div>
+              <div className="text-lg sm:text-2xl font-black text-white">{stats.access_type}</div>
               <div className="text-[10px] sm:text-xs font-semibold text-slate-400 uppercase tracking-wider mt-1">Dedicated Student LMS</div>
             </div>
 
             <div className="bg-slate-900 border border-slate-800 rounded-xl sm:rounded-2xl p-4 sm:p-5 text-center">
               <div className="text-xl sm:text-2xl mb-1 text-[#00A0DF]">👥</div>
-              <div className="text-lg sm:text-2xl font-black text-white">Mentorship</div>
+              <div className="text-lg sm:text-2xl font-black text-white">{stats.mentorship_type}</div>
               <div className="text-[10px] sm:text-xs font-semibold text-slate-400 uppercase tracking-wider mt-1">Direct WhatsApp Support</div>
             </div>
           </div>
@@ -342,16 +319,16 @@ export default function HomePage() {
                   </div>
                 </div>
                 <span className="bg-[#00A0DF]/20 text-[#00A0DF] border border-[#00A0DF]/40 text-[11px] sm:text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full">
-                  Verified eCommerce Mentor
+                  {mentor.title}
                 </span>
               </div>
 
               {/* Mentor Bio */}
               <div className="md:col-span-8">
                 <span className="text-xs font-black uppercase tracking-widest text-[#00A0DF]">YOUR MENTOR</span>
-                <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-white mt-1 mb-3">Muhammad Sami</h2>
+                <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-white mt-1 mb-3">{mentor.name}</h2>
                 <p className="text-slate-300 text-xs sm:text-sm md:text-base leading-relaxed mb-6">
-                  You don&rsquo;t just need course videos &mdash; you need direct mentorship and real-time troubleshooting when scaling ads. <strong>Both are included in your enrollment today.</strong>
+                  {mentor.bio}
                 </p>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3 mb-6">
@@ -375,15 +352,15 @@ export default function HomePage() {
 
                 <div className="grid grid-cols-3 gap-2 sm:gap-4 pt-4 border-t border-slate-800 text-center">
                   <div>
-                    <div className="text-lg sm:text-2xl font-black text-[#00A0DF]">9,700+</div>
+                    <div className="text-lg sm:text-2xl font-black text-[#00A0DF]">{mentor.students_count}</div>
                     <div className="text-[10px] sm:text-xs text-slate-400">Students Mentored</div>
                   </div>
                   <div>
-                    <div className="text-lg sm:text-2xl font-black text-emerald-400">UAE &amp; KSA</div>
+                    <div className="text-lg sm:text-2xl font-black text-emerald-400">{mentor.primary_markets}</div>
                     <div className="text-[10px] sm:text-xs text-slate-400">Primary Markets</div>
                   </div>
                   <div>
-                    <div className="text-lg sm:text-2xl font-black text-amber-400">Lifetime</div>
+                    <div className="text-lg sm:text-2xl font-black text-amber-400">{mentor.access_badge}</div>
                     <div className="text-[10px] sm:text-xs text-slate-400">Access &amp; Updates</div>
                   </div>
                 </div>
@@ -509,7 +486,7 @@ export default function HomePage() {
       {/* ========================================================================= */}
       <section className="py-12 sm:py-16 md:py-24 bg-slate-950 text-white">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <BonusStack />
+          <BonusStack customData={content.bonuses} />
         </div>
       </section>
 
@@ -725,7 +702,7 @@ export default function HomePage() {
               href="/enrollment"
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 sm:px-10 py-4 text-base sm:text-lg font-black uppercase rounded-xl sm:rounded-2xl text-white bg-[#00A0DF] hover:bg-[#008ec7] shadow-xl shadow-[#00A0DF]/40 transition-all duration-200"
             >
-              <span>YES! I WANT TO LEARN THIS &bull; PKR 3,900</span>
+              <span>{hero.cta_text || 'YES! I WANT TO LEARN THIS'} &bull; {hero.current_price || 'PKR 3,900'}</span>
               <ArrowRight size={20} />
             </Link>
 
