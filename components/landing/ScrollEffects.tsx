@@ -11,11 +11,9 @@ export function ScrollEffects() {
 
     let ticking = false;
 
-    // 1. Hardware-Accelerated Scroll Handler
     const updateScrollVisuals = () => {
       const totalScroll = window.scrollY || document.documentElement.scrollTop || 0;
 
-      // Update Scroll to Top Button Visibility with smooth opacity
       if (scrollTopBtnRef.current) {
         if (totalScroll > 380) {
           scrollTopBtnRef.current.style.opacity = '1';
@@ -41,7 +39,6 @@ export function ScrollEffects() {
     window.addEventListener('scroll', handleScroll, { passive: true });
     updateScrollVisuals();
 
-    // 2. High-Performance IntersectionObserver with Safe Fallbacks
     const observerCallback: IntersectionObserverCallback = (entries, observer) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
@@ -66,7 +63,6 @@ export function ScrollEffects() {
 
     triggerVisible();
 
-    // Absolute fail-safe after 500ms
     const safetyTimer = setTimeout(() => {
       document.querySelectorAll('.scroll-animate').forEach(el => el.classList.add('is-visible'));
     }, 500);
@@ -88,39 +84,36 @@ export function ScrollEffects() {
   };
 
   return (
-    <>
-      {/* Floating Scroll to Top Button */}
-      <button
-        ref={scrollTopBtnRef}
-        onClick={scrollToTop}
-        className="scroll-to-top-btn"
-        aria-label="Scroll back to top"
-        style={{
-          position: 'fixed',
-          bottom: '84px',
-          right: '20px',
-          width: '42px',
-          height: '42px',
-          borderRadius: '50%',
-          backgroundColor: '#0F172A',
-          color: '#FFFFFF',
-          border: '1.5px solid rgba(0, 160, 223, 0.4)',
-          boxShadow: '0 8px 20px rgba(0, 0, 0, 0.25)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          cursor: 'pointer',
-          zIndex: 9990,
-          opacity: 0,
-          pointerEvents: 'none',
-          transform: 'translateY(12px)',
-          transition: 'opacity 0.25s ease, transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s ease',
-          willChange: 'opacity, transform'
-        }}
-      >
-        <ChevronUp size={20} color="#00A0DF" />
-      </button>
-    </>
+    <button
+      ref={scrollTopBtnRef}
+      onClick={scrollToTop}
+      className="scroll-to-top-btn"
+      aria-label="Scroll back to top"
+      style={{
+        position: 'fixed',
+        bottom: '84px',
+        right: '20px',
+        width: '42px',
+        height: '42px',
+        borderRadius: '50%',
+        backgroundColor: '#0F172A',
+        color: '#FFFFFF',
+        border: '1.5px solid rgba(0, 160, 223, 0.4)',
+        boxShadow: '0 8px 20px rgba(0, 0, 0, 0.25)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        cursor: 'pointer',
+        zIndex: 9990,
+        opacity: 0,
+        pointerEvents: 'none',
+        transform: 'translateY(12px)',
+        transition: 'opacity 0.25s ease, transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s ease',
+        willChange: 'opacity, transform'
+      }}
+    >
+      <ChevronUp size={20} color="#00A0DF" />
+    </button>
   );
 }
 
