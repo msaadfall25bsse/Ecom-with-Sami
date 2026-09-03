@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { 
   Navbar, 
@@ -32,9 +32,12 @@ import {
   Lock,
   Users,
   ChevronRight,
+  ChevronLeft,
   Gift,
   HelpCircle,
-  Check
+  Check,
+  Award,
+  DollarSign
 } from 'lucide-react';
 import { defaultCmsContent, CmsContentSchema } from '@/utils/cmsStore';
 import { Module } from '@/utils/db';
@@ -50,6 +53,7 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
   const [activeVideoUrl, setActiveVideoUrl] = useState('');
   const [activeVideoTitle, setActiveVideoTitle] = useState('');
   const [content, setContent] = useState<CmsContentSchema>(initialContent || defaultCmsContent);
+  const videoScrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const syncData = async () => {
@@ -57,7 +61,7 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
         localStorage.removeItem('sami_cms_content');
       } catch (e) {}
 
-      // 1. Try local API route
+      // 1. Local API Route
       try {
         const timestamp = `${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
         const res = await fetch(`/api/public/cms-content?_nocache=${timestamp}`, {
@@ -123,6 +127,70 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
     setIsVideoOpen(true);
   };
 
+  const scrollReviews = (direction: 'left' | 'right') => {
+    if (videoScrollRef.current) {
+      const scrollAmount = 340;
+      videoScrollRef.current.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth'
+      });
+    }
+  };
+
+  const videoReviews = [
+    {
+      stars: 5,
+      headline: '“Total beginners are now getting AED 1,000–1,500 in daily sales.”',
+      author: 'Ali Raza — Lahore',
+      result: 'AED 1,500 / Day',
+      videoUrl: hero.video_url || 'https://www.youtube.com/embed/dQw4w9WgXcQ'
+    },
+    {
+      stars: 5,
+      headline: '“After getting mentorship and watching the course, I made €662 in sales within 6 days.”',
+      author: 'Raza Ali — Karachi',
+      result: '€662 in 6 Days',
+      videoUrl: hero.video_url || 'https://www.youtube.com/embed/dQw4w9WgXcQ'
+    },
+    {
+      stars: 5,
+      headline: '“AED 5,000 in sales and 56 orders within 5 days with supplier help.”',
+      author: 'Hamza Tariq — Islamabad',
+      result: 'AED 5,000 / Week',
+      videoUrl: hero.video_url || 'https://www.youtube.com/embed/dQw4w9WgXcQ'
+    },
+    {
+      stars: 5,
+      headline: '“Students say the course is very easy to understand and follow on mobile.”',
+      author: 'Zainab Bibi — Faisalabad',
+      result: 'PKR 480,000 / Mo',
+      videoUrl: hero.video_url || 'https://www.youtube.com/embed/dQw4w9WgXcQ'
+    },
+    {
+      stars: 5,
+      headline: '“26 orders and AED 2,500 in sales with the direct help of Mentor Sami.”',
+      author: 'Usman Ghani — Rawalpindi',
+      result: 'AED 2,500 Sales',
+      videoUrl: hero.video_url || 'https://www.youtube.com/embed/dQw4w9WgXcQ'
+    },
+    {
+      stars: 5,
+      headline: '“AED 1,485 in sales in just 3 days while working from home.”',
+      author: 'Bilal Farooq — Multan',
+      result: 'SAR 3,485 Profit',
+      videoUrl: hero.video_url || 'https://www.youtube.com/embed/dQw4w9WgXcQ'
+    }
+  ];
+
+  const studentEarningsScreenshots = [
+    { name: 'Store #1 Dubai', profit: 'AED 14,850', orders: '124 Orders', label: 'UAE Shopify Store' },
+    { name: 'Store #2 Riyadh', profit: 'SAR 22,400', orders: '186 Orders', label: 'KSA COD Store' },
+    { name: 'Store #3 Sharjah', profit: 'AED 8,620', orders: '72 Orders', label: 'TikTok Ads Campaign' },
+    { name: 'Store #4 Jeddah', profit: 'SAR 31,900', orders: '240 Orders', label: 'Winning Beauty Product' },
+    { name: 'Store #5 Abu Dhabi', profit: 'AED 19,500', orders: '158 Orders', label: 'Meta Advantage+ Scaling' },
+    { name: 'Store #6 Dammam', profit: 'SAR 17,200', orders: '135 Orders', label: 'Direct Supplier Delivery' }
+  ];
+
   return (
     <div className="relative min-h-screen bg-[#FAFCFF] text-slate-900 selection:bg-[#00A0DF] selection:text-white font-sans antialiased">
       {/* Top Marquee Bar */}
@@ -153,7 +221,7 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
           <div className="flex flex-col items-center text-center max-w-4xl mx-auto">
             
             {/* Top Pill Badge */}
-            <div className="dropshipping-badge mb-5 cursor-pointer">
+            <div className="dropshipping-badge mb-5 cursor-pointer animate-float">
               <span className="badge-dot" />
               <span className="badge-blue">PAKISTAN’S #1</span>
               <span className="badge-dark">{hero.badge || "UAE/KSA DROPSHIPPING TRAINING"}</span>
@@ -194,7 +262,7 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
             <div className="w-full max-w-3xl relative">
               {/* Mini Pill Tag over Video */}
               <div className="inline-flex items-center gap-1.5 bg-[#00A0DF] text-white px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-wider mb-3 shadow-md">
-                <Sparkles size={13} className="text-amber-300" />
+                <Sparkles size={13} className="text-amber-300 animate-spin" style={{ animationDuration: '6s' }} />
                 <span>Ecommstory Masterclass</span>
               </div>
 
@@ -247,25 +315,25 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
             
-            <div className="bg-slate-900/90 border border-slate-800 p-4 rounded-xl text-center hover:border-[#00A0DF]/60 transition-colors">
+            <div className="bg-slate-900/90 border border-slate-800 p-4 rounded-xl text-center hover:border-[#00A0DF]/60 transition-colors card-hover-lift">
               <div className="text-xl sm:text-2xl mb-1">⏱</div>
               <div className="text-lg sm:text-xl font-black text-white">{stats.training_hours || '8 Hours'}</div>
               <div className="text-[11px] sm:text-xs text-slate-400 font-semibold">Of training</div>
             </div>
 
-            <div className="bg-slate-900/90 border border-slate-800 p-4 rounded-xl text-center hover:border-emerald-500/60 transition-colors">
+            <div className="bg-slate-900/90 border border-slate-800 p-4 rounded-xl text-center hover:border-emerald-500/60 transition-colors card-hover-lift">
               <div className="text-xl sm:text-2xl mb-1">▶</div>
               <div className="text-lg sm:text-xl font-black text-white">{stats.lectures_count || '36 Lectures'}</div>
               <div className="text-[11px] sm:text-xs text-slate-400 font-semibold">HD video</div>
             </div>
 
-            <div className="bg-slate-900/90 border border-slate-800 p-4 rounded-xl text-center hover:border-amber-500/60 transition-colors">
+            <div className="bg-slate-900/90 border border-slate-800 p-4 rounded-xl text-center hover:border-amber-500/60 transition-colors card-hover-lift">
               <div className="text-xl sm:text-2xl mb-1">🔒</div>
               <div className="text-lg sm:text-xl font-black text-white">{stats.access_type || 'Lifetime Access'}</div>
               <div className="text-[11px] sm:text-xs text-slate-400 font-semibold">LMS portal</div>
             </div>
 
-            <div className="bg-slate-900/90 border border-slate-800 p-4 rounded-xl text-center hover:border-purple-500/60 transition-colors">
+            <div className="bg-slate-900/90 border border-slate-800 p-4 rounded-xl text-center hover:border-purple-500/60 transition-colors card-hover-lift">
               <div className="text-xl sm:text-2xl mb-1">👥</div>
               <div className="text-lg sm:text-xl font-black text-white">{stats.mentorship_type || 'Mentorship'}</div>
               <div className="text-[11px] sm:text-xs text-slate-400 font-semibold">Included</div>
@@ -293,8 +361,7 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-10">
             
-            {/* Card 1 */}
-            <div className="bg-white border border-gray-200 rounded-2xl p-6 sm:p-7 hover:border-[#00A0DF] hover:shadow-lg transition-all">
+            <div className="bg-white border border-gray-200 rounded-2xl p-6 sm:p-7 card-hover-lift">
               <div className="flex items-start gap-4">
                 <div className="w-12 h-12 rounded-xl bg-[#00A0DF] text-white flex items-center justify-center flex-shrink-0 shadow-md">
                   <Globe2 size={22} />
@@ -310,8 +377,7 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
               </div>
             </div>
 
-            {/* Card 2 */}
-            <div className="bg-white border border-gray-200 rounded-2xl p-6 sm:p-7 hover:border-[#00A0DF] hover:shadow-lg transition-all">
+            <div className="bg-white border border-gray-200 rounded-2xl p-6 sm:p-7 card-hover-lift">
               <div className="flex items-start gap-4">
                 <div className="w-12 h-12 rounded-xl bg-[#00A0DF] text-white flex items-center justify-center flex-shrink-0 shadow-md">
                   <Building2 size={22} />
@@ -327,8 +393,7 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
               </div>
             </div>
 
-            {/* Card 3 */}
-            <div className="bg-white border border-gray-200 rounded-2xl p-6 sm:p-7 hover:border-[#00A0DF] hover:shadow-lg transition-all">
+            <div className="bg-white border border-gray-200 rounded-2xl p-6 sm:p-7 card-hover-lift">
               <div className="flex items-start gap-4">
                 <div className="w-12 h-12 rounded-xl bg-[#00A0DF] text-white flex items-center justify-center flex-shrink-0 shadow-md">
                   <TrendingUp size={22} />
@@ -344,8 +409,7 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
               </div>
             </div>
 
-            {/* Card 4 */}
-            <div className="bg-white border border-gray-200 rounded-2xl p-6 sm:p-7 hover:border-[#00A0DF] hover:shadow-lg transition-all">
+            <div className="bg-white border border-gray-200 rounded-2xl p-6 sm:p-7 card-hover-lift">
               <div className="flex items-start gap-4">
                 <div className="w-12 h-12 rounded-xl bg-[#00A0DF] text-white flex items-center justify-center flex-shrink-0 shadow-md">
                   <WalletCards size={22} />
@@ -363,7 +427,6 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
 
           </div>
 
-          {/* Section CTA */}
           <div className="text-center">
             <Link
               href="/enrollment"
@@ -397,7 +460,7 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-10">
             
-            <div className="bg-white border border-gray-200 rounded-2xl p-6 sm:p-7 shadow-sm">
+            <div className="bg-white border border-gray-200 rounded-2xl p-6 sm:p-7 shadow-sm card-hover-lift">
               <div className="w-10 h-10 rounded-xl bg-[#00A0DF]/10 text-[#00A0DF] flex items-center justify-center mb-4">
                 <Globe2 size={20} />
               </div>
@@ -409,7 +472,7 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
               </p>
             </div>
 
-            <div className="bg-white border border-gray-200 rounded-2xl p-6 sm:p-7 shadow-sm">
+            <div className="bg-white border border-gray-200 rounded-2xl p-6 sm:p-7 shadow-sm card-hover-lift">
               <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center mb-4">
                 <Sparkles size={20} />
               </div>
@@ -421,7 +484,7 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
               </p>
             </div>
 
-            <div className="bg-white border border-gray-200 rounded-2xl p-6 sm:p-7 shadow-sm">
+            <div className="bg-white border border-gray-200 rounded-2xl p-6 sm:p-7 shadow-sm card-hover-lift">
               <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center mb-4">
                 <Zap size={20} />
               </div>
@@ -433,7 +496,7 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
               </p>
             </div>
 
-            <div className="bg-white border border-gray-200 rounded-2xl p-6 sm:p-7 shadow-sm">
+            <div className="bg-white border border-gray-200 rounded-2xl p-6 sm:p-7 shadow-sm card-hover-lift">
               <div className="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-600 flex items-center justify-center mb-4">
                 <Users size={20} />
               </div>
@@ -464,8 +527,8 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
       {/* ========================================================================= */}
       <section className="py-14 sm:py-20 bg-[#0B0F19] text-white relative overflow-hidden">
         {/* Glow ambient spots */}
-        <div className="absolute top-1/2 -left-20 w-72 h-72 bg-[#00A0DF]/15 rounded-full blur-3xl" />
-        <div className="absolute top-1/2 -right-20 w-72 h-72 bg-emerald-500/10 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 -left-20 w-72 h-72 bg-[#00A0DF]/15 rounded-full blur-3xl animate-pulse-glow" />
+        <div className="absolute top-1/2 -right-20 w-72 h-72 bg-emerald-500/10 rounded-full blur-3xl animate-pulse-glow" style={{ animationDelay: '2s' }} />
 
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="bg-slate-900/90 border border-slate-800 rounded-3xl p-6 sm:p-10 md:p-12 shadow-2xl relative overflow-hidden">
@@ -476,7 +539,7 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
               
               {/* Mentor Avatar */}
               <div className="lg:col-span-5 flex flex-col items-center text-center">
-                <div className="relative w-44 h-44 sm:w-56 sm:h-56 rounded-3xl bg-gradient-to-tr from-[#00A0DF] to-emerald-400 p-1.5 shadow-2xl mb-4">
+                <div className="relative w-44 h-44 sm:w-56 sm:h-56 rounded-3xl bg-gradient-to-tr from-[#00A0DF] to-emerald-400 p-1.5 shadow-2xl mb-4 animate-float">
                   <div className="w-full h-full rounded-2xl bg-slate-950 flex flex-col items-center justify-center text-4xl sm:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-br from-[#00A0DF] to-emerald-400">
                     SAMI
                     <span className="text-[11px] text-slate-400 font-bold uppercase tracking-widest mt-1">
@@ -552,12 +615,12 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
       </section>
 
       {/* ========================================================================= */}
-      {/* 6. REAL STUDENT VIDEO REVIEWS (LEARNWITHAFAQ STYLE) */}
+      {/* 6. REAL STUDENT VIDEO REVIEWS WITH INTERACTIVE SCROLLING & MOVING EFFECT */}
       {/* ========================================================================= */}
       <section className="py-14 sm:py-20 bg-white">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           
-          <div className="text-center max-w-3xl mx-auto mb-12 sm:mb-16">
+          <div className="text-center max-w-3xl mx-auto mb-8 sm:mb-10">
             <span className="section-tag-pill">REAL STUDENT RESULTS</span>
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 tracking-tight mb-3">
               Hear What Our Students Are Saying
@@ -567,86 +630,79 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-10">
-            
-            {/* Review Card 1 */}
-            <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
-              <div>
-                <div className="flex gap-1 text-amber-400 mb-2">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} size={15} className="fill-amber-400 text-amber-400" />
-                  ))}
-                </div>
-                <h3 className="text-sm sm:text-base font-bold text-slate-900 mb-3">
-                  “Total beginners are now getting AED 1,000–1,500 in daily sales.”
-                </h3>
-              </div>
-              <div 
-                onClick={() => openReviewVideo('Student Result AED 1,500 Daily Sales', hero.video_url || 'https://www.youtube.com/embed/dQw4w9WgXcQ')}
-                className="relative cursor-pointer rounded-xl overflow-hidden bg-slate-900 aspect-video flex items-center justify-center group"
+          {/* Navigation Controls */}
+          <div className="flex items-center justify-between max-w-5xl mx-auto mb-4 px-2">
+            <span className="text-xs font-bold text-slate-500 flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-[#00A0DF] animate-ping" />
+              <span>Tap arrows or swipe to watch more student feedback</span>
+            </span>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => scrollReviews('left')}
+                className="w-9 h-9 rounded-xl bg-gray-100 hover:bg-[#00A0DF] hover:text-white text-slate-700 flex items-center justify-center transition-colors shadow-sm"
+                aria-label="Previous reviews"
               >
-                <div className="w-12 h-12 rounded-full bg-[#00A0DF] text-white flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <Play size={20} className="fill-current ml-0.5" />
-                </div>
-                <span className="absolute bottom-2 left-2 text-[11px] font-bold text-white bg-black/60 px-2 py-0.5 rounded">
-                  Watch Video Review
-                </span>
-              </div>
-            </div>
-
-            {/* Review Card 2 */}
-            <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
-              <div>
-                <div className="flex gap-1 text-amber-400 mb-2">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} size={15} className="fill-amber-400 text-amber-400" />
-                  ))}
-                </div>
-                <h3 className="text-sm sm:text-base font-bold text-slate-900 mb-3">
-                  “After getting mentorship and watching the course, I made €662 in sales within 6 days.”
-                </h3>
-              </div>
-              <div 
-                onClick={() => openReviewVideo('Student Raza Ali Review', hero.video_url || 'https://www.youtube.com/embed/dQw4w9WgXcQ')}
-                className="relative cursor-pointer rounded-xl overflow-hidden bg-slate-900 aspect-video flex items-center justify-center group"
+                <ChevronLeft size={18} />
+              </button>
+              <button
+                onClick={() => scrollReviews('right')}
+                className="w-9 h-9 rounded-xl bg-gray-100 hover:bg-[#00A0DF] hover:text-white text-slate-700 flex items-center justify-center transition-colors shadow-sm"
+                aria-label="Next reviews"
               >
-                <div className="w-12 h-12 rounded-full bg-[#00A0DF] text-white flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <Play size={20} className="fill-current ml-0.5" />
-                </div>
-                <span className="absolute bottom-2 left-2 text-[11px] font-bold text-white bg-black/60 px-2 py-0.5 rounded">
-                  Watch Video Review
-                </span>
-              </div>
+                <ChevronRight size={18} />
+              </button>
             </div>
-
-            {/* Review Card 3 */}
-            <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
-              <div>
-                <div className="flex gap-1 text-amber-400 mb-2">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} size={15} className="fill-amber-400 text-amber-400" />
-                  ))}
-                </div>
-                <h3 className="text-sm sm:text-base font-bold text-slate-900 mb-3">
-                  “AED 5,000 in sales and 56 orders within 5 days with supplier help.”
-                </h3>
-              </div>
-              <div 
-                onClick={() => openReviewVideo('Student 5,000 AED Sales Review', hero.video_url || 'https://www.youtube.com/embed/dQw4w9WgXcQ')}
-                className="relative cursor-pointer rounded-xl overflow-hidden bg-slate-900 aspect-video flex items-center justify-center group"
-              >
-                <div className="w-12 h-12 rounded-full bg-[#00A0DF] text-white flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <Play size={20} className="fill-current ml-0.5" />
-                </div>
-                <span className="absolute bottom-2 left-2 text-[11px] font-bold text-white bg-black/60 px-2 py-0.5 rounded">
-                  Watch Video Review
-                </span>
-              </div>
-            </div>
-
           </div>
 
-          <div className="text-center">
+          {/* Horizontal Scrollable Video Reviews Track */}
+          <div 
+            ref={videoScrollRef}
+            className="flex items-stretch gap-5 overflow-x-auto pb-6 scrollbar-none snap-x snap-mandatory px-2"
+          >
+            {videoReviews.map((rev, idx) => (
+              <div
+                key={idx}
+                className="w-[300px] sm:w-[340px] bg-white border border-gray-200 rounded-2xl p-5 shadow-sm hover:shadow-xl hover:border-[#00A0DF]/60 transition-all flex flex-col justify-between flex-shrink-0 snap-start card-hover-lift"
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-2.5">
+                    <div className="flex gap-1 text-amber-400">
+                      {[...Array(rev.stars)].map((_, i) => (
+                        <Star key={i} size={15} className="fill-amber-400 text-amber-400" />
+                      ))}
+                    </div>
+                    <span className="text-[11px] font-extrabold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
+                      {rev.result}
+                    </span>
+                  </div>
+
+                  <h3 className="text-sm sm:text-base font-bold text-slate-900 mb-4 min-h-[48px]">
+                    {rev.headline}
+                  </h3>
+                </div>
+
+                <div>
+                  <div 
+                    onClick={() => openReviewVideo(rev.headline, rev.videoUrl)}
+                    className="relative cursor-pointer rounded-xl overflow-hidden bg-slate-950 aspect-video flex items-center justify-center group mb-3 shadow-inner"
+                  >
+                    <div className="w-12 h-12 rounded-full bg-[#00A0DF] text-white flex items-center justify-center group-hover:scale-115 transition-transform shadow-lg shadow-[#00A0DF]/50">
+                      <Play size={20} className="fill-current ml-0.5" />
+                    </div>
+                    <span className="absolute bottom-2 left-2 text-[10px] font-bold text-white bg-black/70 px-2 py-0.5 rounded backdrop-blur-sm">
+                      ▶ Watch Feedback
+                    </span>
+                  </div>
+
+                  <div className="text-[11px] text-slate-500 font-semibold">
+                    {rev.author}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="text-center mt-6">
             <Link
               href="/enrollment"
               className="lwa-btn px-10 py-4 text-sm sm:text-base font-black rounded-xl"
@@ -679,8 +735,7 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-10">
             
-            {/* Card 1 */}
-            <div className="bg-[#FFF4E0] border border-amber-200/80 rounded-2xl p-6 shadow-sm">
+            <div className="bg-[#FFF4E0] border border-amber-200/80 rounded-2xl p-6 shadow-sm card-hover-lift">
               <div className="text-3xl mb-3">🌱</div>
               <h3 className="text-base font-black text-slate-900 mb-2">
                 If You’re a Complete <span className="text-amber-700">Beginner</span>
@@ -690,8 +745,7 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
               </p>
             </div>
 
-            {/* Card 2 */}
-            <div className="bg-[#E7F0FF] border border-blue-200/80 rounded-2xl p-6 shadow-sm">
+            <div className="bg-[#E7F0FF] border border-blue-200/80 rounded-2xl p-6 shadow-sm card-hover-lift">
               <div className="text-3xl mb-3">📣</div>
               <h3 className="text-base font-black text-slate-900 mb-2">
                 If You’re <span className="text-[#00A0DF]">Struggling With Ads</span>
@@ -701,8 +755,7 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
               </p>
             </div>
 
-            {/* Card 3 */}
-            <div className="bg-[#EAF9EF] border border-emerald-200/80 rounded-2xl p-6 shadow-sm">
+            <div className="bg-[#EAF9EF] border border-emerald-200/80 rounded-2xl p-6 shadow-sm card-hover-lift">
               <div className="text-3xl mb-3">💼</div>
               <h3 className="text-base font-black text-slate-900 mb-2">
                 If You’re a <span className="text-emerald-700">Business Owner</span>
@@ -712,8 +765,7 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
               </p>
             </div>
 
-            {/* Card 4 */}
-            <div className="bg-[#FDEAF1] border border-rose-200/80 rounded-2xl p-6 shadow-sm">
+            <div className="bg-[#FDEAF1] border border-rose-200/80 rounded-2xl p-6 shadow-sm card-hover-lift">
               <div className="text-3xl mb-3">🚀</div>
               <h3 className="text-base font-black text-slate-900 mb-2">
                 Ready to <span className="text-rose-700">Master Store Management</span>
@@ -723,8 +775,7 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
               </p>
             </div>
 
-            {/* Card 5 */}
-            <div className="bg-[#EDEAFE] border border-purple-200/80 rounded-2xl p-6 shadow-sm">
+            <div className="bg-[#EDEAFE] border border-purple-200/80 rounded-2xl p-6 shadow-sm card-hover-lift">
               <div className="text-3xl mb-3">📈</div>
               <h3 className="text-base font-black text-slate-900 mb-2">
                 If You’re Already <span className="text-purple-700">Running a Store</span>
@@ -734,8 +785,7 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
               </p>
             </div>
 
-            {/* Card 6 */}
-            <div className="bg-[#E0F7F6] border border-teal-200/80 rounded-2xl p-6 shadow-sm">
+            <div className="bg-[#E0F7F6] border border-teal-200/80 rounded-2xl p-6 shadow-sm card-hover-lift">
               <div className="text-3xl mb-3">💡</div>
               <h3 className="text-base font-black text-slate-900 mb-2">
                 If You’re a <span className="text-teal-700">Freelancer or Side Hustler</span>
@@ -799,22 +849,55 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
       </section>
 
       {/* ========================================================================= */}
-      {/* 10. REAL STUDENT SUCCESS & REVIEWS */}
+      {/* 10. REAL STUDENT SUCCESS & MOVING REVIEWS STREAM */}
       {/* ========================================================================= */}
       <section className="py-14 sm:py-20 bg-white">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           
-          <div className="text-center max-w-3xl mx-auto mb-12 sm:mb-16">
+          <div className="text-center max-w-3xl mx-auto mb-8 sm:mb-12">
             <span className="section-tag-pill">STUDENT RESULTS</span>
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 tracking-tight mb-3">
               Students <span className="text-[#00A0DF]">Success</span>
             </h2>
             <p className="text-xs sm:text-sm md:text-base text-slate-600 font-medium">
-              Real screenshots shared by our students — unedited and unfiltered.
+              Real screenshots and verified reviews shared by our students — unedited and unfiltered.
             </p>
           </div>
 
+          {/* Continuous Moving Proof Wall Component */}
           <ProofWall customTestimonials={content.testimonials} />
+
+          {/* Continuous Moving Live Profit Dashboard Streams */}
+          <div className="mt-12 pt-10 border-t border-gray-200">
+            <div className="text-center mb-6">
+              <span className="text-xs font-black uppercase tracking-wider text-[#00A0DF] bg-[#00A0DF]/10 px-3 py-1 rounded-full border border-[#00A0DF]/20">
+                LIVE STORE DASHBOARD WINS
+              </span>
+            </div>
+
+            <div className="overflow-hidden py-2 marquee-fade-mask">
+              <div className="animate-marquee flex items-center gap-4 sm:gap-6">
+                {[...studentEarningsScreenshots, ...studentEarningsScreenshots, ...studentEarningsScreenshots].map((s, idx) => (
+                  <div
+                    key={idx}
+                    className="bg-[#0B0F19] text-white border border-slate-800 rounded-2xl p-4 sm:p-5 w-[240px] sm:w-[270px] flex-shrink-0 shadow-lg hover:border-[#00A0DF] transition-colors"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-[10px] font-bold text-slate-400">{s.label}</span>
+                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                    </div>
+                    <div className="text-lg sm:text-xl font-black text-emerald-400 mb-1">
+                      {s.profit}
+                    </div>
+                    <div className="flex items-center justify-between text-[11px] text-slate-300 font-semibold">
+                      <span>{s.name}</span>
+                      <span className="text-[#00A0DF]">{s.orders}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
 
           <div className="text-center mt-10">
             <Link
@@ -847,7 +930,7 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
             
             {/* Option 01: The Hard Way */}
-            <div className="bg-white border-2 border-red-200 rounded-3xl p-6 sm:p-8 flex flex-col justify-between shadow-sm">
+            <div className="bg-white border-2 border-red-200 rounded-3xl p-6 sm:p-8 flex flex-col justify-between shadow-sm card-hover-lift">
               <div>
                 <span className="inline-block bg-red-100 text-red-700 text-xs font-black px-3.5 py-1 rounded-full uppercase tracking-wider mb-4 border border-red-200">
                   OPTION 01
@@ -881,7 +964,7 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
             </div>
 
             {/* Option 02: The Proven Blueprint */}
-            <div className="bg-[#0B0F19] text-white border-2 border-[#00A0DF] rounded-3xl p-6 sm:p-8 flex flex-col justify-between shadow-2xl relative">
+            <div className="bg-[#0B0F19] text-white border-2 border-[#00A0DF] rounded-3xl p-6 sm:p-8 flex flex-col justify-between shadow-2xl relative card-hover-lift">
               {/* Recommended Badge */}
               <div className="absolute -top-3.5 right-6 bg-amber-400 text-slate-950 font-black text-[11px] px-3.5 py-0.5 rounded-full uppercase tracking-wider shadow-md">
                 RECOMMENDED
@@ -949,7 +1032,7 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-10">
             
-            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6">
+            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 card-hover-lift">
               <span className="text-[11px] font-black uppercase text-slate-600 bg-slate-200/80 px-2.5 py-1 rounded-md inline-block mb-3">
                 3 MONTHS FROM NOW
               </span>
@@ -959,7 +1042,7 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
               </p>
             </div>
 
-            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6">
+            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 card-hover-lift">
               <span className="text-[11px] font-black uppercase text-slate-600 bg-slate-200/80 px-2.5 py-1 rounded-md inline-block mb-3">
                 1 YEAR FROM NOW
               </span>
@@ -969,7 +1052,7 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
               </p>
             </div>
 
-            <div className="bg-amber-50/70 border border-amber-200 rounded-2xl p-6">
+            <div className="bg-amber-50/70 border border-amber-200 rounded-2xl p-6 card-hover-lift">
               <span className="text-[11px] font-black uppercase text-amber-800 bg-amber-200/80 px-2.5 py-1 rounded-md inline-block mb-3">
                 EXPENSIVE GUESSING
               </span>
@@ -979,7 +1062,7 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
               </p>
             </div>
 
-            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6">
+            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 card-hover-lift">
               <span className="text-[11px] font-black uppercase text-slate-600 bg-slate-200/80 px-2.5 py-1 rounded-md inline-block mb-3">
                 RISING COMPETITION
               </span>
@@ -989,7 +1072,7 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
               </p>
             </div>
 
-            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6">
+            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 card-hover-lift">
               <span className="text-[11px] font-black uppercase text-slate-600 bg-slate-200/80 px-2.5 py-1 rounded-md inline-block mb-3">
                 WASTED MONTHS
               </span>
@@ -999,7 +1082,7 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
               </p>
             </div>
 
-            <div className="bg-emerald-50/70 border border-emerald-200 rounded-2xl p-6">
+            <div className="bg-emerald-50/70 border border-emerald-200 rounded-2xl p-6 card-hover-lift">
               <span className="text-[11px] font-black uppercase text-emerald-800 bg-emerald-200/80 px-2.5 py-1 rounded-md inline-block mb-3">
                 THE REAL MATH
               </span>

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Star, ShieldCheck } from 'lucide-react';
+import { Star, ShieldCheck, Sparkles, LayoutGrid, MoveHorizontal } from 'lucide-react';
 
 export function ProofWall({ customTestimonials }: { customTestimonials?: any[] }) {
   const defaultList = [
@@ -58,10 +58,29 @@ export function ProofWall({ customTestimonials }: { customTestimonials?: any[] }
       quote: 'Verified suppliers with Arabic packaging makes local buyers trust the store. Return rate dropped to 11%.',
       market: 'UAE Market',
       initials: 'SA'
+    },
+    {
+      name: 'Muhammad Asif',
+      city: 'Gujranwala',
+      sales: 'AED 6,200 / 10 Days',
+      orders: '38 Orders',
+      quote: 'The Shopify theme and ChatGPT ad scripts saved me days of work. Real results from week 1!',
+      market: 'UAE Market',
+      initials: 'MA'
+    },
+    {
+      name: 'Farhan Sheikh',
+      city: 'Peshawar',
+      sales: 'SAR 5,150',
+      orders: '31 Orders',
+      quote: 'From zero experience to profitable dropshipping store in KSA. Sami’s guidance is unmatched.',
+      market: 'KSA Market',
+      initials: 'FS'
     }
   ];
 
   const [testimonials, setTestimonials] = useState<any[]>(customTestimonials || defaultList);
+  const [viewMode, setViewMode] = useState<'moving' | 'grid'>('moving');
 
   useEffect(() => {
     if (customTestimonials && customTestimonials.length > 0) {
@@ -78,57 +97,196 @@ export function ProofWall({ customTestimonials }: { customTestimonials?: any[] }
       .catch(() => {});
   }, [customTestimonials]);
 
+  const row1 = testimonials.slice(0, Math.ceil(testimonials.length / 2));
+  const row2 = testimonials.slice(Math.ceil(testimonials.length / 2));
+
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-        {testimonials.map((t, index) => (
-          <div
-            key={index}
-            className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm hover:shadow-md hover:border-[#00A0DF]/40 transition-all flex flex-col justify-between"
+      
+      {/* Interactive Mode Switcher */}
+      <div className="flex items-center justify-between max-w-5xl mx-auto px-4">
+        <div className="flex items-center gap-2 text-xs font-bold text-slate-500">
+          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+          <span>Live Moving Student Reviews (Hover to pause)</span>
+        </div>
+
+        <div className="flex items-center bg-gray-100 p-1 rounded-xl border border-gray-200 text-xs font-bold">
+          <button
+            onClick={() => setViewMode('moving')}
+            className={`flex items-center gap-1.5 px-3 py-1 rounded-lg transition-all ${
+              viewMode === 'moving'
+                ? 'bg-white text-[#00A0DF] shadow-sm'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
           >
-            <div>
-              {/* Stars & Market */}
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex gap-1 text-amber-400">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} size={15} className="fill-amber-400 text-amber-400" />
-                  ))}
-                </div>
-                <span className="text-[10px] font-black uppercase tracking-wider bg-[#00A0DF]/10 text-[#00A0DF] px-2.5 py-0.5 rounded-full border border-[#00A0DF]/20">
-                  {t.market || 'Verified Student'}
-                </span>
-              </div>
-
-              {/* Quote */}
-              <p className="text-xs sm:text-sm text-slate-700 font-medium leading-relaxed mb-6">
-                &ldquo;{t.quote}&rdquo;
-              </p>
-            </div>
-
-            {/* Student Details & Revenue Pill */}
-            <div className="pt-3.5 border-t border-gray-100 flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-full bg-[#00A0DF] text-white flex items-center justify-center font-black text-xs">
-                  {t.initials || t.name?.substring(0, 2).toUpperCase() || 'ST'}
-                </div>
-                <div>
-                  <h4 className="text-xs sm:text-sm font-bold text-slate-900 flex items-center gap-1">
-                    <span>{t.name}</span>
-                    <ShieldCheck size={13} className="text-[#00A0DF]" />
-                  </h4>
-                  <p className="text-[11px] text-slate-500 font-semibold">{t.city}</p>
-                </div>
-              </div>
-
-              {t.sales && (
-                <span className="inline-block text-[11px] font-extrabold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md">
-                  {t.sales}
-                </span>
-              )}
-            </div>
-          </div>
-        ))}
+            <MoveHorizontal size={14} />
+            <span>Auto Moving</span>
+          </button>
+          <button
+            onClick={() => setViewMode('grid')}
+            className={`flex items-center gap-1.5 px-3 py-1 rounded-lg transition-all ${
+              viewMode === 'grid'
+                ? 'bg-white text-[#00A0DF] shadow-sm'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <LayoutGrid size={14} />
+            <span>Grid View</span>
+          </button>
+        </div>
       </div>
+
+      {/* 1. AUTO MOVING HORIZONTAL MARQUEE STREAMS */}
+      {viewMode === 'moving' ? (
+        <div className="space-y-4 overflow-hidden py-2 marquee-fade-mask relative">
+          
+          {/* Row 1: Leftward Moving Stream */}
+          <div className="animate-marquee-slow flex items-stretch gap-4 sm:gap-5">
+            {[...testimonials, ...testimonials, ...testimonials].map((t, idx) => (
+              <div
+                key={`r1-${idx}`}
+                className="w-[300px] sm:w-[350px] bg-white border border-gray-200 rounded-2xl p-5 shadow-sm hover:shadow-xl hover:border-[#00A0DF]/50 transition-all flex flex-col justify-between flex-shrink-0 cursor-pointer"
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-2.5">
+                    <div className="flex gap-1 text-amber-400">
+                      {[...Array(5)].map((_, i) => (
+                        <Star key={i} size={14} className="fill-amber-400 text-amber-400" />
+                      ))}
+                    </div>
+                    <span className="text-[10px] font-black uppercase tracking-wider bg-[#00A0DF]/10 text-[#00A0DF] px-2 py-0.5 rounded-full border border-[#00A0DF]/20">
+                      {t.market || 'Verified Student'}
+                    </span>
+                  </div>
+
+                  <p className="text-xs sm:text-sm text-slate-700 font-medium leading-relaxed mb-4">
+                    &ldquo;{t.quote}&rdquo;
+                  </p>
+                </div>
+
+                <div className="pt-3 border-t border-gray-100 flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-full bg-[#00A0DF] text-white flex items-center justify-center font-black text-[11px]">
+                      {t.initials || t.name?.substring(0, 2).toUpperCase() || 'ST'}
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-bold text-slate-900 flex items-center gap-1">
+                        <span>{t.name}</span>
+                        <ShieldCheck size={12} className="text-[#00A0DF]" />
+                      </h4>
+                      <p className="text-[10px] text-slate-500 font-semibold">{t.city}</p>
+                    </div>
+                  </div>
+
+                  {t.sales && (
+                    <span className="inline-block text-[10px] sm:text-[11px] font-extrabold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md">
+                      {t.sales}
+                    </span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Row 2: Reverse Moving Stream */}
+          <div className="animate-marquee-reverse flex items-stretch gap-4 sm:gap-5">
+            {[...testimonials, ...testimonials, ...testimonials].reverse().map((t, idx) => (
+              <div
+                key={`r2-${idx}`}
+                className="w-[300px] sm:w-[350px] bg-slate-900 text-white border border-slate-800 rounded-2xl p-5 shadow-sm hover:shadow-xl hover:border-emerald-500/50 transition-all flex flex-col justify-between flex-shrink-0 cursor-pointer"
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-2.5">
+                    <div className="flex gap-1 text-amber-400">
+                      {[...Array(5)].map((_, i) => (
+                        <Star key={i} size={14} className="fill-amber-400 text-amber-400" />
+                      ))}
+                    </div>
+                    <span className="text-[10px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full border border-emerald-500/30">
+                      {t.market || 'Verified Student'}
+                    </span>
+                  </div>
+
+                  <p className="text-xs sm:text-sm text-slate-200 font-medium leading-relaxed mb-4">
+                    &ldquo;{t.quote}&rdquo;
+                  </p>
+                </div>
+
+                <div className="pt-3 border-t border-slate-800 flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-full bg-emerald-500 text-white flex items-center justify-center font-black text-[11px]">
+                      {t.initials || t.name?.substring(0, 2).toUpperCase() || 'ST'}
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-bold text-white flex items-center gap-1">
+                        <span>{t.name}</span>
+                        <ShieldCheck size={12} className="text-emerald-400" />
+                      </h4>
+                      <p className="text-[10px] text-slate-400 font-semibold">{t.city}</p>
+                    </div>
+                  </div>
+
+                  {t.sales && (
+                    <span className="inline-block text-[10px] sm:text-[11px] font-extrabold text-emerald-400 bg-emerald-950/60 border border-emerald-500/40 px-2 py-0.5 rounded-md">
+                      {t.sales}
+                    </span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+
+        </div>
+      ) : (
+        /* 2. GRID VIEW FALLBACK */
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 max-w-6xl mx-auto px-4">
+          {testimonials.map((t, index) => (
+            <div
+              key={index}
+              className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm hover:shadow-md hover:border-[#00A0DF]/40 transition-all flex flex-col justify-between"
+            >
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex gap-1 text-amber-400">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} size={14} className="fill-amber-400 text-amber-400" />
+                    ))}
+                  </div>
+                  <span className="text-[10px] font-black uppercase tracking-wider bg-[#00A0DF]/10 text-[#00A0DF] px-2.5 py-0.5 rounded-full border border-[#00A0DF]/20">
+                    {t.market || 'Verified Student'}
+                  </span>
+                </div>
+
+                <p className="text-xs sm:text-sm text-slate-700 font-medium leading-relaxed mb-5">
+                  &ldquo;{t.quote}&rdquo;
+                </p>
+              </div>
+
+              <div className="pt-3 border-t border-gray-100 flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-full bg-[#00A0DF] text-white flex items-center justify-center font-black text-xs">
+                    {t.initials || t.name?.substring(0, 2).toUpperCase() || 'ST'}
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-bold text-slate-900 flex items-center gap-1">
+                      <span>{t.name}</span>
+                      <ShieldCheck size={12} className="text-[#00A0DF]" />
+                    </h4>
+                    <p className="text-[10px] text-slate-500 font-semibold">{t.city}</p>
+                  </div>
+                </div>
+
+                {t.sales && (
+                  <span className="inline-block text-[11px] font-extrabold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md">
+                    {t.sales}
+                  </span>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
     </div>
   );
 }

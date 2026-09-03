@@ -241,10 +241,17 @@ body {
   margin-top: 0.15rem;
 }
 
-/* Marquee Animation */
+/* ========================================================================= */
+/* Marquee & Continuous Moving Track Animations */
+/* ========================================================================= */
 @keyframes marquee {
   0% { transform: translateX(0%); }
   100% { transform: translateX(-50%); }
+}
+
+@keyframes marqueeReverse {
+  0% { transform: translateX(-50%); }
+  100% { transform: translateX(0%); }
 }
 
 .animate-marquee {
@@ -255,6 +262,32 @@ body {
 
 .animate-marquee:hover {
   animation-play-state: paused;
+}
+
+.animate-marquee-slow {
+  display: flex;
+  width: max-content;
+  animation: marquee 45s linear infinite;
+}
+
+.animate-marquee-slow:hover {
+  animation-play-state: paused;
+}
+
+.animate-marquee-reverse {
+  display: flex;
+  width: max-content;
+  animation: marqueeReverse 40s linear infinite;
+}
+
+.animate-marquee-reverse:hover {
+  animation-play-state: paused;
+}
+
+/* Soft Fade Masks for Horizontal Carousels */
+.marquee-fade-mask {
+  mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
 }
 
 @keyframes pulseGlow {
@@ -272,6 +305,16 @@ body {
   animation: pulseGlow 5s ease-in-out infinite;
 }
 
+/* Floating Animation */
+@keyframes floatY {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-6px); }
+}
+
+.animate-float {
+  animation: floatY 4s ease-in-out infinite;
+}
+
 /* WhatsApp Floating Pulse */
 @keyframes whatsappPulse {
   0% {
@@ -287,4 +330,15 @@ body {
 
 .animate-whatsapp-pulse {
   animation: whatsappPulse 2s infinite;
+}
+
+/* Interactive Card Lift */
+.card-hover-lift {
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.card-hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 15px 30px -10px rgba(0, 160, 223, 0.18);
+  border-color: rgba(0, 160, 223, 0.45);
 }
