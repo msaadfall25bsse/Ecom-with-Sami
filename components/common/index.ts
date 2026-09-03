@@ -1,0 +1,1 @@
+export { WhatsAppWidget } from './WhatsAppWidget';
