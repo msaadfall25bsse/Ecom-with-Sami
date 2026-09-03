@@ -24,7 +24,9 @@ export default function AdminLoginPage() {
       const data = await res.json();
 
       if (data.success) {
-        window.location.href = '/admin';
+        const searchParams = new URLSearchParams(window.location.search);
+        const redirectUrl = searchParams.get('redirect') || '/admin';
+        window.location.href = redirectUrl;
       } else {
         setError(data.message || 'Invalid admin credentials.');
       }

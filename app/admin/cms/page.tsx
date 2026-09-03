@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { 
   Save, 
   Sparkles, 
@@ -34,6 +35,8 @@ import { Module, Supplier } from '@/utils/db';
 import { supabase } from '@/lib/supabase';
 
 export default function AdminCmsPage() {
+  const router = useRouter();
+  const [authChecking, setAuthChecking] = useState(true);
   const [activeTab, setActiveTab] = useState<'lms' | 'hero' | 'stats' | 'bonuses' | 'reviews' | 'faqs' | 'payments' | 'contact' | 'pixels'>('lms');
   const [cmsData, setCmsData] = useState<CmsContentSchema>(defaultCmsContent);
   const [modules, setModules] = useState<Module[]>([]);
@@ -147,7 +150,19 @@ export default function AdminCmsPage() {
   };
 
   useEffect(() => {
-    fetchAllData();
+    fetch('/api/auth/me?t=' + Date.now())
+      .then(res => res.json())
+      .then(data => {
+        if (!data.authenticated || data.role !== 'ADMIN') {
+          router.replace('/admin/login?redirect=/admin/cms');
+        } else {
+          setAuthChecking(false);
+          fetchAllData();
+        }
+      })
+      .catch(() => {
+        router.replace('/admin/login?redirect=/admin/cms');
+      });
   }, []);
 
   const handleSaveAll = async () => {

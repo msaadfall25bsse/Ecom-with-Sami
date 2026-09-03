@@ -36,7 +36,14 @@ export default function LoginPage() {
       const data = await res.json();
 
       if (data.success) {
-        window.location.href = '/lms';
+        if (data.user) {
+          try {
+            localStorage.setItem('sami_student_auth', JSON.stringify(data.user));
+          } catch (e) {}
+        }
+        const searchParams = new URLSearchParams(window.location.search);
+        const redirectUrl = searchParams.get('redirect') || '/lms';
+        window.location.href = redirectUrl;
       } else {
         setError(data.message || 'Invalid credentials.');
       }

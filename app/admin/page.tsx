@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { 
   Users, 
   CreditCard, 
@@ -27,6 +28,8 @@ import {
 import { Enrollment, Student } from '@/utils/db';
 
 export default function AdminDashboardPage() {
+  const router = useRouter();
+  const [authChecking, setAuthChecking] = useState(true);
   const [activeTab, setActiveTab] = useState<'overview' | 'enrollments' | 'students'>('overview');
   const [stats, setStats] = useState({
     totalStudents: 9742,
@@ -54,6 +57,29 @@ export default function AdminDashboardPage() {
     city: 'Lahore',
     password: 'studentpass2026'
   });
+
+  useEffect(() => {
+    fetch('/api/auth/me?t=' + Date.now())
+      .then(res => res.json())
+      .then(data => {
+        if (!data.authenticated || data.role !== 'ADMIN') {
+          router.replace('/admin/login?redirect=/admin');
+        } else {
+          setAuthChecking(false);
+          fetchDashboardData();
+        }
+      })
+      .catch(() => {
+        router.replace('/admin/login?redirect=/admin');
+      });
+  }, []);
+
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+    } catch (e) {}
+    router.replace('/admin/login');
+  };
 
   const fetchDashboardData = () => {
     setLoading(true);

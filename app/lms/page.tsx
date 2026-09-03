@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { 
   Play, 
   CheckCircle2, 
@@ -17,24 +18,26 @@ import {
   FileText, 
   ShoppingBag, 
   MessageSquare, 
-  Search,
-  ExternalLink,
-  ChevronLeft,
-  Menu,
-  X,
-  Zap,
-  Globe2,
-  ShieldCheck,
-  Check,
-  ListVideo
+  Search, 
+  ExternalLink, 
+  ChevronLeft, 
+  Menu, 
+  X, 
+  Zap, 
+  Globe2, 
+  ShieldCheck, 
+  Check, 
+  ListVideo 
 } from 'lucide-react';
 import { Module, Supplier, ResourceItem } from '@/utils/db';
 
 export default function LmsClassroomPage() {
+  const router = useRouter();
   const [modules, setModules] = useState<Module[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [resources, setResources] = useState<ResourceItem[]>([]);
   const [user, setUser] = useState<any>(null);
+  const [authChecking, setAuthChecking] = useState(true);
   const [activeLesson, setActiveLesson] = useState<any>(null);
   const [completedLessons, setCompletedLessons] = useState<string[]>([]);
   const [openModuleId, setOpenModuleId] = useState<number>(1);
@@ -44,10 +47,22 @@ export default function LmsClassroomPage() {
   const [supplierSearch, setSupplierSearch] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+    } catch (e) {}
+    try {
+      localStorage.removeItem('sami_student_auth');
+      document.cookie = 'sami_student_auth=; path=/; max-age=0';
+      document.cookie = 'sami_student_session=; path=/; max-age=0';
+    } catch (e) {}
+    router.replace('/login');
+  };
+
   useEffect(() => {
     const timestamp = Date.now();
 
-    // Check auth
+    // 1. Strict Authentication Check
     fetch(`/api/auth/me?t=${timestamp}`, {
       cache: 'no-store',
       headers: {
@@ -60,12 +75,30 @@ export default function LmsClassroomPage() {
         if (res.authenticated && res.user) {
           setUser(res.user);
           setCompletedLessons(res.user.completedLessons || []);
+          setAuthChecking(false);
         } else {
-          setUser({ name: 'Sami Student', email: 'student@samiecom.com' });
+          // Check cookie fallback for static hosting
+          let foundUser = null;
+          try {
+            const cookieAuth = document.cookie
+              .split('; ')
+              .find(row => row.startsWith('sami_student_auth='))
+              ?.split('=')[1];
+            if (cookieAuth) {
+              foundUser = JSON.parse(decodeURIComponent(cookieAuth));
+            }
+          } catch (e) {}
+
+          if (foundUser && foundUser.email) {
+            setUser(foundUser);
+            setAuthChecking(false);
+          } else {
+            router.replace('/login?redirect=/lms');
+          }
         }
       })
       .catch(() => {
-        setUser({ name: 'Sami Student', email: 'student@samiecom.com' });
+        router.replace('/login?redirect=/lms');
       });
 
     // Fetch modules directly from DB
@@ -136,11 +169,6 @@ export default function LmsClassroomPage() {
     } catch (e) {
       console.error(e);
     }
-  };
-
-  const handleLogout = async () => {
-    await fetch('/api/auth/logout', { method: 'POST' });
-    window.location.href = '/login';
   };
 
   // Find all lessons in flat list for next/prev navigation

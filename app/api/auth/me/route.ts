@@ -1,22 +1,48 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/utils/db';
+import { getAdminSessionFromRequest, getStudentSessionFromRequest } from '@/lib/auth';
+import { dbGetStudentByEmail, dbGetStudents } from '@/lib/database';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
-    const studentSession = request.cookies.get('sami_student_session')?.value;
-    const adminSession = request.cookies.get('sami_admin_session')?.value;
-
-    if (adminSession === 'authenticated_super_admin') {
+    // 1. Check Admin Session
+    const adminSession = getAdminSessionFromRequest(request);
+    if (adminSession) {
       return NextResponse.json({
         authenticated: true,
         role: 'ADMIN',
-        user: { name: 'Muhammad Sami', email: 'admin@samiecom.com' }
+        user: {
+          id: adminSession.id,
+          name: 'Muhammad Sami',
+          email: adminSession.email || 'admin@samiecom.com',
+          role: 'SUPER_ADMIN'
+        }
       });
     }
 
+    // 2. Check Student Session
+    const studentSession = getStudentSessionFromRequest(request);
     if (studentSession) {
-      const student = db.getStudentById(studentSession);
-      if (student && student.isActive) {
+      let student = null;
+      if (studentSession.email) {
+        student = await dbGetStudentByEmail(studentSession.email);
+      }
+      if (!student && studentSession.id) {
+        const allStudents = await dbGetStudents();
+        student = allStudents.find(s => String(s.id) === String(studentSession.id)) || null;
+      }
+
+      if (student) {
+        if (!student.isActive) {
+          return NextResponse.json({
+            authenticated: false,
+            role: 'GUEST',
+            user: null,
+            message: 'Account is pending activation.'
+          });
+        }
+
         return NextResponse.json({
           authenticated: true,
           role: 'STUDENT',
@@ -26,7 +52,8 @@ export async function GET(request: NextRequest) {
             email: student.email,
             phone: student.phone,
             city: student.city,
-            completedLessons: student.completedLessons || []
+            completedLessons: student.completedLessons || [],
+            role: 'student'
           }
         });
       }
@@ -38,6 +65,9 @@ export async function GET(request: NextRequest) {
       user: null
     });
   } catch (error: any) {
-    return NextResponse.json({ authenticated: false, error: error.message }, { status: 500 });
+    return NextResponse.json(
+      { authenticated: false, role: 'GUEST', user: null, error: error.message },
+      { status: 500 }
+    );
   }
 }
