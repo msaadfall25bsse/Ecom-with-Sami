@@ -8,10 +8,9 @@ import {
   Lock, 
   Mail, 
   ArrowRight, 
-  Download, 
-  ShieldCheck, 
-  Smartphone, 
-  Laptop,
+  AlertCircle,
+  Laptop, 
+  Smartphone,
   CheckCircle2
 } from 'lucide-react';
 import { useContactConfig } from '@/utils/contactConfig';
@@ -23,20 +22,29 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
 
-    setTimeout(() => {
-      setLoading(false);
-      // Demo validation or redirect
-      if (email && password) {
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json();
+
+      if (data.success) {
         window.location.href = '/lms';
       } else {
-        setError('Please enter your valid registered email and password.');
+        setError(data.message || 'Invalid credentials.');
       }
-    }, 1000);
+    } catch (err: any) {
+      setError(err.message || 'Server connection error.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -58,8 +66,9 @@ export default function LoginPage() {
             </div>
 
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-600 text-xs font-bold rounded-xl p-3 mb-4 text-center">
-                {error}
+              <div className="bg-red-50 border border-red-200 text-red-600 text-xs font-bold rounded-xl p-3 mb-4 text-center flex items-center justify-center gap-2">
+                <AlertCircle size={15} />
+                <span>{error}</span>
               </div>
             )}
 
@@ -71,7 +80,7 @@ export default function LoginPage() {
                   <input
                     type="email"
                     required
-                    placeholder="student@gmail.com"
+                    placeholder="student@samiecom.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-300 text-sm focus:outline-none focus:border-[#00A0DF]"
@@ -96,7 +105,7 @@ export default function LoginPage() {
 
               <div className="flex items-center justify-between text-xs text-slate-600 pt-1">
                 <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" className="rounded text-[#00A0DF]" />
+                  <input type="checkbox" defaultChecked className="rounded text-[#00A0DF]" />
                   <span>Remember me</span>
                 </label>
                 <a
@@ -114,7 +123,7 @@ export default function LoginPage() {
                 disabled={loading}
                 className="w-full py-3.5 px-6 rounded-xl text-sm font-black text-white bg-[#00A0DF] hover:bg-[#008ec7] disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-[#00A0DF]/30 transition-all"
               >
-                <span>{loading ? 'Logging In...' : 'Access My Classroom'}</span>
+                <span>{loading ? 'Authenticating with Backend...' : 'Access My Classroom'}</span>
                 <ArrowRight size={16} />
               </button>
             </form>

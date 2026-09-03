@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { ShieldCheck, Lock, Mail, ArrowRight } from 'lucide-react';
+import { ShieldCheck, Lock, Mail, ArrowRight, AlertCircle } from 'lucide-react';
 
 export default function AdminLoginPage() {
   const [email, setEmail] = useState('');
@@ -10,19 +10,29 @@ export default function AdminLoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const handleAdminLogin = (e: React.FormEvent) => {
+  const handleAdminLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
 
-    setTimeout(() => {
-      setLoading(false);
-      if (email && password) {
+    try {
+      const res = await fetch('/api/auth/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json();
+
+      if (data.success) {
         window.location.href = '/admin';
       } else {
-        setError('Invalid admin credentials.');
+        setError(data.message || 'Invalid admin credentials.');
       }
-    }, 1000);
+    } catch (err: any) {
+      setError(err.message || 'Server connection error.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -37,8 +47,9 @@ export default function AdminLoginPage() {
         </div>
 
         {error && (
-          <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-xs font-bold rounded-xl p-3 mb-4 text-center">
-            {error}
+          <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-xs font-bold rounded-xl p-3 mb-4 text-center flex items-center justify-center gap-2">
+            <AlertCircle size={15} />
+            <span>{error}</span>
           </div>
         )}
 
@@ -78,7 +89,7 @@ export default function AdminLoginPage() {
             disabled={loading}
             className="w-full py-3.5 px-6 rounded-xl text-sm font-black text-white bg-[#00A0DF] hover:bg-[#008ec7] disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-[#00A0DF]/30 transition-all mt-6"
           >
-            <span>{loading ? 'Authenticating...' : 'Sign In to Dashboard'}</span>
+            <span>{loading ? 'Authenticating with Backend...' : 'Sign In to Dashboard'}</span>
             <ArrowRight size={16} />
           </button>
         </form>

@@ -1,19 +1,27 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
+import { db } from '@/utils/db';
 
-export async function GET(request: NextRequest) {
-  const authHeader = request.headers.get('authorization');
-  if (!authHeader) {
-    return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
+export async function GET() {
+  try {
+    const students = db.getStudents();
+    const enrollments = db.getEnrollments();
+
+    const totalStudentsCount = 9700 + students.length;
+    const pendingEnrollments = enrollments.filter(e => e.status === 'pending');
+    const approvedEnrollments = enrollments.filter(e => e.status === 'approved');
+    const totalRevenuePKR = (totalStudentsCount * 3900);
+
+    return NextResponse.json({
+      success: true,
+      stats: {
+        totalStudents: totalStudentsCount,
+        pendingApprovals: pendingEnrollments.length,
+        approvedEnrollments: approvedEnrollments.length,
+        totalRevenueFormatted: `PKR ${(totalRevenuePKR / 1000000).toFixed(1)}M`,
+        recentEnrollments: enrollments.slice(0, 8)
+      }
+    });
+  } catch (error: any) {
+    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
   }
-
-  return NextResponse.json({
-    success: true,
-    metrics: {
-      totalStudents: 9740,
-      activeEnrollments: 9420,
-      pendingEnrollments: 3,
-      bannedStudents: 0,
-      totalRevenue: 'PKR 37,986,000'
-    }
-  });
 }

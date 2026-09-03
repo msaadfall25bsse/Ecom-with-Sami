@@ -9,11 +9,9 @@ import {
   MapPin, 
   Clock, 
   Send, 
-  ShieldCheck, 
   CheckCircle2, 
   MessageSquare,
-  HelpCircle,
-  Sparkles
+  AlertCircle
 } from 'lucide-react';
 import { useContactConfig } from '@/utils/contactConfig';
 
@@ -22,6 +20,8 @@ export default function SupportPage() {
   const whatsappUrl = getWhatsAppUrl('Hi Sami Team! I need support regarding my course access / inquiry.');
   
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -30,9 +30,29 @@ export default function SupportPage() {
     message: ''
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitted(true);
+    setSubmitting(true);
+    setErrorMsg('');
+
+    try {
+      const res = await fetch('/api/support/ticket', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        setSubmitted(true);
+      } else {
+        setErrorMsg(data.message || 'Error submitting ticket.');
+      }
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Server error.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -45,7 +65,7 @@ export default function SupportPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl mx-auto">
             <span className="inline-block bg-[#00A0DF]/20 text-[#00A0DF] border border-[#00A0DF]/40 text-xs font-black uppercase tracking-wider px-4 py-1.5 rounded-full mb-4">
-              STUDENT HELP DESK
+              STUDENT HELP DESK &bull; 24/7 TICKETING
             </span>
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-white tracking-tight mb-4 sm:mb-6">
               How Can We <span className="text-[#00A0DF]">Help You Today?</span>
@@ -123,12 +143,19 @@ export default function SupportPage() {
                   Fill out the form below and our support team will respond within 2 to 4 business hours.
                 </p>
 
+                {errorMsg && (
+                  <div className="bg-red-50 border border-red-200 text-red-600 text-xs font-bold rounded-xl p-3 mb-4 flex items-center gap-2">
+                    <AlertCircle size={15} />
+                    <span>{errorMsg}</span>
+                  </div>
+                )}
+
                 {submitted ? (
                   <div className="bg-emerald-50 border border-emerald-300 rounded-2xl p-6 text-center text-emerald-900">
                     <CheckCircle2 size={36} className="text-emerald-600 mx-auto mb-3" />
-                    <h4 className="text-lg font-bold mb-1">Message Received!</h4>
+                    <h4 className="text-lg font-bold mb-1">Ticket Submitted to Backend!</h4>
                     <p className="text-xs sm:text-sm text-emerald-700 mb-4">
-                      Thank you for contacting us. We will get back to you via email or WhatsApp shortly.
+                      Thank you for contacting us. Our support agent has received your ticket and will reach out to you via WhatsApp or Email shortly.
                     </p>
                     <button
                       onClick={() => setSubmitted(false)}
@@ -204,10 +231,11 @@ export default function SupportPage() {
 
                     <button
                       type="submit"
-                      className="w-full py-3.5 px-6 rounded-xl text-sm sm:text-base font-black text-white bg-[#00A0DF] hover:bg-[#008ec7] shadow-lg shadow-[#00A0DF]/30 flex items-center justify-center gap-2 transition-all"
+                      disabled={submitting}
+                      className="w-full py-3.5 px-6 rounded-xl text-sm sm:text-base font-black text-white bg-[#00A0DF] hover:bg-[#008ec7] disabled:opacity-50 shadow-lg shadow-[#00A0DF]/30 flex items-center justify-center gap-2 transition-all"
                     >
                       <Send size={16} />
-                      <span>Submit Help Request</span>
+                      <span>{submitting ? 'Submitting to Backend...' : 'Submit Help Request'}</span>
                     </button>
                   </form>
                 )}

@@ -8,22 +8,21 @@ import {
   CheckCircle2, 
   Clock, 
   ArrowRight, 
-  Lock, 
   Copy, 
   Upload, 
-  Sparkles,
-  Zap
+  AlertCircle
 } from 'lucide-react';
 import { useContactConfig } from '@/utils/contactConfig';
 
 export default function EnrollmentPage() {
-  const { displayPhone, getWhatsAppUrl } = useContactConfig();
+  const { displayPhone } = useContactConfig();
 
   const [step, setStep] = useState(1);
   const [copiedAccount, setCopiedAccount] = useState<string | null>(null);
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [success, setSuccess] = useState(false);
+  const [successData, setSuccessData] = useState<any>(null);
+  const [errorMsg, setErrorMsg] = useState('');
 
   const [formData, setFormData] = useState({
     fullName: '',
@@ -54,7 +53,6 @@ export default function EnrollmentPage() {
       name: 'Meezan Bank Ltd',
       accountTitle: 'SARDAR SAMIULLAH',
       accountNumber: '01010101010101',
-      iban: 'PK00MEZN0001010101010101',
       badge: 'Direct Bank Transfer'
     },
     {
@@ -72,13 +70,29 @@ export default function EnrollmentPage() {
     setTimeout(() => setCopiedAccount(null), 2500);
   };
 
-  const handleFinalSubmit = (e: React.FormEvent) => {
+  const handleFinalSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
-    setTimeout(() => {
+    setErrorMsg('');
+
+    try {
+      const res = await fetch('/api/enrollment/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      });
+      const data = await res.json();
+
+      if (data.success && data.enrollment) {
+        setSuccessData(data.enrollment);
+      } else {
+        setErrorMsg(data.message || 'Failed to submit enrollment.');
+      }
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Network error occurred.');
+    } finally {
       setSubmitting(false);
-      setSuccess(true);
-    }, 1200);
+    }
   };
 
   return (
@@ -131,28 +145,39 @@ export default function EnrollmentPage() {
         {/* Content Box */}
         <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-10 shadow-xl">
           
-          {success ? (
+          {errorMsg && (
+            <div className="bg-red-50 border border-red-200 text-red-700 text-xs font-bold rounded-xl p-3 mb-6 flex items-center gap-2">
+              <AlertCircle size={16} className="flex-shrink-0" />
+              <span>{errorMsg}</span>
+            </div>
+          )}
+
+          {successData ? (
             <div className="text-center py-6">
               <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-4">
                 <CheckCircle2 size={36} />
               </div>
-              <h2 className="text-2xl font-black text-slate-900 mb-2">Application Submitted Successfully!</h2>
-              <p className="text-xs sm:text-sm text-slate-600 max-w-md mx-auto mb-6 leading-relaxed">
-                Thank you, <strong>{formData.fullName}</strong>. We have received your payment proof for PKR 3,900. Your LMS credentials will be sent to <strong>{formData.email}</strong> within 15 minutes.
+              <h2 className="text-2xl font-black text-slate-900 mb-2">Enrollment Submitted!</h2>
+              <p className="text-xs sm:text-sm text-slate-600 max-w-md mx-auto mb-4 leading-relaxed">
+                Thank you, <strong>{successData.name}</strong>. Your application has been logged with Tracking Code: <strong className="text-[#00A0DF] font-mono">{successData.trackingCode}</strong>.
               </p>
-              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 max-w-md mx-auto text-left text-xs text-slate-700 mb-6 space-y-1">
-                <div><strong>Transaction ID:</strong> {formData.transactionId || 'N/A'}</div>
-                <div><strong>Selected Method:</strong> {formData.paymentMethod}</div>
-                <div><strong>WhatsApp:</strong> {formData.phone}</div>
+              
+              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 max-w-md mx-auto text-left text-xs text-slate-700 mb-6 space-y-1.5">
+                <div><strong>Student Name:</strong> {successData.name}</div>
+                <div><strong>Registered Email:</strong> {successData.email}</div>
+                <div><strong>Tracking Code:</strong> <span className="font-mono text-emerald-600 font-bold">{successData.trackingCode}</span></div>
+                <div><strong>Amount:</strong> {successData.amount}</div>
+                <div><strong>Status:</strong> <span className="text-amber-600 font-bold uppercase">{successData.status}</span></div>
               </div>
+
               <a
-                href={getWhatsAppUrl(`Hi Sami! I just submitted my enrollment form for PKR 3,900. My name is ${formData.fullName} and WhatsApp is ${formData.phone}. Please activate my LMS portal.`)}
+                href={successData.whatsappUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="btn-primary inline-flex px-8 py-3.5 text-sm font-black rounded-xl shadow-lg"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 text-sm sm:text-base font-black text-white bg-[#25D366] hover:bg-[#1faa53] rounded-xl shadow-lg shadow-emerald-500/30 transition-all"
               >
-                <span>Notify Support on WhatsApp for Fast Track</span>
-                <ArrowRight size={16} />
+                <span>Notify Sami on WhatsApp for Fast Track Activation</span>
+                <ArrowRight size={18} />
               </a>
             </div>
           ) : (
@@ -361,7 +386,7 @@ export default function EnrollmentPage() {
                     className="w-full py-4 px-6 rounded-xl text-sm sm:text-base font-black text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 flex items-center justify-center gap-2 shadow-xl shadow-emerald-500/30 transition-all"
                   >
                     <ShieldCheck size={18} />
-                    <span>{submitting ? 'Verifying Application...' : 'Submit Application & Activate LMS'}</span>
+                    <span>{submitting ? 'Submitting to Backend...' : 'Submit Application & Activate LMS'}</span>
                   </button>
                 </form>
               )}
