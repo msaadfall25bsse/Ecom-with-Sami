@@ -4,7 +4,6 @@ import React, { useEffect, useRef } from 'react';
 import { ChevronUp } from 'lucide-react';
 
 export function ScrollEffects() {
-  const progressBarRef = useRef<HTMLDivElement>(null);
   const scrollTopBtnRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
@@ -12,16 +11,9 @@ export function ScrollEffects() {
 
     let ticking = false;
 
-    // 1. Hardware-Accelerated 60/120 FPS Scroll Handler
+    // 1. Hardware-Accelerated Scroll Handler
     const updateScrollVisuals = () => {
       const totalScroll = window.scrollY || document.documentElement.scrollTop || 0;
-      const docHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
-
-      // Update Top Progress Bar smoothly
-      if (progressBarRef.current && docHeight > 0) {
-        const progress = Math.min(100, Math.max(0, (totalScroll / docHeight) * 100));
-        progressBarRef.current.style.transform = `scaleX(${progress / 100})`;
-      }
 
       // Update Scroll to Top Button Visibility with smooth opacity
       if (scrollTopBtnRef.current) {
@@ -97,34 +89,6 @@ export function ScrollEffects() {
 
   return (
     <>
-      {/* Top Window Ultra-Smooth Progress Bar */}
-      <div
-        style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '3.5px',
-          zIndex: 99999,
-          backgroundColor: 'transparent',
-          pointerEvents: 'none',
-          overflow: 'hidden'
-        }}
-      >
-        <div
-          ref={progressBarRef}
-          style={{
-            height: '100%',
-            width: '100%',
-            transformOrigin: '0% 50%',
-            transform: 'scaleX(0)',
-            background: 'linear-gradient(90deg, #00A0DF 0%, #10B981 50%, #F59E0B 100%)',
-            boxShadow: '0 0 12px rgba(0, 160, 223, 0.8), 0 0 6px rgba(16, 185, 129, 0.6)',
-            willChange: 'transform'
-          }}
-        />
-      </div>
-
       {/* Floating Scroll to Top Button */}
       <button
         ref={scrollTopBtnRef}

@@ -12,7 +12,6 @@ import {
   CountdownTimer, 
   CurriculumAccordion, 
   ProofWall, 
-  ScrollTracingBeam, 
   VideoModal 
 } from '@/components/landing';
 import { 
@@ -78,9 +77,6 @@ export default function HomePage() {
 
       {/* Main Navigation Header */}
       <Navbar />
-
-      {/* Dynamic Animated Scroll Tracing Beam */}
-      <ScrollTracingBeam />
 
       {/* Video Modal Popup */}
       <VideoModal
