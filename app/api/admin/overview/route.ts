@@ -5,8 +5,8 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const students = dbGetStudents();
-    const enrollments = dbGetEnrollments();
+    const students = await dbGetStudents();
+    const enrollments = await dbGetEnrollments();
 
     const totalStudentsCount = 9700 + students.length;
     const pendingEnrollments = enrollments.filter(e => e.status === 'pending');

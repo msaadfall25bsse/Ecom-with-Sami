@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const data = dbGetCmsSettings();
+    const data = await dbGetCmsSettings();
     return NextResponse.json({
       success: true,
       sections: data

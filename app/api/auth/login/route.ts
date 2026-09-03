@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const student = dbGetStudentByEmail(email);
+    const student = await dbGetStudentByEmail(email);
 
     if (!student) {
       return NextResponse.json(
@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Update last login in database
-    dbUpdateStudent(student.id, { lastLogin: new Date().toISOString() });
+    await dbUpdateStudent(student.id, { lastLogin: new Date().toISOString() });
 
     const response = NextResponse.json({
       success: true,

@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const data = dbGetCmsSettings();
+    const data = await dbGetCmsSettings();
     return NextResponse.json({
       success: true,
       content: data
@@ -21,7 +21,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const updated = dbSaveCmsSettings(body);
+    const updated = await dbSaveCmsSettings(body);
     return NextResponse.json({
       success: true,
       message: 'CMS Content saved to database permanently!',

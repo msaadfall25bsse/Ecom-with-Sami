@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const enrollments = dbGetEnrollments();
+    const enrollments = await dbGetEnrollments();
     return NextResponse.json({ success: true, enrollments });
   } catch (error: any) {
     return NextResponse.json({ success: false, message: error.message }, { status: 500 });
@@ -19,7 +19,7 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ success: false, message: 'Missing id or status' }, { status: 400 });
     }
 
-    const updated = dbUpdateEnrollmentStatus(id, status);
+    const updated = await dbUpdateEnrollmentStatus(id, status);
     if (!updated) {
       return NextResponse.json({ success: false, message: 'Enrollment not found' }, { status: 404 });
     }

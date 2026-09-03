@@ -13,7 +13,7 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const modules = dbGetModules();
+    const modules = await dbGetModules();
     return NextResponse.json({
       success: true,
       modules
@@ -31,12 +31,12 @@ export async function POST(request: NextRequest) {
     // Action: Add new module
     if (action === 'ADD_MODULE' || (!action && module)) {
       const newMod = module || body;
-      const currentModules = dbGetModules();
+      const currentModules = await dbGetModules();
       const nextId = currentModules.length > 0 
         ? Math.max(...currentModules.map(m => m.id)) + 1 
         : 1;
 
-      const createdModule = dbAddModule({
+      const createdModule = await dbAddModule({
         id: newMod.id || nextId,
         title: newMod.title || `Module ${nextId}: New Course Topic`,
         duration: newMod.duration || '45 mins',
@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
         success: true,
         message: 'Module added to database successfully!',
         module: createdModule,
-        modules: dbGetModules()
+        modules: await dbGetModules()
       });
     }
 
@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
       }
 
       const lessonId = lesson.id || `m${moduleId}_l${Date.now()}`;
-      const createdLesson = dbAddLesson(Number(moduleId), {
+      const createdLesson = await dbAddLesson(Number(moduleId), {
         id: lessonId,
         title: lesson.title || 'New Lecture Video',
         duration: lesson.duration || '15:00',
@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
         success: true,
         message: 'Lesson added to module in database successfully!',
         lesson: createdLesson,
-        modules: dbGetModules()
+        modules: await dbGetModules()
       });
     }
 
@@ -91,15 +91,15 @@ export async function PUT(request: NextRequest) {
     const { action, moduleId, lessonId, patch } = body;
 
     if (action === 'UPDATE_MODULE') {
-      const updated = dbUpdateModule(Number(moduleId), patch);
+      const updated = await dbUpdateModule(Number(moduleId), patch);
       if (!updated) return NextResponse.json({ success: false, message: 'Module not found' }, { status: 404 });
-      return NextResponse.json({ success: true, message: 'Module updated in database', module: updated, modules: dbGetModules() });
+      return NextResponse.json({ success: true, message: 'Module updated in database', module: updated, modules: await dbGetModules() });
     }
 
     if (action === 'UPDATE_LESSON') {
-      const updated = dbUpdateLesson(Number(moduleId), lessonId, patch);
+      const updated = await dbUpdateLesson(Number(moduleId), lessonId, patch);
       if (!updated) return NextResponse.json({ success: false, message: 'Lesson not found' }, { status: 404 });
-      return NextResponse.json({ success: true, message: 'Lesson updated in database', lesson: updated, modules: dbGetModules() });
+      return NextResponse.json({ success: true, message: 'Lesson updated in database', lesson: updated, modules: await dbGetModules() });
     }
 
     return NextResponse.json({ success: false, message: 'Invalid update action' }, { status: 400 });
@@ -116,16 +116,16 @@ export async function DELETE(request: NextRequest) {
 
     // Delete specific lesson
     if (moduleId && lessonId) {
-      const removed = dbDeleteLesson(Number(moduleId), lessonId);
+      const removed = await dbDeleteLesson(Number(moduleId), lessonId);
       if (!removed) return NextResponse.json({ success: false, message: 'Lesson not found' }, { status: 404 });
-      return NextResponse.json({ success: true, message: 'Lesson removed from database', modules: dbGetModules() });
+      return NextResponse.json({ success: true, message: 'Lesson removed from database', modules: await dbGetModules() });
     }
 
     // Delete entire module
     if (moduleId) {
-      const removed = dbDeleteModule(Number(moduleId));
+      const removed = await dbDeleteModule(Number(moduleId));
       if (!removed) return NextResponse.json({ success: false, message: 'Module not found' }, { status: 404 });
-      return NextResponse.json({ success: true, message: 'Module deleted from database', modules: dbGetModules() });
+      return NextResponse.json({ success: true, message: 'Module deleted from database', modules: await dbGetModules() });
     }
 
     return NextResponse.json({ success: false, message: 'Missing moduleId or lessonId' }, { status: 400 });

@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const students = dbGetStudents();
+    const students = await dbGetStudents();
     return NextResponse.json({ success: true, students });
   } catch (error: any) {
     return NextResponse.json({ success: false, message: error.message }, { status: 500 });
@@ -19,7 +19,7 @@ export async function PUT(request: NextRequest) {
     if (isActive !== undefined) patch.isActive = isActive;
     if (password) patch.password = password;
 
-    const updated = dbUpdateStudent(id, patch);
+    const updated = await dbUpdateStudent(id, patch);
     if (!updated) {
       return NextResponse.json({ success: false, message: 'Student not found' }, { status: 404 });
     }

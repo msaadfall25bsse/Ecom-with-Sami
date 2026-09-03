@@ -27,8 +27,8 @@ export async function POST(request: NextRequest) {
     const trackingCode = `SAMI-ENR-${Math.floor(10000 + Math.random() * 90000)}`;
     const studentId = `std_${Date.now()}`;
 
-    // Add enrollment record to persistent SQLite database
-    const enrollment = dbAddEnrollment({
+    // Add enrollment record to persistent database (Supabase + SQLite)
+    const enrollment = await dbAddEnrollment({
       id: `enr_${Date.now()}`,
       trackingCode,
       studentId,
@@ -46,9 +46,9 @@ export async function POST(request: NextRequest) {
     });
 
     // Check if student exists or create provisional student
-    let student = dbGetStudentByEmail(email);
+    let student = await dbGetStudentByEmail(email);
     if (!student) {
-      student = dbAddStudent({
+      student = await dbAddStudent({
         id: studentId,
         name: fullName,
         email,

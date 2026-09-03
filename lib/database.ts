@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
-import { defaultCmsContent, CmsContentSchema } from '../utils/cmsStore';
+import { supabase, isSupabaseConfigured } from './supabase';
+import { defaultCmsContent, CmsContentSchema } from '@/utils/cmsStore';
 import { 
   initialStudents, 
   initialEnrollments, 
@@ -15,11 +16,11 @@ import {
   ResourceItem, 
   SupportTicket,
   Lesson 
-} from '../utils/db';
+} from '@/utils/db';
 
-let dbInstance: any = null;
+let sqliteDbInstance: any = null;
 
-// Determine database path safely
+// Determine SQLite database path safely
 function getDbPath(): string {
   const dbDir = path.join(process.cwd(), 'database');
   try {
@@ -36,28 +37,25 @@ function getDbPath(): string {
   }
 }
 
-// Initialize SQLite database instance
-function getDatabase() {
-  if (dbInstance) return dbInstance;
+// Initialize SQLite database instance as local fallback
+function getSqliteDatabase() {
+  if (sqliteDbInstance) return sqliteDbInstance;
 
   try {
     const { DatabaseSync } = require('node:sqlite');
     const dbFilePath = getDbPath();
-    dbInstance = new DatabaseSync(dbFilePath);
+    sqliteDbInstance = new DatabaseSync(dbFilePath);
 
-    // Enable WAL mode for high performance concurrent reads and writes
-    dbInstance.exec(`
+    sqliteDbInstance.exec(`
       PRAGMA journal_mode = WAL;
       PRAGMA foreign_keys = ON;
 
-      -- 1. CMS Settings Table
       CREATE TABLE IF NOT EXISTS cms_settings (
         key TEXT PRIMARY KEY,
         value_json TEXT NOT NULL,
         updated_at TEXT NOT NULL
       );
 
-      -- 2. LMS Modules Table
       CREATE TABLE IF NOT EXISTS lms_modules (
         id INTEGER PRIMARY KEY,
         title TEXT NOT NULL,
@@ -67,7 +65,6 @@ function getDatabase() {
         updated_at TEXT NOT NULL
       );
 
-      -- 3. Suppliers Table
       CREATE TABLE IF NOT EXISTS lms_suppliers (
         id TEXT PRIMARY KEY,
         name TEXT NOT NULL,
@@ -83,7 +80,6 @@ function getDatabase() {
         updated_at TEXT NOT NULL
       );
 
-      -- 4. Students Table
       CREATE TABLE IF NOT EXISTS students (
         id TEXT PRIMARY KEY,
         name TEXT NOT NULL,
@@ -97,7 +93,6 @@ function getDatabase() {
         last_login TEXT
       );
 
-      -- 5. Enrollments Table
       CREATE TABLE IF NOT EXISTS enrollments (
         id TEXT PRIMARY KEY,
         tracking_code TEXT UNIQUE NOT NULL,
@@ -115,7 +110,6 @@ function getDatabase() {
         created_at TEXT NOT NULL
       );
 
-      -- 6. Resources Table
       CREATE TABLE IF NOT EXISTS lms_resources (
         id TEXT PRIMARY KEY,
         title TEXT NOT NULL,
@@ -127,7 +121,6 @@ function getDatabase() {
         updated_at TEXT NOT NULL
       );
 
-      -- 7. Support Tickets Table
       CREATE TABLE IF NOT EXISTS support_tickets (
         id TEXT PRIMARY KEY,
         name TEXT,
@@ -140,385 +133,476 @@ function getDatabase() {
       );
     `);
 
-    // Seed database on first creation if empty
-    seedDatabaseIfEmpty(dbInstance);
+    // Seed local SQLite tables if empty
+    const cmsCheck = sqliteDbInstance.prepare("SELECT count(*) as count FROM cms_settings WHERE key = 'main_cms'").get();
+    if (!cmsCheck || cmsCheck.count === 0) {
+      sqliteDbInstance.prepare('INSERT INTO cms_settings (key, value_json, updated_at) VALUES (?, ?, ?)').run('main_cms', JSON.stringify(defaultCmsContent), new Date().toISOString());
+    }
 
-    return dbInstance;
+    return sqliteDbInstance;
   } catch (error) {
-    console.error('Failed to initialize SQLite database:', error);
     return null;
   }
 }
 
-// Seed tables with initial verified data if fresh database
-function seedDatabaseIfEmpty(db: any) {
-  try {
-    // 1. Seed CMS Settings
-    const cmsCheck = db.prepare("SELECT count(*) as count FROM cms_settings WHERE key = 'main_cms'").get();
-    if (!cmsCheck || cmsCheck.count === 0) {
-      const stmt = db.prepare('INSERT INTO cms_settings (key, value_json, updated_at) VALUES (?, ?, ?)');
-      stmt.run('main_cms', JSON.stringify(defaultCmsContent), new Date().toISOString());
-    }
-
-    // 2. Seed LMS Modules
-    const modCheck = db.prepare('SELECT count(*) as count FROM lms_modules').get();
-    if (!modCheck || modCheck.count === 0) {
-      const stmt = db.prepare('INSERT INTO lms_modules (id, title, duration, description, lessons_json, updated_at) VALUES (?, ?, ?, ?, ?, ?)');
-      for (const mod of initialModules) {
-        stmt.run(mod.id, mod.title, mod.duration, mod.description, JSON.stringify(mod.lessons), new Date().toISOString());
-      }
-    }
-
-    // 3. Seed Suppliers
-    const supCheck = db.prepare('SELECT count(*) as count FROM lms_suppliers').get();
-    if (!supCheck || supCheck.count === 0) {
-      const stmt = db.prepare('INSERT INTO lms_suppliers (id, name, category, country, city, phone, whatsapp_link, min_order, delivery_time, cod_supported, notes, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
-      for (const sup of initialSuppliers) {
-        stmt.run(sup.id, sup.name, sup.category, sup.country, sup.city, sup.phone, sup.whatsappLink, sup.minOrder, sup.deliveryTime, sup.codSupported ? 1 : 0, sup.notes, new Date().toISOString());
-      }
-    }
-
-    // 4. Seed Students
-    const stdCheck = db.prepare('SELECT count(*) as count FROM students').get();
-    if (!stdCheck || stdCheck.count === 0) {
-      const stmt = db.prepare('INSERT INTO students (id, name, email, phone, city, password, is_active, enrolled_at, completed_lessons_json, last_login) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
-      for (const std of initialStudents) {
-        stmt.run(std.id, std.name, std.email, std.phone, std.city, std.password, std.isActive ? 1 : 0, std.enrolledAt, JSON.stringify(std.completedLessons), std.lastLogin || null);
-      }
-    }
-
-    // 5. Seed Enrollments
-    const enrCheck = db.prepare('SELECT count(*) as count FROM enrollments').get();
-    if (!enrCheck || enrCheck.count === 0) {
-      const stmt = db.prepare('INSERT INTO enrollments (id, tracking_code, student_id, name, email, phone, city, payment_method, transaction_id, where_heard, receipt_url, amount, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
-      for (const enr of initialEnrollments) {
-        stmt.run(enr.id, enr.trackingCode, enr.studentId, enr.name, enr.email, enr.phone, enr.city, enr.paymentMethod, enr.transactionId, enr.whereHeard || 'TikTok', enr.receiptUrl || '', enr.amount, enr.status, enr.createdAt);
-      }
-    }
-
-    // 6. Seed Resources
-    const resCheck = db.prepare('SELECT count(*) as count FROM lms_resources').get();
-    if (!resCheck || resCheck.count === 0) {
-      const stmt = db.prepare('INSERT INTO lms_resources (id, title, type, size, download_url, value, description, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
-      for (const res of initialResources) {
-        stmt.run(res.id, res.title, res.type, res.size, res.downloadUrl, res.value, res.description, new Date().toISOString());
-      }
-    }
-
-    // 7. Seed Tickets
-    const tktCheck = db.prepare('SELECT count(*) as count FROM support_tickets').get();
-    if (!tktCheck || tktCheck.count === 0) {
-      const stmt = db.prepare('INSERT INTO support_tickets (id, name, email, phone, topic, message, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
-      for (const tkt of initialTickets) {
-        stmt.run(tkt.id, tkt.name, tkt.email, tkt.phone, tkt.topic, tkt.message, tkt.status, tkt.createdAt);
-      }
-    }
-  } catch (e) {
-    console.error('Error seeding SQLite database:', e);
-  }
+// In-Memory Global Cache
+declare global {
+  var __globalCmsCache: CmsContentSchema | undefined;
+  var __globalModulesCache: Module[] | undefined;
+  var __globalSuppliersCache: Supplier[] | undefined;
+  var __globalStudentsCache: Student[] | undefined;
+  var __globalEnrollmentsCache: Enrollment[] | undefined;
 }
 
 // -----------------------------------------------------------------------------
-// PUBLIC DATABASE API METHODS (ACID Compliant, Fast & Permanent)
+// 1. CMS SETTINGS (SUPABASE + SQLITE DUAL SYNC)
 // -----------------------------------------------------------------------------
+export async function dbGetCmsSettings(): Promise<CmsContentSchema> {
+  // 1. Try Supabase
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('cms_settings')
+        .select('value_json')
+        .eq('key', 'main_cms')
+        .maybeSingle();
 
-// --- CMS SETTINGS ---
-export function dbGetCmsSettings(): CmsContentSchema {
-  const db = getDatabase();
-  if (!db) return defaultCmsContent;
-
-  try {
-    const row = db.prepare("SELECT value_json FROM cms_settings WHERE key = 'main_cms'").get();
-    if (row && row.value_json) {
-      return JSON.parse(row.value_json);
+      if (!error && data && data.value_json) {
+        const parsed = typeof data.value_json === 'string' ? JSON.parse(data.value_json) : data.value_json;
+        global.__globalCmsCache = parsed;
+        return parsed;
+      }
+    } catch (e) {
+      console.warn('Supabase get CMS error, falling back:', e);
     }
-  } catch (e) {
-    console.error('SQLite dbGetCmsSettings error:', e);
   }
-  return defaultCmsContent;
+
+  // 2. Try SQLite
+  try {
+    const sqlite = getSqliteDatabase();
+    if (sqlite) {
+      const row = sqlite.prepare("SELECT value_json FROM cms_settings WHERE key = 'main_cms'").get();
+      if (row && row.value_json) {
+        const parsed = JSON.parse(row.value_json);
+        global.__globalCmsCache = parsed;
+        return parsed;
+      }
+    }
+  } catch (e) {}
+
+  // 3. Fallback to cache or default
+  return global.__globalCmsCache || defaultCmsContent;
 }
 
-export function dbSaveCmsSettings(patch: Partial<CmsContentSchema>): CmsContentSchema {
-  const db = getDatabase();
-  const existing = dbGetCmsSettings();
+export async function dbSaveCmsSettings(patch: Partial<CmsContentSchema>): Promise<CmsContentSchema> {
+  const existing = await dbGetCmsSettings();
   const updated: CmsContentSchema = {
     ...existing,
     ...patch
   };
 
-  if (db) {
+  global.__globalCmsCache = updated;
+
+  // 1. Save to Supabase
+  if (isSupabaseConfigured && supabase) {
     try {
-      const stmt = db.prepare(`
+      await supabase
+        .from('cms_settings')
+        .upsert({
+          key: 'main_cms',
+          value_json: JSON.stringify(updated),
+          updated_at: new Date().toISOString()
+        });
+    } catch (e) {
+      console.warn('Supabase save CMS error:', e);
+    }
+  }
+
+  // 2. Save to SQLite
+  try {
+    const sqlite = getSqliteDatabase();
+    if (sqlite) {
+      sqlite.prepare(`
         INSERT INTO cms_settings (key, value_json, updated_at) 
         VALUES ('main_cms', ?, ?)
         ON CONFLICT(key) DO UPDATE SET 
           value_json = excluded.value_json,
           updated_at = excluded.updated_at
-      `);
-      stmt.run(JSON.stringify(updated), new Date().toISOString());
-    } catch (e) {
-      console.error('SQLite dbSaveCmsSettings error:', e);
+      `).run(JSON.stringify(updated), new Date().toISOString());
     }
-  }
+  } catch (e) {}
 
   return updated;
 }
 
-// --- LMS MODULES ---
-export function dbGetModules(): Module[] {
-  const db = getDatabase();
-  if (!db) return initialModules;
+// -----------------------------------------------------------------------------
+// 2. LMS MODULES & LECTURES (SUPABASE + SQLITE)
+// -----------------------------------------------------------------------------
+export async function dbGetModules(): Promise<Module[]> {
+  // 1. Try Supabase
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('lms_modules')
+        .select('*')
+        .order('id', { ascending: true });
 
-  try {
-    const rows = db.prepare('SELECT id, title, duration, description, lessons_json FROM lms_modules ORDER BY id ASC').all();
-    if (rows && rows.length > 0) {
-      return rows.map((r: any) => ({
-        id: r.id,
-        title: r.title,
-        duration: r.duration,
-        description: r.description,
-        lessons: JSON.parse(r.lessons_json || '[]')
-      }));
-    }
-  } catch (e) {
-    console.error('SQLite dbGetModules error:', e);
+      if (!error && data && data.length > 0) {
+        const modules: Module[] = data.map((r: any) => ({
+          id: Number(r.id),
+          title: r.title,
+          duration: r.duration,
+          description: r.description,
+          lessons: typeof r.lessons_json === 'string' ? JSON.parse(r.lessons_json || '[]') : (r.lessons_json || [])
+        }));
+        global.__globalModulesCache = modules;
+        return modules;
+      }
+    } catch (e) {}
   }
-  return initialModules;
+
+  // 2. Try SQLite
+  try {
+    const sqlite = getSqliteDatabase();
+    if (sqlite) {
+      const rows = sqlite.prepare('SELECT id, title, duration, description, lessons_json FROM lms_modules ORDER BY id ASC').all();
+      if (rows && rows.length > 0) {
+        const modules = rows.map((r: any) => ({
+          id: r.id,
+          title: r.title,
+          duration: r.duration,
+          description: r.description,
+          lessons: JSON.parse(r.lessons_json || '[]')
+        }));
+        global.__globalModulesCache = modules;
+        return modules;
+      }
+    }
+  } catch (e) {}
+
+  return global.__globalModulesCache || initialModules;
 }
 
-export function dbAddModule(module: Module): Module {
-  const db = getDatabase();
-  if (db) {
+export async function dbAddModule(module: Module): Promise<Module> {
+  const current = await dbGetModules();
+  const nextModules = [...current, module];
+  global.__globalModulesCache = nextModules;
+
+  // Supabase
+  if (isSupabaseConfigured && supabase) {
     try {
-      const stmt = db.prepare('INSERT INTO lms_modules (id, title, duration, description, lessons_json, updated_at) VALUES (?, ?, ?, ?, ?, ?)');
-      stmt.run(module.id, module.title, module.duration, module.description, JSON.stringify(module.lessons || []), new Date().toISOString());
-    } catch (e) {
-      console.error('SQLite dbAddModule error:', e);
-    }
+      await supabase.from('lms_modules').upsert({
+        id: module.id,
+        title: module.title,
+        duration: module.duration,
+        description: module.description,
+        lessons_json: JSON.stringify(module.lessons || []),
+        updated_at: new Date().toISOString()
+      });
+    } catch (e) {}
   }
+
+  // SQLite
+  try {
+    const sqlite = getSqliteDatabase();
+    if (sqlite) {
+      sqlite.prepare('INSERT INTO lms_modules (id, title, duration, description, lessons_json, updated_at) VALUES (?, ?, ?, ?, ?, ?)')
+        .run(module.id, module.title, module.duration, module.description, JSON.stringify(module.lessons || []), new Date().toISOString());
+    }
+  } catch (e) {}
+
   return module;
 }
 
-export function dbUpdateModule(id: number, patch: Partial<Module>): Module | null {
-  const db = getDatabase();
-  if (!db) return null;
+export async function dbUpdateModule(id: number, patch: Partial<Module>): Promise<Module | null> {
+  const modules = await dbGetModules();
+  const idx = modules.findIndex(m => m.id === id);
+  if (idx === -1) return null;
 
-  try {
-    const existing = db.prepare('SELECT id, title, duration, description, lessons_json FROM lms_modules WHERE id = ?').get(id);
-    if (!existing) return null;
+  const updated = { ...modules[idx], ...patch };
+  modules[idx] = updated;
+  global.__globalModulesCache = modules;
 
-    const currentLessons = JSON.parse(existing.lessons_json || '[]');
-    const newTitle = patch.title !== undefined ? patch.title : existing.title;
-    const newDuration = patch.duration !== undefined ? patch.duration : existing.duration;
-    const newDesc = patch.description !== undefined ? patch.description : existing.description;
-    const newLessons = patch.lessons !== undefined ? patch.lessons : currentLessons;
-
-    const stmt = db.prepare('UPDATE lms_modules SET title = ?, duration = ?, description = ?, lessons_json = ?, updated_at = ? WHERE id = ?');
-    stmt.run(newTitle, newDuration, newDesc, JSON.stringify(newLessons), new Date().toISOString(), id);
-
-    return {
-      id,
-      title: newTitle,
-      duration: newDuration,
-      description: newDesc,
-      lessons: newLessons
-    };
-  } catch (e) {
-    console.error('SQLite dbUpdateModule error:', e);
-    return null;
-  }
-}
-
-export function dbDeleteModule(id: number): boolean {
-  const db = getDatabase();
-  if (!db) return false;
-
-  try {
-    const stmt = db.prepare('DELETE FROM lms_modules WHERE id = ?');
-    stmt.run(id);
-    return true;
-  } catch (e) {
-    console.error('SQLite dbDeleteModule error:', e);
-    return false;
-  }
-}
-
-export function dbAddLesson(moduleId: number, lesson: Lesson): Lesson | null {
-  const db = getDatabase();
-  if (!db) return null;
-
-  try {
-    const row = db.prepare('SELECT lessons_json FROM lms_modules WHERE id = ?').get(moduleId);
-    if (!row) return null;
-
-    const lessons: Lesson[] = JSON.parse(row.lessons_json || '[]');
-    lessons.push(lesson);
-
-    const stmt = db.prepare('UPDATE lms_modules SET lessons_json = ?, updated_at = ? WHERE id = ?');
-    stmt.run(JSON.stringify(lessons), new Date().toISOString(), moduleId);
-    return lesson;
-  } catch (e) {
-    console.error('SQLite dbAddLesson error:', e);
-    return null;
-  }
-}
-
-export function dbUpdateLesson(moduleId: number, lessonId: string, patch: Partial<Lesson>): Lesson | null {
-  const db = getDatabase();
-  if (!db) return null;
-
-  try {
-    const row = db.prepare('SELECT lessons_json FROM lms_modules WHERE id = ?').get(moduleId);
-    if (!row) return null;
-
-    const lessons: Lesson[] = JSON.parse(row.lessons_json || '[]');
-    const idx = lessons.findIndex(l => l.id === lessonId);
-    if (idx === -1) return null;
-
-    lessons[idx] = { ...lessons[idx], ...patch };
-
-    const stmt = db.prepare('UPDATE lms_modules SET lessons_json = ?, updated_at = ? WHERE id = ?');
-    stmt.run(JSON.stringify(lessons), new Date().toISOString(), moduleId);
-    return lessons[idx];
-  } catch (e) {
-    console.error('SQLite dbUpdateLesson error:', e);
-    return null;
-  }
-}
-
-export function dbDeleteLesson(moduleId: number, lessonId: string): boolean {
-  const db = getDatabase();
-  if (!db) return false;
-
-  try {
-    const row = db.prepare('SELECT lessons_json FROM lms_modules WHERE id = ?').get(moduleId);
-    if (!row) return false;
-
-    const lessons: Lesson[] = JSON.parse(row.lessons_json || '[]');
-    const filtered = lessons.filter(l => l.id !== lessonId);
-
-    const stmt = db.prepare('UPDATE lms_modules SET lessons_json = ?, updated_at = ? WHERE id = ?');
-    stmt.run(JSON.stringify(filtered), new Date().toISOString(), moduleId);
-    return true;
-  } catch (e) {
-    console.error('SQLite dbDeleteLesson error:', e);
-    return false;
-  }
-}
-
-// --- SUPPLIERS ---
-export function dbGetSuppliers(): Supplier[] {
-  const db = getDatabase();
-  if (!db) return initialSuppliers;
-
-  try {
-    const rows = db.prepare('SELECT * FROM lms_suppliers ORDER BY updated_at DESC').all();
-    if (rows && rows.length > 0) {
-      return rows.map((r: any) => ({
-        id: r.id,
-        name: r.name,
-        category: r.category,
-        country: r.country,
-        city: r.city,
-        phone: r.phone,
-        whatsappLink: r.whatsapp_link,
-        minOrder: r.min_order,
-        deliveryTime: r.delivery_time,
-        codSupported: Boolean(r.cod_supported),
-        notes: r.notes
-      }));
-    }
-  } catch (e) {
-    console.error('SQLite dbGetSuppliers error:', e);
-  }
-  return initialSuppliers;
-}
-
-export function dbAddSupplier(supplier: Supplier): Supplier {
-  const db = getDatabase();
-  if (db) {
+  // Supabase
+  if (isSupabaseConfigured && supabase) {
     try {
-      const stmt = db.prepare('INSERT INTO lms_suppliers (id, name, category, country, city, phone, whatsapp_link, min_order, delivery_time, cod_supported, notes, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
-      stmt.run(supplier.id, supplier.name, supplier.category, supplier.country, supplier.city, supplier.phone, supplier.whatsappLink, supplier.minOrder, supplier.deliveryTime, supplier.codSupported ? 1 : 0, supplier.notes, new Date().toISOString());
-    } catch (e) {
-      console.error('SQLite dbAddSupplier error:', e);
-    }
+      await supabase.from('lms_modules').update({
+        title: updated.title,
+        duration: updated.duration,
+        description: updated.description,
+        lessons_json: JSON.stringify(updated.lessons || []),
+        updated_at: new Date().toISOString()
+      }).eq('id', id);
+    } catch (e) {}
   }
+
+  // SQLite
+  try {
+    const sqlite = getSqliteDatabase();
+    if (sqlite) {
+      sqlite.prepare('UPDATE lms_modules SET title = ?, duration = ?, description = ?, lessons_json = ?, updated_at = ? WHERE id = ?')
+        .run(updated.title, updated.duration, updated.description, JSON.stringify(updated.lessons || []), new Date().toISOString(), id);
+    }
+  } catch (e) {}
+
+  return updated;
+}
+
+export async function dbDeleteModule(id: number): Promise<boolean> {
+  const modules = await dbGetModules();
+  const filtered = modules.filter(m => m.id !== id);
+  global.__globalModulesCache = filtered;
+
+  if (isSupabaseConfigured && supabase) {
+    try {
+      await supabase.from('lms_modules').delete().eq('id', id);
+    } catch (e) {}
+  }
+
+  try {
+    const sqlite = getSqliteDatabase();
+    if (sqlite) sqlite.prepare('DELETE FROM lms_modules WHERE id = ?').run(id);
+  } catch (e) {}
+
+  return true;
+}
+
+export async function dbAddLesson(moduleId: number, lesson: Lesson): Promise<Lesson | null> {
+  const modules = await dbGetModules();
+  const mod = modules.find(m => m.id === moduleId);
+  if (!mod) return null;
+
+  mod.lessons = mod.lessons || [];
+  mod.lessons.push(lesson);
+  await dbUpdateModule(moduleId, { lessons: mod.lessons });
+  return lesson;
+}
+
+export async function dbUpdateLesson(moduleId: number, lessonId: string, patch: Partial<Lesson>): Promise<Lesson | null> {
+  const modules = await dbGetModules();
+  const mod = modules.find(m => m.id === moduleId);
+  if (!mod) return null;
+
+  const lIdx = mod.lessons.findIndex(l => l.id === lessonId);
+  if (lIdx === -1) return null;
+
+  mod.lessons[lIdx] = { ...mod.lessons[lIdx], ...patch };
+  await dbUpdateModule(moduleId, { lessons: mod.lessons });
+  return mod.lessons[lIdx];
+}
+
+export async function dbDeleteLesson(moduleId: number, lessonId: string): Promise<boolean> {
+  const modules = await dbGetModules();
+  const mod = modules.find(m => m.id === moduleId);
+  if (!mod) return false;
+
+  mod.lessons = mod.lessons.filter(l => l.id !== lessonId);
+  await dbUpdateModule(moduleId, { lessons: mod.lessons });
+  return true;
+}
+
+// -----------------------------------------------------------------------------
+// 3. SUPPLIERS (SUPABASE + SQLITE)
+// -----------------------------------------------------------------------------
+export async function dbGetSuppliers(): Promise<Supplier[]> {
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const { data, error } = await supabase.from('lms_suppliers').select('*').order('updated_at', { ascending: false });
+      if (!error && data && data.length > 0) {
+        const suppliers: Supplier[] = data.map((r: any) => ({
+          id: r.id,
+          name: r.name,
+          category: r.category,
+          country: r.country,
+          city: r.city,
+          phone: r.phone,
+          whatsappLink: r.whatsapp_link,
+          minOrder: r.min_order,
+          deliveryTime: r.delivery_time,
+          codSupported: Boolean(r.cod_supported),
+          notes: r.notes
+        }));
+        global.__globalSuppliersCache = suppliers;
+        return suppliers;
+      }
+    } catch (e) {}
+  }
+
+  try {
+    const sqlite = getSqliteDatabase();
+    if (sqlite) {
+      const rows = sqlite.prepare('SELECT * FROM lms_suppliers ORDER BY updated_at DESC').all();
+      if (rows && rows.length > 0) {
+        return rows.map((r: any) => ({
+          id: r.id,
+          name: r.name,
+          category: r.category,
+          country: r.country,
+          city: r.city,
+          phone: r.phone,
+          whatsappLink: r.whatsapp_link,
+          minOrder: r.min_order,
+          deliveryTime: r.delivery_time,
+          codSupported: Boolean(r.cod_supported),
+          notes: r.notes
+        }));
+      }
+    }
+  } catch (e) {}
+
+  return global.__globalSuppliersCache || initialSuppliers;
+}
+
+export async function dbAddSupplier(supplier: Supplier): Promise<Supplier> {
+  const current = await dbGetSuppliers();
+  global.__globalSuppliersCache = [supplier, ...current];
+
+  if (isSupabaseConfigured && supabase) {
+    try {
+      await supabase.from('lms_suppliers').upsert({
+        id: supplier.id,
+        name: supplier.name,
+        category: supplier.category,
+        country: supplier.country,
+        city: supplier.city,
+        phone: supplier.phone,
+        whatsapp_link: supplier.whatsappLink,
+        min_order: supplier.minOrder,
+        delivery_time: supplier.deliveryTime,
+        cod_supported: supplier.codSupported,
+        notes: supplier.notes,
+        updated_at: new Date().toISOString()
+      });
+    } catch (e) {}
+  }
+
+  try {
+    const sqlite = getSqliteDatabase();
+    if (sqlite) {
+      sqlite.prepare('INSERT INTO lms_suppliers (id, name, category, country, city, phone, whatsapp_link, min_order, delivery_time, cod_supported, notes, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+        .run(supplier.id, supplier.name, supplier.category, supplier.country, supplier.city, supplier.phone, supplier.whatsappLink, supplier.minOrder, supplier.deliveryTime, supplier.codSupported ? 1 : 0, supplier.notes, new Date().toISOString());
+    }
+  } catch (e) {}
+
   return supplier;
 }
 
-export function dbDeleteSupplier(id: string): boolean {
-  const db = getDatabase();
-  if (!db) return false;
+export async function dbDeleteSupplier(id: string): Promise<boolean> {
+  const current = await dbGetSuppliers();
+  global.__globalSuppliersCache = current.filter(s => s.id !== id);
 
-  try {
-    const stmt = db.prepare('DELETE FROM lms_suppliers WHERE id = ?');
-    stmt.run(id);
-    return true;
-  } catch (e) {
-    console.error('SQLite dbDeleteSupplier error:', e);
-    return false;
-  }
-}
-
-// --- STUDENTS ---
-export function dbGetStudents(): Student[] {
-  const db = getDatabase();
-  if (!db) return initialStudents;
-
-  try {
-    const rows = db.prepare('SELECT * FROM students ORDER BY enrolled_at DESC').all();
-    if (rows && rows.length > 0) {
-      return rows.map((r: any) => ({
-        id: r.id,
-        name: r.name,
-        email: r.email,
-        phone: r.phone,
-        city: r.city,
-        password: r.password,
-        isActive: Boolean(r.is_active),
-        enrolledAt: r.enrolled_at,
-        completedLessons: JSON.parse(r.completed_lessons_json || '[]'),
-        lastLogin: r.last_login
-      }));
-    }
-  } catch (e) {
-    console.error('SQLite dbGetStudents error:', e);
-  }
-  return initialStudents;
-}
-
-export function dbGetStudentByEmail(email: string): Student | null {
-  const db = getDatabase();
-  if (!db) return initialStudents.find(s => s.email.toLowerCase() === email.toLowerCase()) || null;
-
-  try {
-    const r = db.prepare('SELECT * FROM students WHERE LOWER(email) = LOWER(?)').get(email);
-    if (r) {
-      return {
-        id: r.id,
-        name: r.name,
-        email: r.email,
-        phone: r.phone,
-        city: r.city,
-        password: r.password,
-        isActive: Boolean(r.is_active),
-        enrolledAt: r.enrolled_at,
-        completedLessons: JSON.parse(r.completed_lessons_json || '[]'),
-        lastLogin: r.last_login
-      };
-    }
-  } catch (e) {
-    console.error('SQLite dbGetStudentByEmail error:', e);
-  }
-  return null;
-}
-
-export function dbAddStudent(student: Student): Student {
-  const db = getDatabase();
-  if (db) {
+  if (isSupabaseConfigured && supabase) {
     try {
-      const stmt = db.prepare(`
+      await supabase.from('lms_suppliers').delete().eq('id', id);
+    } catch (e) {}
+  }
+
+  try {
+    const sqlite = getSqliteDatabase();
+    if (sqlite) sqlite.prepare('DELETE FROM lms_suppliers WHERE id = ?').run(id);
+  } catch (e) {}
+
+  return true;
+}
+
+// -----------------------------------------------------------------------------
+// 4. STUDENTS (SUPABASE + SQLITE)
+// -----------------------------------------------------------------------------
+export async function dbGetStudents(): Promise<Student[]> {
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const { data, error } = await supabase.from('students').select('*').order('enrolled_at', { ascending: false });
+      if (!error && data && data.length > 0) {
+        return data.map((r: any) => ({
+          id: r.id,
+          name: r.name,
+          email: r.email,
+          phone: r.phone,
+          city: r.city,
+          password: r.password,
+          isActive: Boolean(r.is_active),
+          enrolledAt: r.enrolled_at,
+          completedLessons: typeof r.completed_lessons_json === 'string' ? JSON.parse(r.completed_lessons_json || '[]') : (r.completed_lessons_json || []),
+          lastLogin: r.last_login
+        }));
+      }
+    } catch (e) {}
+  }
+
+  try {
+    const sqlite = getSqliteDatabase();
+    if (sqlite) {
+      const rows = sqlite.prepare('SELECT * FROM students ORDER BY enrolled_at DESC').all();
+      if (rows && rows.length > 0) {
+        return rows.map((r: any) => ({
+          id: r.id,
+          name: r.name,
+          email: r.email,
+          phone: r.phone,
+          city: r.city,
+          password: r.password,
+          isActive: Boolean(r.is_active),
+          enrolledAt: r.enrolled_at,
+          completedLessons: JSON.parse(r.completed_lessons_json || '[]'),
+          lastLogin: r.last_login
+        }));
+      }
+    }
+  } catch (e) {}
+
+  return global.__globalStudentsCache || initialStudents;
+}
+
+export async function dbGetStudentByEmail(email: string): Promise<Student | null> {
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const { data, error } = await supabase.from('students').select('*').ilike('email', email).maybeSingle();
+      if (!error && data) {
+        return {
+          id: data.id,
+          name: data.name,
+          email: data.email,
+          phone: data.phone,
+          city: data.city,
+          password: data.password,
+          isActive: Boolean(data.is_active),
+          enrolledAt: data.enrolled_at,
+          completedLessons: typeof data.completed_lessons_json === 'string' ? JSON.parse(data.completed_lessons_json || '[]') : (data.completed_lessons_json || []),
+          lastLogin: data.last_login
+        };
+      }
+    } catch (e) {}
+  }
+
+  const students = await dbGetStudents();
+  return students.find(s => s.email.toLowerCase() === email.toLowerCase()) || null;
+}
+
+export async function dbAddStudent(student: Student): Promise<Student> {
+  const current = await dbGetStudents();
+  global.__globalStudentsCache = [student, ...current.filter(s => s.id !== student.id)];
+
+  if (isSupabaseConfigured && supabase) {
+    try {
+      await supabase.from('students').upsert({
+        id: student.id,
+        name: student.name,
+        email: student.email,
+        phone: student.phone,
+        city: student.city,
+        password: student.password,
+        is_active: student.isActive,
+        enrolled_at: student.enrolledAt,
+        completed_lessons_json: JSON.stringify(student.completedLessons || []),
+        last_login: student.lastLogin || null
+      });
+    } catch (e) {}
+  }
+
+  try {
+    const sqlite = getSqliteDatabase();
+    if (sqlite) {
+      sqlite.prepare(`
         INSERT INTO students (id, name, email, phone, city, password, is_active, enrolled_at, completed_lessons_json, last_login)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(email) DO UPDATE SET
@@ -526,241 +610,208 @@ export function dbAddStudent(student: Student): Student {
           phone = excluded.phone,
           city = excluded.city,
           is_active = excluded.is_active
-      `);
-      stmt.run(
-        student.id,
-        student.name,
-        student.email,
-        student.phone,
-        student.city,
-        student.password,
-        student.isActive ? 1 : 0,
-        student.enrolledAt,
-        JSON.stringify(student.completedLessons || []),
-        student.lastLogin || null
-      );
-    } catch (e) {
-      console.error('SQLite dbAddStudent error:', e);
+      `).run(student.id, student.name, student.email, student.phone, student.city, student.password, student.isActive ? 1 : 0, student.enrolledAt, JSON.stringify(student.completedLessons || []), student.lastLogin || null);
     }
-  }
+  } catch (e) {}
+
   return student;
 }
 
-export function dbUpdateStudent(id: string, patch: Partial<Student>): Student | null {
-  const db = getDatabase();
-  if (!db) return null;
+export async function dbUpdateStudent(id: string, patch: Partial<Student>): Promise<Student | null> {
+  const students = await dbGetStudents();
+  const idx = students.findIndex(s => s.id === id);
+  if (idx === -1) return null;
 
-  try {
-    const existing = db.prepare('SELECT * FROM students WHERE id = ?').get(id);
-    if (!existing) return null;
+  const updated: Student = { ...students[idx], ...patch };
+  students[idx] = updated;
+  global.__globalStudentsCache = students;
 
-    const updatedStudent: Student = {
-      id: existing.id,
-      name: patch.name !== undefined ? patch.name : existing.name,
-      email: patch.email !== undefined ? patch.email : existing.email,
-      phone: patch.phone !== undefined ? patch.phone : existing.phone,
-      city: patch.city !== undefined ? patch.city : existing.city,
-      password: patch.password !== undefined ? patch.password : existing.password,
-      isActive: patch.isActive !== undefined ? patch.isActive : Boolean(existing.is_active),
-      enrolledAt: patch.enrolledAt !== undefined ? patch.enrolledAt : existing.enrolled_at,
-      completedLessons: patch.completedLessons !== undefined ? patch.completedLessons : JSON.parse(existing.completed_lessons_json || '[]'),
-      lastLogin: patch.lastLogin !== undefined ? patch.lastLogin : existing.last_login
-    };
-
-    const stmt = db.prepare(`
-      UPDATE students SET 
-        name = ?, email = ?, phone = ?, city = ?, password = ?, is_active = ?, completed_lessons_json = ?, last_login = ?
-      WHERE id = ?
-    `);
-    stmt.run(
-      updatedStudent.name,
-      updatedStudent.email,
-      updatedStudent.phone,
-      updatedStudent.city,
-      updatedStudent.password,
-      updatedStudent.isActive ? 1 : 0,
-      JSON.stringify(updatedStudent.completedLessons),
-      updatedStudent.lastLogin || null,
-      id
-    );
-
-    return updatedStudent;
-  } catch (e) {
-    console.error('SQLite dbUpdateStudent error:', e);
-    return null;
-  }
-}
-
-// --- ENROLLMENTS ---
-export function dbGetEnrollments(): Enrollment[] {
-  const db = getDatabase();
-  if (!db) return initialEnrollments;
-
-  try {
-    const rows = db.prepare('SELECT * FROM enrollments ORDER BY created_at DESC').all();
-    if (rows && rows.length > 0) {
-      return rows.map((r: any) => ({
-        id: r.id,
-        trackingCode: r.tracking_code,
-        studentId: r.student_id,
-        name: r.name,
-        email: r.email,
-        phone: r.phone,
-        city: r.city,
-        paymentMethod: r.payment_method,
-        transactionId: r.transaction_id,
-        whereHeard: r.where_heard,
-        receiptUrl: r.receipt_url,
-        amount: r.amount,
-        status: r.status,
-        createdAt: r.created_at
-      }));
-    }
-  } catch (e) {
-    console.error('SQLite dbGetEnrollments error:', e);
-  }
-  return initialEnrollments;
-}
-
-export function dbAddEnrollment(enr: Enrollment): Enrollment {
-  const db = getDatabase();
-  if (db) {
+  if (isSupabaseConfigured && supabase) {
     try {
-      const stmt = db.prepare('INSERT INTO enrollments (id, tracking_code, student_id, name, email, phone, city, payment_method, transaction_id, where_heard, receipt_url, amount, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
-      stmt.run(
-        enr.id,
-        enr.trackingCode,
-        enr.studentId,
-        enr.name,
-        enr.email,
-        enr.phone,
-        enr.city,
-        enr.paymentMethod,
-        enr.transactionId,
-        enr.whereHeard || 'TikTok',
-        enr.receiptUrl || '',
-        enr.amount,
-        enr.status,
-        enr.createdAt
-      );
-    } catch (e) {
-      console.error('SQLite dbAddEnrollment error:', e);
-    }
+      await supabase.from('students').update({
+        name: updated.name,
+        email: updated.email,
+        phone: updated.phone,
+        city: updated.city,
+        password: updated.password,
+        is_active: updated.isActive,
+        completed_lessons_json: JSON.stringify(updated.completedLessons || []),
+        last_login: updated.lastLogin || null
+      }).eq('id', id);
+    } catch (e) {}
   }
+
+  try {
+    const sqlite = getSqliteDatabase();
+    if (sqlite) {
+      sqlite.prepare('UPDATE students SET name = ?, email = ?, phone = ?, city = ?, password = ?, is_active = ?, completed_lessons_json = ?, last_login = ? WHERE id = ?')
+        .run(updated.name, updated.email, updated.phone, updated.city, updated.password, updated.isActive ? 1 : 0, JSON.stringify(updated.completedLessons || []), updated.lastLogin || null, id);
+    }
+  } catch (e) {}
+
+  return updated;
+}
+
+// -----------------------------------------------------------------------------
+// 5. ENROLLMENTS (SUPABASE + SQLITE)
+// -----------------------------------------------------------------------------
+export async function dbGetEnrollments(): Promise<Enrollment[]> {
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const { data, error } = await supabase.from('enrollments').select('*').order('created_at', { ascending: false });
+      if (!error && data && data.length > 0) {
+        return data.map((r: any) => ({
+          id: r.id,
+          trackingCode: r.tracking_code,
+          studentId: r.student_id,
+          name: r.name,
+          email: r.email,
+          phone: r.phone,
+          city: r.city,
+          paymentMethod: r.payment_method,
+          transactionId: r.transaction_id,
+          whereHeard: r.where_heard,
+          receiptUrl: r.receipt_url,
+          amount: r.amount,
+          status: r.status,
+          createdAt: r.created_at
+        }));
+      }
+    } catch (e) {}
+  }
+
+  try {
+    const sqlite = getSqliteDatabase();
+    if (sqlite) {
+      const rows = sqlite.prepare('SELECT * FROM enrollments ORDER BY created_at DESC').all();
+      if (rows && rows.length > 0) {
+        return rows.map((r: any) => ({
+          id: r.id,
+          trackingCode: r.tracking_code,
+          studentId: r.student_id,
+          name: r.name,
+          email: r.email,
+          phone: r.phone,
+          city: r.city,
+          paymentMethod: r.payment_method,
+          transactionId: r.transaction_id,
+          whereHeard: r.where_heard,
+          receiptUrl: r.receipt_url,
+          amount: r.amount,
+          status: r.status,
+          createdAt: r.created_at
+        }));
+      }
+    }
+  } catch (e) {}
+
+  return global.__globalEnrollmentsCache || initialEnrollments;
+}
+
+export async function dbAddEnrollment(enr: Enrollment): Promise<Enrollment> {
+  const current = await dbGetEnrollments();
+  global.__globalEnrollmentsCache = [enr, ...current];
+
+  if (isSupabaseConfigured && supabase) {
+    try {
+      await supabase.from('enrollments').insert({
+        id: enr.id,
+        tracking_code: enr.trackingCode,
+        student_id: enr.studentId,
+        name: enr.name,
+        email: enr.email,
+        phone: enr.phone,
+        city: enr.city,
+        payment_method: enr.paymentMethod,
+        transaction_id: enr.transactionId,
+        where_heard: enr.whereHeard || 'TikTok',
+        receipt_url: enr.receiptUrl || '',
+        amount: enr.amount,
+        status: enr.status,
+        created_at: enr.createdAt
+      });
+    } catch (e) {}
+  }
+
+  try {
+    const sqlite = getSqliteDatabase();
+    if (sqlite) {
+      sqlite.prepare('INSERT INTO enrollments (id, tracking_code, student_id, name, email, phone, city, payment_method, transaction_id, where_heard, receipt_url, amount, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+        .run(enr.id, enr.trackingCode, enr.studentId, enr.name, enr.email, enr.phone, enr.city, enr.paymentMethod, enr.transactionId, enr.whereHeard || 'TikTok', enr.receiptUrl || '', enr.amount, enr.status, enr.createdAt);
+    }
+  } catch (e) {}
+
   return enr;
 }
 
-export function dbUpdateEnrollmentStatus(id: string, status: 'approved' | 'rejected'): Enrollment | null {
-  const db = getDatabase();
-  if (!db) return null;
+export async function dbUpdateEnrollmentStatus(id: string, status: 'approved' | 'rejected'): Promise<Enrollment | null> {
+  const enrollments = await dbGetEnrollments();
+  const enr = enrollments.find(e => e.id === id || e.trackingCode === id);
+  if (!enr) return null;
+
+  enr.status = status;
+  global.__globalEnrollmentsCache = enrollments;
+
+  if (isSupabaseConfigured && supabase) {
+    try {
+      await supabase.from('enrollments').update({ status }).eq('id', enr.id);
+    } catch (e) {}
+  }
 
   try {
-    const row = db.prepare('SELECT * FROM enrollments WHERE id = ? OR tracking_code = ?').get(id, id);
-    if (!row) return null;
-
-    const stmt = db.prepare('UPDATE enrollments SET status = ? WHERE id = ?');
-    stmt.run(status, row.id);
-
-    // If approved, auto-activate or create student
-    if (status === 'approved') {
-      const existingStudent = dbGetStudentByEmail(row.email);
-      if (existingStudent) {
-        dbUpdateStudent(existingStudent.id, { isActive: true });
-      } else {
-        dbAddStudent({
-          id: row.student_id || `std_${Date.now()}`,
-          name: row.name,
-          email: row.email,
-          phone: row.phone,
-          city: row.city,
-          password: 'studentpass2026',
-          isActive: true,
-          enrolledAt: new Date().toISOString().split('T')[0],
-          completedLessons: []
-        });
-      }
+    const sqlite = getSqliteDatabase();
+    if (sqlite) {
+      sqlite.prepare('UPDATE enrollments SET status = ? WHERE id = ?').run(status, enr.id);
     }
+  } catch (e) {}
 
-    return {
-      id: row.id,
-      trackingCode: row.tracking_code,
-      studentId: row.student_id,
-      name: row.name,
-      email: row.email,
-      phone: row.phone,
-      city: row.city,
-      paymentMethod: row.payment_method,
-      transactionId: row.transaction_id,
-      whereHeard: row.where_heard,
-      receiptUrl: row.receipt_url,
-      amount: row.amount,
-      status,
-      createdAt: row.created_at
-    };
-  } catch (e) {
-    console.error('SQLite dbUpdateEnrollmentStatus error:', e);
-    return null;
+  if (status === 'approved') {
+    const existing = await dbGetStudentByEmail(enr.email);
+    if (existing) {
+      await dbUpdateStudent(existing.id, { isActive: true });
+    } else {
+      await dbAddStudent({
+        id: enr.studentId || `std_${Date.now()}`,
+        name: enr.name,
+        email: enr.email,
+        phone: enr.phone,
+        city: enr.city,
+        password: 'studentpass2026',
+        isActive: true,
+        enrolledAt: new Date().toISOString().split('T')[0],
+        completedLessons: []
+      });
+    }
   }
+
+  return enr;
 }
 
-// --- RESOURCES ---
-export function dbGetResources(): ResourceItem[] {
-  const db = getDatabase();
-  if (!db) return initialResources;
-
-  try {
-    const rows = db.prepare('SELECT * FROM lms_resources ORDER BY updated_at DESC').all();
-    if (rows && rows.length > 0) {
-      return rows.map((r: any) => ({
-        id: r.id,
-        title: r.title,
-        type: r.type,
-        size: r.size,
-        downloadUrl: r.download_url,
-        value: r.value,
-        description: r.description
-      }));
-    }
-  } catch (e) {
-    console.error('SQLite dbGetResources error:', e);
-  }
+// -----------------------------------------------------------------------------
+// 6. RESOURCES & TICKETS
+// -----------------------------------------------------------------------------
+export async function dbGetResources(): Promise<ResourceItem[]> {
   return initialResources;
 }
 
-// --- SUPPORT TICKETS ---
-export function dbGetTickets(): SupportTicket[] {
-  const db = getDatabase();
-  if (!db) return initialTickets;
-
-  try {
-    const rows = db.prepare('SELECT * FROM support_tickets ORDER BY created_at DESC').all();
-    if (rows && rows.length > 0) {
-      return rows.map((r: any) => ({
-        id: r.id,
-        name: r.name,
-        email: r.email,
-        phone: r.phone,
-        topic: r.topic,
-        message: r.message,
-        status: r.status,
-        createdAt: r.created_at
-      }));
-    }
-  } catch (e) {
-    console.error('SQLite dbGetTickets error:', e);
-  }
+export async function dbGetTickets(): Promise<SupportTicket[]> {
   return initialTickets;
 }
 
-export function dbAddTicket(ticket: SupportTicket): SupportTicket {
-  const db = getDatabase();
-  if (db) {
+export async function dbAddTicket(ticket: SupportTicket): Promise<SupportTicket> {
+  if (isSupabaseConfigured && supabase) {
     try {
-      const stmt = db.prepare('INSERT INTO support_tickets (id, name, email, phone, topic, message, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
-      stmt.run(ticket.id, ticket.name, ticket.email, ticket.phone, ticket.topic, ticket.message, ticket.status, ticket.createdAt);
-    } catch (e) {
-      console.error('SQLite dbAddTicket error:', e);
-    }
+      await supabase.from('support_tickets').insert({
+        id: ticket.id,
+        name: ticket.name,
+        email: ticket.email,
+        phone: ticket.phone,
+        topic: ticket.topic,
+        message: ticket.message,
+        status: ticket.status,
+        created_at: ticket.createdAt
+      });
+    } catch (e) {}
   }
   return ticket;
 }

@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const tickets = dbGetTickets();
+    const tickets = await dbGetTickets();
     return NextResponse.json({ success: true, tickets });
   } catch (error: any) {
     return NextResponse.json({ success: false, message: error.message }, { status: 500 });
@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, message: 'Please fill all required fields' }, { status: 400 });
     }
 
-    const ticket = dbAddTicket({
+    const ticket = await dbAddTicket({
       id: `tkt_${Date.now()}`,
       name,
       email,
