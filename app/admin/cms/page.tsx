@@ -78,15 +78,14 @@ export default function AdminCmsPage() {
   const [newFaq, setNewFaq] = useState({ q: '', a: '' });
 
   const fetchAllData = () => {
-    // Clear any old stale browser storage
     try {
       localStorage.removeItem('sami_cms_content');
     } catch (e) {}
 
-    const timestamp = Date.now();
+    const cacheBuster = `${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
 
-    // 100% Live Dynamic Fetch from Database with zero cache
-    fetch(`/api/cms/content?t=${timestamp}`, {
+    // 100% Live Dynamic Fetch from Supabase Database with strict zero-cache headers
+    fetch(`/api/cms/content?_nocache=${cacheBuster}`, {
       cache: 'no-store',
       headers: {
         'Cache-Control': 'no-cache, no-store, must-revalidate',
@@ -102,7 +101,7 @@ export default function AdminCmsPage() {
       .catch((err) => console.error('CMS live fetch notice:', err));
 
     // Live Dynamic Fetch LMS Modules from Database
-    fetch(`/api/lms/modules?t=${timestamp}`, {
+    fetch(`/api/lms/modules?_nocache=${cacheBuster}`, {
       cache: 'no-store',
       headers: {
         'Cache-Control': 'no-cache, no-store, must-revalidate',
@@ -116,7 +115,7 @@ export default function AdminCmsPage() {
       .catch((err) => console.error('Modules live fetch notice:', err));
 
     // Live Dynamic Fetch Suppliers from Database
-    fetch(`/api/lms/suppliers?t=${timestamp}`, {
+    fetch(`/api/lms/suppliers?_nocache=${cacheBuster}`, {
       cache: 'no-store',
       headers: {
         'Cache-Control': 'no-cache, no-store, must-revalidate',
@@ -143,7 +142,7 @@ export default function AdminCmsPage() {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
-          'Cache-Control': 'no-cache'
+          'Cache-Control': 'no-cache, no-store, must-revalidate'
         },
         body: JSON.stringify(cmsData)
       });

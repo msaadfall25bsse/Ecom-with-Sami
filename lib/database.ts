@@ -29,9 +29,29 @@ export async function dbGetCmsSettings(): Promise<CmsContentSchema> {
         .maybeSingle();
 
       if (!error && data && data.value_json) {
-        return typeof data.value_json === 'string' 
+        const parsed = typeof data.value_json === 'string' 
           ? JSON.parse(data.value_json) 
           : data.value_json;
+
+        if (parsed && typeof parsed === 'object') {
+          return {
+            ...defaultCmsContent,
+            ...parsed,
+            hero: { ...defaultCmsContent.hero, ...(parsed.hero || {}) },
+            stats: { ...defaultCmsContent.stats, ...(parsed.stats || {}) },
+            mentor: { ...defaultCmsContent.mentor, ...(parsed.mentor || {}) },
+            marquee: { ...defaultCmsContent.marquee, ...(parsed.marquee || {}) },
+            contact: { ...defaultCmsContent.contact, ...(parsed.contact || {}) },
+            bonuses: { ...defaultCmsContent.bonuses, ...(parsed.bonuses || {}) },
+            why_dropshipping: { ...defaultCmsContent.why_dropshipping, ...(parsed.why_dropshipping || {}) },
+            options_comparison: { ...defaultCmsContent.options_comparison, ...(parsed.options_comparison || {}) },
+            cost_of_waiting: { ...defaultCmsContent.cost_of_waiting, ...(parsed.cost_of_waiting || {}) },
+            testimonials: Array.isArray(parsed.testimonials) ? parsed.testimonials : defaultCmsContent.testimonials,
+            faqs: Array.isArray(parsed.faqs) ? parsed.faqs : defaultCmsContent.faqs,
+            payment_methods: Array.isArray(parsed.payment_methods) ? parsed.payment_methods : defaultCmsContent.payment_methods,
+            pixels: Array.isArray(parsed.pixels) ? parsed.pixels : defaultCmsContent.pixels
+          };
+        }
       }
     } catch (e) {
       console.error('Supabase get CMS error:', e);
@@ -45,7 +65,20 @@ export async function dbSaveCmsSettings(patch: Partial<CmsContentSchema>): Promi
   const existing = await dbGetCmsSettings();
   const updated: CmsContentSchema = {
     ...existing,
-    ...patch
+    ...patch,
+    hero: patch.hero !== undefined ? { ...existing.hero, ...patch.hero } : existing.hero,
+    stats: patch.stats !== undefined ? { ...existing.stats, ...patch.stats } : existing.stats,
+    mentor: patch.mentor !== undefined ? { ...existing.mentor, ...patch.mentor } : existing.mentor,
+    marquee: patch.marquee !== undefined ? { ...existing.marquee, ...patch.marquee } : existing.marquee,
+    contact: patch.contact !== undefined ? { ...existing.contact, ...patch.contact } : existing.contact,
+    bonuses: patch.bonuses !== undefined ? patch.bonuses : existing.bonuses,
+    why_dropshipping: patch.why_dropshipping !== undefined ? patch.why_dropshipping : existing.why_dropshipping,
+    options_comparison: patch.options_comparison !== undefined ? patch.options_comparison : existing.options_comparison,
+    cost_of_waiting: patch.cost_of_waiting !== undefined ? patch.cost_of_waiting : existing.cost_of_waiting,
+    testimonials: patch.testimonials !== undefined ? patch.testimonials : existing.testimonials,
+    faqs: patch.faqs !== undefined ? patch.faqs : existing.faqs,
+    payment_methods: patch.payment_methods !== undefined ? patch.payment_methods : existing.payment_methods,
+    pixels: patch.pixels !== undefined ? patch.pixels : existing.pixels
   };
 
   if (supabase) {
