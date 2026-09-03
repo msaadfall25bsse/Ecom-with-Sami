@@ -436,12 +436,102 @@ class DatabaseStore {
     return this.modules;
   }
 
+  getModuleById(id: number) {
+    return this.modules.find(m => m.id === id);
+  }
+
+  addModule(module: Module) {
+    this.modules.push(module);
+    return module;
+  }
+
+  updateModule(id: number, patch: Partial<Module>) {
+    const idx = this.modules.findIndex(m => m.id === id);
+    if (idx !== -1) {
+      this.modules[idx] = { ...this.modules[idx], ...patch };
+      return this.modules[idx];
+    }
+    return null;
+  }
+
+  deleteModule(id: number) {
+    const idx = this.modules.findIndex(m => m.id === id);
+    if (idx !== -1) {
+      const removed = this.modules.splice(idx, 1);
+      return removed[0];
+    }
+    return null;
+  }
+
+  addLessonToModule(moduleId: number, lesson: Lesson) {
+    const mod = this.getModuleById(moduleId);
+    if (mod) {
+      mod.lessons.push(lesson);
+      return lesson;
+    }
+    return null;
+  }
+
+  updateLesson(moduleId: number, lessonId: string, patch: Partial<Lesson>) {
+    const mod = this.getModuleById(moduleId);
+    if (mod) {
+      const lIdx = mod.lessons.findIndex(l => l.id === lessonId);
+      if (lIdx !== -1) {
+        mod.lessons[lIdx] = { ...mod.lessons[lIdx], ...patch };
+        return mod.lessons[lIdx];
+      }
+    }
+    return null;
+  }
+
+  deleteLesson(moduleId: number, lessonId: string) {
+    const mod = this.getModuleById(moduleId);
+    if (mod) {
+      const lIdx = mod.lessons.findIndex(l => l.id === lessonId);
+      if (lIdx !== -1) {
+        const removed = mod.lessons.splice(lIdx, 1);
+        return removed[0];
+      }
+    }
+    return null;
+  }
+
+  // Suppliers CRUD
   getSuppliers() {
     return this.suppliers;
   }
 
+  addSupplier(supplier: Supplier) {
+    this.suppliers.unshift(supplier);
+    return supplier;
+  }
+
+  deleteSupplier(id: string) {
+    const idx = this.suppliers.findIndex(s => s.id === id);
+    if (idx !== -1) {
+      const removed = this.suppliers.splice(idx, 1);
+      return removed[0];
+    }
+    return null;
+  }
+
+  // Resources CRUD
   getResources() {
     return this.resources;
+  }
+
+  addResource(resource: ResourceItem) {
+    this.resources.unshift(resource);
+    return resource;
+  }
+
+  deleteResource(id: string) {
+    const idx = this.resources.findIndex(r => r.id === id);
+    if (idx !== -1) {
+      const removed = this.resources.splice(idx, 1);
+      return removed[0];
+    }
+    return null;
   }
 
   // Support Tickets
@@ -461,3 +551,4 @@ declare global {
 }
 
 export const db: DatabaseStore = global.__ecomDbInstance || (global.__ecomDbInstance = new DatabaseStore());
+
