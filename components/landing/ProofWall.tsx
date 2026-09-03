@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Star, ShieldCheck, TrendingUp, ShoppingBag } from 'lucide-react';
+import { Star, ShieldCheck, TrendingUp, Sparkles } from 'lucide-react';
 
 export function ProofWall({ customTestimonials }: { customTestimonials?: any[] }) {
   const defaultList = [
@@ -71,7 +71,7 @@ export function ProofWall({ customTestimonials }: { customTestimonials?: any[] }
     fetch('/api/public/cms-content')
       .then(r => r.json())
       .then(res => {
-        if (res.success && res.sections?.testimonials) {
+        if (res.success && res.sections?.testimonials && res.sections.testimonials.length > 0) {
           setTestimonials(res.sections.testimonials);
         }
       })
@@ -84,62 +84,54 @@ export function ProofWall({ customTestimonials }: { customTestimonials?: any[] }
         {testimonials.map((t, index) => (
           <div
             key={index}
-            className="bg-slate-900 border border-slate-800 rounded-2xl p-5 sm:p-6 hover:border-[#00A0DF]/50 hover:shadow-xl hover:shadow-[#00A0DF]/10 transition-all flex flex-col justify-between"
+            className="group relative bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 rounded-3xl p-6 hover:border-[#00A0DF]/60 shadow-xl hover:shadow-2xl hover:shadow-[#00A0DF]/15 transition-all duration-300 flex flex-col justify-between"
           >
             <div>
               {/* Stars & Market */}
               <div className="flex items-center justify-between mb-4">
                 <div className="flex gap-1 text-amber-400">
                   {[...Array(5)].map((_, i) => (
-                    <Star key={i} size={14} className="fill-amber-400" />
+                    <Star key={i} size={15} className="fill-amber-400 text-amber-400 drop-shadow-[0_0_6px_rgba(251,191,36,0.5)]" />
                   ))}
                 </div>
-                <span className="text-[10px] font-extrabold uppercase tracking-wider bg-emerald-500/10 text-emerald-400 px-2.5 py-0.5 rounded-full border border-emerald-500/30">
+                <span className="text-[10px] font-black uppercase tracking-wider bg-emerald-500/15 text-emerald-400 px-3 py-1 rounded-full border border-emerald-500/30">
                   {t.market || 'Verified Student'}
                 </span>
               </div>
 
               {/* Quote */}
-              <p className="text-slate-200 text-xs sm:text-sm leading-relaxed mb-6 italic">
+              <p className="text-xs sm:text-sm text-slate-300 font-medium leading-relaxed mb-6 italic">
                 &ldquo;{t.quote}&rdquo;
               </p>
             </div>
 
-            {/* Student & Sales Box */}
-            <div className="pt-4 border-t border-slate-800 flex items-center justify-between">
+            {/* Student Details & Revenue Pill */}
+            <div className="pt-4 border-t border-slate-800/80 flex items-center justify-between gap-3">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#00A0DF] to-emerald-400 flex items-center justify-center font-bold text-white text-xs">
-                  {t.initials || t.name?.slice(0, 2).toUpperCase() || 'ST'}
+                <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#00A0DF] to-emerald-400 p-0.5 shadow-md">
+                  <div className="w-full h-full rounded-full bg-slate-900 flex items-center justify-center font-black text-xs text-white">
+                    {t.initials || t.name?.substring(0, 2).toUpperCase() || 'ST'}
+                  </div>
                 </div>
                 <div>
-                  <h4 className="text-xs sm:text-sm font-bold text-white">{t.name}</h4>
-                  <p className="text-[10px] sm:text-xs text-slate-400">{t.city}</p>
+                  <h4 className="text-xs sm:text-sm font-bold text-white flex items-center gap-1">
+                    <span>{t.name}</span>
+                    <ShieldCheck size={14} className="text-[#00A0DF]" />
+                  </h4>
+                  <p className="text-[11px] text-slate-400">{t.city}</p>
                 </div>
               </div>
 
-              <div className="text-right">
-                <span className="text-xs sm:text-sm font-black text-emerald-400 block">{t.sales}</span>
-                <span className="text-[10px] text-slate-400 font-medium">{t.orders}</span>
-              </div>
+              {t.sales && (
+                <div className="text-right">
+                  <span className="inline-block text-[11px] sm:text-xs font-black text-emerald-400 bg-emerald-950/60 border border-emerald-500/40 px-2.5 py-1 rounded-lg">
+                    {t.sales}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
         ))}
-      </div>
-
-      {/* Bottom Trust Badge */}
-      <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-8 pt-4 text-xs sm:text-sm text-slate-400">
-        <div className="flex items-center gap-2">
-          <ShieldCheck size={18} className="text-[#00A0DF]" />
-          <span>100% Genuine Student Proof</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <TrendingUp size={18} className="text-emerald-400" />
-          <span>Real Ad Accounts &amp; Stores</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <ShoppingBag size={18} className="text-amber-400" />
-          <span>Live UAE &amp; Saudi Orders</span>
-        </div>
       </div>
     </div>
   );
