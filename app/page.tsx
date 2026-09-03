@@ -32,11 +32,9 @@ export default function HomePage() {
 
   useEffect(() => {
     const syncData = () => {
+      // Clear old browser storage cache
       try {
-        const cached = localStorage.getItem('sami_cms_content');
-        if (cached) {
-          setContent(JSON.parse(cached));
-        }
+        localStorage.removeItem('sami_cms_content');
       } catch (e) {}
 
       const timestamp = Date.now();
@@ -51,9 +49,6 @@ export default function HomePage() {
         .then((res) => {
           if (res.success && res.sections) {
             setContent(res.sections);
-            try {
-              localStorage.setItem('sami_cms_content', JSON.stringify(res.sections));
-            } catch (e) {}
           }
         })
         .catch(() => {});

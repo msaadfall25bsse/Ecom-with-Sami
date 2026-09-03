@@ -4,6 +4,10 @@ import { DynamicPixels } from '@/components/tracking';
 import { WhatsAppWidget } from '@/components/common';
 import { StickyMobileCta } from '@/components/layout';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
+
 export const metadata: Metadata = {
   title: 'Master UAE & KSA Dropshipping | Ecom With Sami',
   description: 'Learn UAE & KSA Shopify dropshipping step-by-step in Urdu. 9,700+ students trained, lifetime mentorship, verified supplier directory, and ads training. Start today for PKR 3,900.',

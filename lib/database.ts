@@ -16,15 +16,8 @@ import {
   Lesson 
 } from '@/utils/db';
 
-// In-Memory Fast Cache
-declare global {
-  var __globalCmsCache: CmsContentSchema | undefined;
-  var __globalModulesCache: Module[] | undefined;
-  var __globalSuppliersCache: Supplier[] | undefined;
-}
-
 // -----------------------------------------------------------------------------
-// 1. CMS SETTINGS (100% PURE SUPABASE)
+// 1. CMS SETTINGS (100% DIRECT SUPABASE REAL-TIME READ/WRITE)
 // -----------------------------------------------------------------------------
 export async function dbGetCmsSettings(): Promise<CmsContentSchema> {
   if (supabase) {
@@ -36,16 +29,16 @@ export async function dbGetCmsSettings(): Promise<CmsContentSchema> {
         .maybeSingle();
 
       if (!error && data && data.value_json) {
-        const parsed = typeof data.value_json === 'string' ? JSON.parse(data.value_json) : data.value_json;
-        global.__globalCmsCache = parsed;
-        return parsed;
+        return typeof data.value_json === 'string' 
+          ? JSON.parse(data.value_json) 
+          : data.value_json;
       }
     } catch (e) {
       console.error('Supabase get CMS error:', e);
     }
   }
 
-  return global.__globalCmsCache || defaultCmsContent;
+  return defaultCmsContent;
 }
 
 export async function dbSaveCmsSettings(patch: Partial<CmsContentSchema>): Promise<CmsContentSchema> {
@@ -54,8 +47,6 @@ export async function dbSaveCmsSettings(patch: Partial<CmsContentSchema>): Promi
     ...existing,
     ...patch
   };
-
-  global.__globalCmsCache = updated;
 
   if (supabase) {
     try {
@@ -76,7 +67,7 @@ export async function dbSaveCmsSettings(patch: Partial<CmsContentSchema>): Promi
 }
 
 // -----------------------------------------------------------------------------
-// 2. LMS MODULES & LECTURES (100% PURE SUPABASE)
+// 2. LMS MODULES & LECTURES (100% DIRECT SUPABASE REAL-TIME READ/WRITE)
 // -----------------------------------------------------------------------------
 export async function dbGetModules(): Promise<Module[]> {
   if (supabase) {
@@ -87,29 +78,23 @@ export async function dbGetModules(): Promise<Module[]> {
         .order('id', { ascending: true });
 
       if (!error && data && data.length > 0) {
-        const modules: Module[] = data.map((r: any) => ({
+        return data.map((r: any) => ({
           id: Number(r.id),
           title: r.title,
           duration: r.duration,
           description: r.description,
           lessons: typeof r.lessons_json === 'string' ? JSON.parse(r.lessons_json || '[]') : (r.lessons_json || [])
         }));
-        global.__globalModulesCache = modules;
-        return modules;
       }
     } catch (e) {
       console.error('Supabase get modules error:', e);
     }
   }
 
-  return global.__globalModulesCache || initialModules;
+  return initialModules;
 }
 
 export async function dbAddModule(module: Module): Promise<Module> {
-  const current = await dbGetModules();
-  const nextModules = [...current, module];
-  global.__globalModulesCache = nextModules;
-
   if (supabase) {
     try {
       await supabase.from('lms_modules').upsert({
@@ -130,12 +115,10 @@ export async function dbAddModule(module: Module): Promise<Module> {
 
 export async function dbUpdateModule(id: number, patch: Partial<Module>): Promise<Module | null> {
   const modules = await dbGetModules();
-  const idx = modules.findIndex(m => m.id === id);
-  if (idx === -1) return null;
+  const target = modules.find(m => m.id === id);
+  if (!target) return null;
 
-  const updated = { ...modules[idx], ...patch };
-  modules[idx] = updated;
-  global.__globalModulesCache = modules;
+  const updated = { ...target, ...patch };
 
   if (supabase) {
     try {
@@ -155,10 +138,6 @@ export async function dbUpdateModule(id: number, patch: Partial<Module>): Promis
 }
 
 export async function dbDeleteModule(id: number): Promise<boolean> {
-  const modules = await dbGetModules();
-  const filtered = modules.filter(m => m.id !== id);
-  global.__globalModulesCache = filtered;
-
   if (supabase) {
     try {
       await supabase.from('lms_modules').delete().eq('id', id);
@@ -166,7 +145,6 @@ export async function dbDeleteModule(id: number): Promise<boolean> {
       console.error('Supabase delete module error:', e);
     }
   }
-
   return true;
 }
 
@@ -205,14 +183,14 @@ export async function dbDeleteLesson(moduleId: number, lessonId: string): Promis
 }
 
 // -----------------------------------------------------------------------------
-// 3. WHOLESALE SUPPLIERS (100% PURE SUPABASE)
+// 3. WHOLESALE SUPPLIERS (100% DIRECT SUPABASE REAL-TIME READ/WRITE)
 // -----------------------------------------------------------------------------
 export async function dbGetSuppliers(): Promise<Supplier[]> {
   if (supabase) {
     try {
       const { data, error } = await supabase.from('lms_suppliers').select('*').order('updated_at', { ascending: false });
       if (!error && data && data.length > 0) {
-        const suppliers: Supplier[] = data.map((r: any) => ({
+        return data.map((r: any) => ({
           id: r.id,
           name: r.name,
           category: r.category,
@@ -225,21 +203,16 @@ export async function dbGetSuppliers(): Promise<Supplier[]> {
           codSupported: Boolean(r.cod_supported),
           notes: r.notes
         }));
-        global.__globalSuppliersCache = suppliers;
-        return suppliers;
       }
     } catch (e) {
       console.error('Supabase get suppliers error:', e);
     }
   }
 
-  return global.__globalSuppliersCache || initialSuppliers;
+  return initialSuppliers;
 }
 
 export async function dbAddSupplier(supplier: Supplier): Promise<Supplier> {
-  const current = await dbGetSuppliers();
-  global.__globalSuppliersCache = [supplier, ...current];
-
   if (supabase) {
     try {
       await supabase.from('lms_suppliers').upsert({
@@ -265,9 +238,6 @@ export async function dbAddSupplier(supplier: Supplier): Promise<Supplier> {
 }
 
 export async function dbDeleteSupplier(id: string): Promise<boolean> {
-  const current = await dbGetSuppliers();
-  global.__globalSuppliersCache = current.filter(s => s.id !== id);
-
   if (supabase) {
     try {
       await supabase.from('lms_suppliers').delete().eq('id', id);
@@ -280,7 +250,7 @@ export async function dbDeleteSupplier(id: string): Promise<boolean> {
 }
 
 // -----------------------------------------------------------------------------
-// 4. STUDENTS (100% PURE SUPABASE)
+// 4. STUDENTS (100% DIRECT SUPABASE REAL-TIME READ/WRITE)
 // -----------------------------------------------------------------------------
 export async function dbGetStudents(): Promise<Student[]> {
   if (supabase) {
@@ -386,7 +356,7 @@ export async function dbUpdateStudent(id: string, patch: Partial<Student>): Prom
 }
 
 // -----------------------------------------------------------------------------
-// 5. ENROLLMENTS (100% PURE SUPABASE)
+// 5. ENROLLMENTS (100% DIRECT SUPABASE REAL-TIME READ/WRITE)
 // -----------------------------------------------------------------------------
 export async function dbGetEnrollments(): Promise<Enrollment[]> {
   if (supabase) {
