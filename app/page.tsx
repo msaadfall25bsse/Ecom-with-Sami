@@ -31,11 +31,23 @@ export default function HomePage() {
   const [content, setContent] = useState<CmsContentSchema>(defaultCmsContent);
 
   useEffect(() => {
+    // Try immediate load from localStorage for zero-flicker custom data
+    try {
+      const cached = localStorage.getItem('sami_cms_content');
+      if (cached) {
+        setContent(JSON.parse(cached));
+      }
+    } catch (e) {}
+
+    // Fetch live permanent data from server
     fetch('/api/public/cms-content')
       .then((r) => r.json())
       .then((res) => {
         if (res.success && res.sections) {
           setContent(res.sections);
+          try {
+            localStorage.setItem('sami_cms_content', JSON.stringify(res.sections));
+          } catch (e) {}
         }
       })
       .catch(() => {});

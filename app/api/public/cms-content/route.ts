@@ -1,9 +1,11 @@
 import { NextResponse } from 'next/server';
-import { getCmsContent } from '@/utils/cmsStore';
+import { getServerCmsContent } from '@/utils/serverStorage';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const data = getCmsContent();
+    const data = getServerCmsContent();
     return NextResponse.json({
       success: true,
       sections: data

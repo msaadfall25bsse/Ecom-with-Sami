@@ -111,6 +111,10 @@ export default function AdminCmsPage() {
     setLoading(true);
     setSavedSuccess(false);
     try {
+      try {
+        localStorage.setItem('sami_cms_content', JSON.stringify(cmsData));
+      } catch (e) {}
+
       const res = await fetch('/api/cms/content', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

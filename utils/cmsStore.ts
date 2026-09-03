@@ -1,4 +1,4 @@
-// Central CMS Data Store & In-Memory / File Persistent Helper
+// Central CMS Data Store & Schema Definitions
 
 export interface CmsContentSchema {
   marquee: {
@@ -107,183 +107,185 @@ export const defaultCmsContent: CmsContentSchema = {
   marquee: {
     is_active: true,
     items: [
-      '🔥 Master UAE & KSA Shopify Dropshipping',
-      '⚡ 88% OFF Today',
-      '💰 Just PKR 3,900',
-      '🔒 Lifetime LMS Portal Access',
-      '📱 WhatsApp Mentorship (9AM–5PM)',
-      '🏆 9,700+ Students Trained',
-      '🚀 Verified Suppliers Directory Included',
-      '🎁 Free Bonuses Worth Rs 30,000+'
+      '🔥 RAMADAN SPECIAL 88% DISCOUNT &bull; PKR 3,900 ONLY FOR LIFETIME ACCESS',
+      '⚡ 9,742+ SUCCESSFUL STUDENTS TRAINED ACROSS PAKISTAN, UAE & SAUDI ARABIA',
+      '🚀 2026 UPDATED GCC SCALING BLUEPRINT WITH DIRECT DUBAI SUPPLIERS',
+      '💬 DIRECT 1-ON-1 WHATSAPP MENTORSHIP WITH MENTOR SAMI INCLUDED'
     ]
   },
   hero: {
-    badge: 'PAKISTAN’S #1 UAE/KSA DROPSHIPPING TRAINING',
-    title_line1: 'Learn How to Start Online Dropshipping Store in UAE & KSA',
-    title_highlight: 'Step-by-Step Training',
-    subtitle: 'Beginner Friendly Practical Training • Direct Verified GCC Suppliers • 9,700+ Students Mentored',
+    badge: '2026 UPDATED DUBAI & SAUDI ARABIA DROPSHIPPING BLUEPRINT',
+    title_line1: 'Learn How to Start Online Shopify',
+    title_highlight: 'Dropshipping Store in UAE & KSA',
+    subtitle: 'A proven step-by-step masterclass taking you from zero to your first AED 10,000+ per month with verified local GCC wholesale suppliers, winning products & high-ROI TikTok ads.',
     video_url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-    video_title: '128-Second Dropshipping Blueprint Overview',
+    video_title: 'Watch Sami Explain the Entire UAE & KSA Dropshipping Model (10 Mins Overview)',
     original_price: 'PKR 32,500',
     current_price: 'PKR 3,900',
     seats_left: 12,
     cta_text: 'YES! I WANT TO LEARN THIS'
   },
   stats: {
-    training_hours: '8 Hours',
+    training_hours: '15+ Hours',
     lectures_count: '36 Lectures',
     access_type: 'Lifetime Access',
-    mentorship_type: 'WhatsApp Mentorship'
+    mentorship_type: 'Direct WhatsApp Support'
   },
   mentor: {
-    name: 'Muhammad Sami',
-    title: 'Verified eCommerce Mentor',
-    bio: 'You don’t just need course videos — you need direct mentorship and real-time troubleshooting when scaling ads. Both are included in your enrollment today.',
-    students_count: '9,700+',
-    primary_markets: 'UAE & KSA',
-    access_badge: 'Lifetime'
+    name: 'Sardar Samiullah (Sami Ur Rehman)',
+    title: 'Top E-Commerce Mentor & GCC Dropshipping Expert',
+    bio: 'Founder of Ecom With Sami. Over 5+ years of active e-commerce experience scaling 7-figure stores across Dubai, Sharjah, Riyadh, and Jeddah. Trained over 9,700 students.',
+    students_count: '9,742+',
+    primary_markets: 'UAE & Saudi Arabia (KSA)',
+    access_badge: 'Verified Mentor & Coach'
   },
   bonuses: {
-    tag: 'FREE POWER BONUSES',
-    title: 'Exclusive Free Bonuses Worth',
-    highlight_value: 'Rs 30,000+',
-    subtitle: 'Enroll in the course today and get these 6 exclusive power resources 100% FREE with your enrollment.',
+    tag: 'EXCLUSIVE POWER BONUSES',
+    title: 'Get 6 Game-Changing Bonuses Worth Over',
+    highlight_value: 'Rs 30,000 Free',
+    subtitle: 'When you enroll today for PKR 3,900, you get all software tools, supplier contacts, and ad blueprints completely free of charge.',
     items: [
-      { title: 'Weekly 2-Hour Live Class', desc: 'Join live coaching sessions every week with Sami to review ads, solve problems & stay on track.', value: 'Rs 10,000' },
-      { title: 'Live Campaign & Pixel Audits', desc: 'Get your live ad campaigns and TikTok/Facebook pixels audited so you know exactly what to scale.', value: 'Rs 7,500' },
-      { title: 'Facebook Zero to Hero E-Book', desc: 'A complete step-by-step PDF manual taking you from total beginner to confident advertiser.', value: 'Rs 3,500' },
-      { title: 'Dropshipping P&L Margin Calculator', desc: 'Know your exact profit margins, product costs, ad budgets, and COD delivery returns in Excel.', value: 'Rs 3,000' },
-      { title: 'Ultra-Fast Premium Shopify Themes', desc: 'Ready-to-use premium store themes optimized for mobile conversions and Arabic RTL layout.', value: 'Rs 4,000' },
-      { title: '30+ High-Converting ChatGPT Prompts Pack', desc: 'Instant AI prompts to write compelling product descriptions, viral video hooks, and ad copy.', value: 'Rs 2,500' }
+      {
+        title: 'Verified UAE & Saudi Arabia Suppliers Directory',
+        desc: 'Direct WhatsApp contacts of trusted wholesale suppliers in Dubai (Deira), Sharjah, and Riyadh with 24-48 hours COD delivery.',
+        value: 'Rs 10,000 Value'
+      },
+      {
+        title: 'High-Converting Premium Shopify Theme (ZIP)',
+        desc: 'The exact custom-coded, ultra-fast converting theme used on our 7-figure stores. Clean, mobile-first design with 1-click upsells.',
+        value: 'Rs 8,500 Value'
+      },
+      {
+        title: 'Ready-to-Use Facebook & TikTok Ads Blueprint',
+        desc: 'Pre-written ad copy templates, campaign testing structures, targeting setups, and hook scripts in Arabic & English.',
+        value: 'Rs 5,000 Value'
+      },
+      {
+        title: 'E-Commerce P&L Margin & Profit Calculator (Excel)',
+        desc: 'Track advertising spend, product cost, shipping courier fees, COD delivery rates, and net profit margins automatically.',
+        value: 'Rs 3,000 Value'
+      },
+      {
+        title: 'Winning Product Hunt Checklist & Spy Prompts',
+        desc: '15-point criteria checklist to discover untapped winning products with high profit margins before your competitors do.',
+        value: 'Rs 2,500 Value'
+      },
+      {
+        title: 'Direct WhatsApp Mentorship Desk Access',
+        desc: 'Private direct WhatsApp assistance for account verification, ad troubleshooting, pixel errors, and scaling questions.',
+        value: 'Priceless'
+      }
     ]
   },
   why_dropshipping: {
-    badge: 'THE BEST OPPORTUNITY IN 2026',
-    title: 'Why Dropshipping Is the Smartest Online Business Right Now',
-    subtitle: 'No big investment, no office, no inventory risk. Start with just PKR 15,000 — from home, right on your phone.',
+    badge: 'WHY UAE & KSA MARKETS',
+    title: 'Why GCC Dropshipping is the #1 Opportunity in 2026',
+    subtitle: 'Unlike saturated western markets or low-margin local markets, UAE and Saudi Arabia offer high purchasing power and low ad costs.',
     items: [
-      { title: 'Work From Anywhere', desc: 'Run your high-converting Shopify store from your home, a cafe, or even while traveling.' },
-      { title: 'No Company Registration', desc: 'No complex paperwork, licenses, or legal setup required — just a smartphone/laptop and internet.' },
-      { title: 'Zero Inventory, Zero Risk', desc: 'You never buy stock upfront. Your supplier ships the item only after a customer places an order.' },
-      { title: 'Get Paid in Your Local Bank', desc: 'Withdraw your cash on delivery (COD) profits directly to your Pakistani bank account effortlessly.' }
+      {
+        title: 'High Purchasing Power (Dirhams & Riyals)',
+        desc: 'Customers in Dubai and Riyadh spend heavily online. Average order value (AOV) is 3x to 5x higher than local Pakistani stores.'
+      },
+      {
+        title: 'Cheap TikTok & Facebook Ad Costs (High ROAS)',
+        desc: 'Ad impressions and clicks cost significantly less compared to USA/UK, allowing high 4x-10x Return On Ad Spend.'
+      },
+      {
+        title: 'No Need to Buy Inventory Upfront (Zero Stock Risk)',
+        desc: 'Local wholesale warehouses in UAE fulfill orders directly via Cash-on-Delivery (COD). You only pay after the customer pays!'
+      },
+      {
+        title: 'Operate 100% from Pakistan with Laptop & Internet',
+        desc: 'You manage store setup, marketing, and customer support remotely from home while couriers handle local delivery in UAE/KSA.'
+      }
     ]
   },
   options_comparison: {
-    diy_title: 'Do It Yourself',
+    diy_title: 'Option A: Figuring It Out Yourself',
     diy_points: [
-      'Keep guessing which products work and which burn ad spend',
-      'Face repeated Facebook ad account restrictions without guidance',
-      'Waste months and 50,000+ PKR on trial-and-error tests',
-      'Lose motivation and quit before seeing your first real order'
+      'Wasting Rs 50,000+ on banned TikTok & Meta ad accounts',
+      'Working with fake or scam suppliers who steal deposits',
+      'Selling saturated products with 70%+ return rates',
+      'Months of frustration with zero mentorship or guidance'
     ],
-    sami_title: 'Join Ecom With Sami Program',
+    sami_title: 'Option B: The Ecom With Sami Shortcut',
     sami_points: [
-      'Follow a tested 11-module framework from product hunting to scaling',
-      'Get direct verified UAE & Saudi supplier phone numbers and rates',
-      'Lifetime WhatsApp mentorship from 9AM to 5PM daily',
-      'Get 6 free power bonus tools worth Rs 30,000+ included'
+      'Proven step-by-step roadmap tested on 9,700+ students',
+      'Direct WhatsApp directory of verified GCC wholesale suppliers',
+      'Copy-paste winning ad scripts and product selection criteria',
+      'Direct WhatsApp access to mentor Sami for fast answers'
     ]
   },
   cost_of_waiting: {
-    title: 'What Does Waiting Really Cost You?',
-    subtitle: 'The cost isn’t just PKR 3,900. It’s everything that stays exactly the same if nothing changes today.',
+    title: 'The Real Cost of Waiting Another Month',
+    subtitle: 'Every day you delay starting is another day of potential Dirhams and Riyals made by someone else.',
     cards: [
-      { label: '3 MONTHS FROM NOW', title: 'Still Stuck at “Someday”', desc: 'Still watching free YouTube videos with missing steps, still confused about pixels, same questions, zero progress.' },
-      { label: '1 YEAR FROM NOW', title: 'Watching Others Move Ahead', desc: 'People who enrolled today will already have a live profitable store. You will look back wishing you had started now.' },
-      { label: 'EXPENSIVE GUESSING', title: 'Money Lost to Trial & Error', desc: 'Most beginners burn 40,000+ PKR testing blindly on TikTok/Facebook ads. A proven blueprint saves you that wasted money.' },
-      { label: 'RISING COMPETITION', title: 'Late Entry = Harder Game', desc: 'GCC e-commerce is booming right now. The longer you delay, the more crowded it becomes for new entrants.' },
-      { label: 'WASTED MONTHS', title: 'The Slow, Lonely Route', desc: 'Figuring everything out alone takes 6 to 12 months. With mentor Sami’s roadmap, you launch in days.' },
-      { label: 'THE REAL MATH', title: 'Course Fee vs. Delay Cost', desc: 'PKR 3,900 is less than what most waste on a single failed ad test. Invest in your business skills today.' }
+      {
+        label: 'Delaying 30 Days',
+        title: 'Lost Time & Momentum',
+        desc: 'Watching others post screenshot proofs while you stay stuck in the same position.'
+      },
+      {
+        label: 'Price Increase',
+        title: 'Paying Rs 32,500 Full Price Later',
+        desc: 'This special 88% discounted fee (PKR 3,900) is strictly for this limited batch.'
+      },
+      {
+        label: 'Market Opportunity',
+        title: 'Rising Ad Costs in Q4',
+        desc: 'Taking advantage of early market arbitrage in UAE & Saudi before competition grows.'
+      }
     ]
   },
   faqs: [
     {
-      q: 'Is this course suitable for beginners?',
-      a: 'Absolutely. This course is built from absolute scratch for complete beginners and guides you step by step through the entire process — no prior coding, Shopify, or digital marketing experience is needed.'
+      q: 'Do I need any previous technical experience to join?',
+      a: 'No prior coding or e-commerce experience is required. The course starts from absolute basics (Shopify store setup from scratch) to advanced scaling.'
     },
     {
-      q: 'How much investment do I need to start dropshipping in UAE & KSA?',
-      a: 'You can get started in the UAE, KSA, and Pakistani markets with as little as 15,000 to 20,000 PKR using the organic & low-budget testing strategies taught in the course.'
+      q: 'Can I do this business while living in Pakistan?',
+      a: 'Yes, 100%. Over 90% of our students run their UAE and Saudi Arabia stores directly from Pakistan using their laptop or mobile phone.'
     },
     {
-      q: 'How do I get LMS portal access after paying?',
-      a: 'After completing payment on the enrollment page, upload your payment receipt or message our support team on WhatsApp. Your dedicated LMS portal credentials will be activated instantly via email.'
+      q: 'How much budget is needed after enrolling?',
+      a: 'Since you do not need to buy inventory in advance (COD model), you only need around PKR 10,000 to PKR 15,000 for domain and testing ads.'
     },
     {
-      q: 'Do you provide verified UAE & KSA supplier contacts?',
-      a: 'Yes! Inside Module 10, you get direct contact numbers, warehouse locations, and negotiation scripts for verified suppliers with fast 2-day delivery and cash-on-delivery (COD) payout options.'
+      q: 'How do I access the LMS classroom after payment?',
+      a: 'As soon as you submit the enrollment form with your receipt, your login credentials will be generated and you can log in at /login.'
     },
     {
-      q: 'Do you provide mentorship and live ad support?',
-      a: 'Yes — we provide lifetime support. You can ask questions directly on WhatsApp from 9AM to 5PM, plus attend weekly live coaching sessions to audit your ad campaigns and solve issues.'
-    },
-    {
-      q: 'How long is the course and how many lectures?',
-      a: 'The course consists of approximately 8 hours of step-by-step practical training, organized into 11 modules and 36 easy-to-follow HD video lectures you can watch at your own pace.'
-    },
-    {
-      q: 'Is this a one-time fee or monthly subscription?',
-      a: 'It is a strictly one-time fee of PKR 3,900 with lifetime access. All future updates, newly added supplier lists, and live coaching calls are included without any extra charges.'
-    },
-    {
-      q: 'Can I do this from my mobile phone while working a full-time job?',
-      a: 'Yes. You only need a smartphone or laptop and an internet connection. Most of our 9,700+ students are job holders and manage their stores during their free evening hours.'
+      q: 'How do I get help if I get stuck?',
+      a: 'You receive direct WhatsApp mentorship support where mentor Sami and his senior team assist with ad accounts and store reviews.'
     }
   ],
   testimonials: [
     {
-      name: 'Raza Ali',
-      city: 'Lahore',
-      sales: 'AED 4,850 in 6 Days',
-      orders: '24 Orders',
-      quote: 'Launched my first TikTok test ad campaign following Sami’s hook formula. First sale within 18 hours!',
-      market: 'UAE Market',
-      initials: 'RA'
-    },
-    {
       name: 'Hamza Tariq',
-      city: 'Islamabad',
-      sales: 'AED 5,000 / Week',
-      orders: '56 Orders',
-      quote: 'The direct supplier contacts in Dubai changed everything. Fast 2-day delivery and COD payout on time.',
+      city: 'Lahore',
+      sales: 'AED 8,920 in 14 Days',
+      orders: '42 Delivered Orders',
+      quote: 'Sami bhai ke verified supplier directory ne meri life badal di. Pehle scam supplier se loss hoa tha, ab daily orders ship ho rahe hain!',
       market: 'UAE Market',
       initials: 'HT'
     },
     {
-      name: 'Bilal Farooq',
+      name: 'Bilal Ahmad',
       city: 'Karachi',
-      sales: 'SAR 3,485 in 3 Days',
-      orders: '19 Orders',
-      quote: 'Started as a total beginner with zero Shopify knowledge. The 11 modules are so easy and step-by-step.',
+      sales: 'SAR 12,450 in 3 Weeks',
+      orders: '68 Orders',
+      quote: 'TikTok ads strategy jo module 4 mein sikhayi hai wo 100% working hai. 5.8 ROAS mila mujhe pehle hi campaign mein.',
       market: 'Saudi Arabia',
-      initials: 'BF'
-    },
-    {
-      name: 'Zainab Bibi',
-      city: 'Faisalabad',
-      sales: 'PKR 480,000 / Mo',
-      orders: '110+ Orders',
-      quote: 'The WhatsApp mentorship answered every question I had during my ad setup. Never felt alone.',
-      market: 'UAE & KSA',
-      initials: 'ZB'
+      initials: 'BA'
     },
     {
       name: 'Usman Ghani',
-      city: 'Rawalpindi',
-      sales: 'SAR 8,200',
-      orders: '78 Orders',
-      quote: 'Scaled my product using Advantage+ CBO scaling taught in Module 8. Best investment of my life.',
-      market: 'Saudi Market',
-      initials: 'UG'
-    },
-    {
-      name: 'Saad Ahmed',
-      city: 'Multan',
-      sales: 'PKR 320,000 Profit',
-      orders: '42 Orders',
-      quote: 'Verified suppliers with Arabic packaging makes local buyers trust the store. Return rate dropped to 11%.',
+      city: 'Islamabad',
+      sales: 'AED 4,850 First Week',
+      orders: '24 Orders',
+      quote: 'Rs 3,900 mein itna practical aur updated content koi nahi deta Pakistan mein. Highly recommended!',
       market: 'UAE Market',
-      initials: 'SA'
+      initials: 'UG'
     }
   ],
   payment_methods: [
@@ -333,17 +335,17 @@ export const defaultCmsContent: CmsContentSchema = {
   }
 };
 
-// Global In-Memory Store with fallback
-let currentCmsStore: CmsContentSchema = { ...defaultCmsContent };
+let inMemoryCmsStore: CmsContentSchema = { ...defaultCmsContent };
 
 export function getCmsContent(): CmsContentSchema {
-  return currentCmsStore;
+  return inMemoryCmsStore;
 }
 
 export function updateCmsContent(patch: Partial<CmsContentSchema>): CmsContentSchema {
-  currentCmsStore = {
-    ...currentCmsStore,
+  inMemoryCmsStore = {
+    ...inMemoryCmsStore,
     ...patch
   };
-  return currentCmsStore;
+  return inMemoryCmsStore;
 }
+

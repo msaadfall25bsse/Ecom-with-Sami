@@ -1,20 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getCmsContent, updateCmsContent } from '@/utils/cmsStore';
+import { getServerCmsContent, saveServerCmsContent } from '@/utils/serverStorage';
 
 export async function GET() {
-  const data = getCmsContent();
+  const data = getServerCmsContent();
   return NextResponse.json({ success: true, faqs: data.faqs });
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const newFaq = await request.json();
-    const data = getCmsContent();
-    const updated = [...data.faqs, newFaq];
-    updateCmsContent({ faqs: updated });
-    return NextResponse.json({ success: true, message: 'FAQ added successfully!', faqs: updated });
-  } catch (err: any) {
-    return NextResponse.json({ success: false, message: err.message }, { status: 400 });
+    const body = await request.json();
+    const data = getServerCmsContent();
+    const faqs = [...data.faqs, body];
+    const updated = saveServerCmsContent({ faqs });
+    return NextResponse.json({ success: true, message: 'FAQ added permanently', faqs: updated.faqs });
+  } catch (error: any) {
+    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
   }
 }
 
@@ -22,14 +22,14 @@ export async function DELETE(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const index = parseInt(searchParams.get('index') || '-1', 10);
-    const data = getCmsContent();
+    const data = getServerCmsContent();
     if (index >= 0 && index < data.faqs.length) {
-      const updated = data.faqs.filter((_, i) => i !== index);
-      updateCmsContent({ faqs: updated });
-      return NextResponse.json({ success: true, message: 'FAQ removed', faqs: updated });
+      const faqs = data.faqs.filter((_, i) => i !== index);
+      const updated = saveServerCmsContent({ faqs });
+      return NextResponse.json({ success: true, message: 'FAQ removed', faqs: updated.faqs });
     }
-    return NextResponse.json({ success: false, message: 'Invalid index' }, { status: 400 });
-  } catch (err: any) {
-    return NextResponse.json({ success: false, message: err.message }, { status: 500 });
+    return NextResponse.json({ success: false, message: 'Invalid FAQ index' }, { status: 400 });
+  } catch (error: any) {
+    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
   }
 }

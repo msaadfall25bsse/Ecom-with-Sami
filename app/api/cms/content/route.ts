@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getCmsContent, updateCmsContent } from '@/utils/cmsStore';
+import { getServerCmsContent, saveServerCmsContent } from '@/utils/serverStorage';
 
 export async function GET() {
   try {
-    const data = getCmsContent();
+    const data = getServerCmsContent();
     return NextResponse.json({
       success: true,
       content: data
@@ -19,10 +19,10 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const updated = updateCmsContent(body);
+    const updated = saveServerCmsContent(body);
     return NextResponse.json({
       success: true,
-      message: 'CMS Content updated successfully!',
+      message: 'CMS Content updated permanently!',
       content: updated
     });
   } catch (error: any) {
