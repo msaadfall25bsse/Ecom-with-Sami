@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { 
@@ -68,6 +68,7 @@ export default function AdminCmsPage() {
   const [selectedVideoSize, setSelectedVideoSize] = useState('');
   const [videoUploadSuccess, setVideoUploadSuccess] = useState(false);
   const [uploadError, setUploadError] = useState('');
+  const uploadXhrRef = useRef<XMLHttpRequest | null>(null);
 
   // New Supplier form state
   const [showAddSupplierModal, setShowAddSupplierModal] = useState(false);
@@ -320,75 +321,96 @@ export default function AdminCmsPage() {
     setUploadProgress(0);
     setVideoUploadSuccess(false);
     setUploadError('');
-    setUploadStatusText('Preparing video upload...');
+    setUploadStatusText('Authorizing secure cloud storage upload...');
 
-    const ext = file.name.substring(file.name.lastIndexOf('.')) || '.mp4';
-    const cleanBase = file.name.replace(/\.[^/.]+$/, '').replace(/[^a-zA-Z0-9_-]/g, '_');
-    const fileName = `mod${moduleId || '1'}_${Date.now()}_${cleanBase}${ext}`;
+    try {
+      // 1. Request presigned upload URL from our server (keeps secrets secure on backend)
+      const res = await fetch('/api/admin/cms/get-upload-url', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          originalName: file.name,
+          moduleId,
+          contentType: file.type || 'video/mp4'
+        })
+      });
 
-    const chunkSize = 4 * 1024 * 1024; // 4MB per chunk - bypasses Hostinger Nginx 413 limit
-    const totalChunks = Math.ceil(file.size / chunkSize);
-    const uploadId = `upl_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+      const data = await res.json();
+      if (!res.ok || !data.success || !data.signedUrl) {
+        throw new Error(data.message || 'Could not authorize video upload');
+      }
 
-    for (let i = 0; i < totalChunks; i++) {
-      const start = i * chunkSize;
-      const end = Math.min(start + chunkSize, file.size);
-      const chunkBlob = file.slice(start, end);
+      setUploadStatusText('Streaming video directly to cloud storage...');
 
-      const formData = new FormData();
-      formData.append('chunk', chunkBlob);
-      formData.append('chunkIndex', String(i));
-      formData.append('totalChunks', String(totalChunks));
-      formData.append('uploadId', uploadId);
-      formData.append('fileName', fileName);
-      formData.append('moduleId', String(moduleId));
+      // 2. Direct HTTP PUT upload stream to Supabase Storage (bypasses Hostinger limits completely)
+      const xhr = new XMLHttpRequest();
+      uploadXhrRef.current = xhr;
 
-      try {
-        const res = await fetch('/api/admin/cms/upload-chunk', {
-          method: 'POST',
-          body: formData
-        });
-
-        if (!res.ok) {
-          throw new Error(`Upload error at chunk ${i + 1}/${totalChunks} (Status ${res.status})`);
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable) {
+          const percent = Math.min(Math.round((event.loaded / event.total) * 100), 99);
+          setUploadProgress(percent);
+          const loadedMB = (event.loaded / (1024 * 1024)).toFixed(1);
+          const totalMB = (event.total / (1024 * 1024)).toFixed(1);
+          setUploadStatusText(`${loadedMB} MB / ${totalMB} MB (${percent}%)`);
         }
+      };
 
-        const data = await res.json();
-        if (!data.success) {
-          throw new Error(data.message || `Chunk ${i + 1} rejected`);
-        }
-
-        const percent = Math.round((end / file.size) * 100);
-        setUploadProgress(percent);
-        const uploadedMB = (end / (1024 * 1024)).toFixed(1);
-        const totalMB = (file.size / (1024 * 1024)).toFixed(1);
-        setUploadStatusText(`${uploadedMB} MB / ${totalMB} MB (${percent}%)`);
-
-        if (data.isComplete && data.url) {
-          setNewLessonUrl(data.url);
+      xhr.onload = () => {
+        uploadXhrRef.current = null;
+        if (xhr.status >= 200 && xhr.status < 300) {
+          setNewLessonUrl(data.publicUrl);
           setUploadProgress(100);
           setUploadingVideo(false);
           setVideoUploadSuccess(true);
-          setUploadStatusText('Upload complete 100%!');
-          return;
+          const totalMB = (file.size / (1024 * 1024)).toFixed(1);
+          setUploadStatusText(`Uploaded ${totalMB} MB successfully (100%)!`);
+        } else {
+          setUploadingVideo(false);
+          setUploadError(`Storage upload failed with status ${xhr.status}. Please try again.`);
         }
-      } catch (err: any) {
+      };
+
+      xhr.onerror = () => {
+        uploadXhrRef.current = null;
         setUploadingVideo(false);
-        setUploadError(err.message || 'Video upload failed. Please try again.');
-        return;
-      }
+        setUploadError('Network connection interrupted during upload. Please try again.');
+      };
+
+      xhr.onabort = () => {
+        uploadXhrRef.current = null;
+        setUploadingVideo(false);
+        setUploadError('Upload cancelled');
+      };
+
+      xhr.open('PUT', data.signedUrl, true);
+      xhr.setRequestHeader('Content-Type', file.type || 'video/mp4');
+      xhr.send(file);
+
+    } catch (err: any) {
+      setUploadingVideo(false);
+      setUploadError(err.message || 'Video upload initialization failed');
     }
   };
 
   // --- LMS LESSON ACTIONS ---
   const handleAddLesson = async (moduleId: number) => {
-    if (!newLessonTitle) {
+    if (!newLessonTitle.trim()) {
       setUploadError('Please enter a lecture title');
       return;
     }
-    if (!newLessonUrl) {
+    if (!newLessonUrl.trim()) {
       setUploadError('Please upload a video file or paste a video URL');
       return;
+    }
+
+    let finalVideoUrl = newLessonUrl.trim();
+    if (finalVideoUrl.includes('youtube.com/watch?v=')) {
+      const vId = finalVideoUrl.split('v=')[1]?.split('&')[0];
+      if (vId) finalVideoUrl = `https://www.youtube.com/embed/${vId}`;
+    } else if (finalVideoUrl.includes('youtu.be/')) {
+      const vId = finalVideoUrl.split('youtu.be/')[1]?.split('?')[0];
+      if (vId) finalVideoUrl = `https://www.youtube.com/embed/${vId}`;
     }
 
     try {
@@ -399,9 +421,9 @@ export default function AdminCmsPage() {
           action: 'ADD_LESSON',
           moduleId,
           lesson: {
-            title: newLessonTitle,
+            title: newLessonTitle.trim(),
             duration: newLessonDuration || '15:00',
-            videoUrl: newLessonUrl
+            videoUrl: finalVideoUrl
           }
         })
       });
@@ -841,9 +863,16 @@ export default function AdminCmsPage() {
                             <div className="flex items-center gap-2 justify-end pt-2 border-t border-white/5">
                               <button
                                 type="button"
-                                onClick={() => setAddingLessonForModuleId(null)}
-                                disabled={uploadingVideo}
-                                className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-300 disabled:opacity-50 transition-colors"
+                                onClick={() => {
+                                  if (uploadXhrRef.current) {
+                                    uploadXhrRef.current.abort();
+                                  }
+                                  setAddingLessonForModuleId(null);
+                                  setUploadingVideo(false);
+                                  setUploadProgress(0);
+                                  setUploadError('');
+                                }}
+                                className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-300 transition-colors"
                               >
                                 Cancel
                               </button>

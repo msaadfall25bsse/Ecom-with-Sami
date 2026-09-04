@@ -47,6 +47,19 @@ export default function LmsClassroomPage() {
   const [supplierSearch, setSupplierSearch] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
+  const getEmbedUrl = (url?: string) => {
+    if (!url) return 'https://www.youtube.com/embed/dQw4w9WgXcQ';
+    if (url.includes('youtube.com/watch?v=')) {
+      const vId = url.split('v=')[1]?.split('&')[0];
+      if (vId) return `https://www.youtube.com/embed/${vId}`;
+    }
+    if (url.includes('youtu.be/')) {
+      const vId = url.split('youtu.be/')[1]?.split('?')[0];
+      if (vId) return `https://www.youtube.com/embed/${vId}`;
+    }
+    return url;
+  };
+
   const handleLogout = async () => {
     try {
       await fetch('/api/auth/logout', { method: 'POST' });
@@ -467,7 +480,7 @@ export default function LmsClassroomPage() {
                     />
                   ) : (
                     <iframe
-                      src={activeLesson?.videoUrl || 'https://www.youtube.com/embed/dQw4w9WgXcQ'}
+                      src={getEmbedUrl(activeLesson?.videoUrl)}
                       title={activeLesson?.title || 'Lesson Video'}
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                       allowFullScreen
