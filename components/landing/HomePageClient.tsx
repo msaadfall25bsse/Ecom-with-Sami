@@ -37,7 +37,9 @@ import {
   HelpCircle,
   Check,
   Award,
-  DollarSign
+  DollarSign,
+  MoveHorizontal,
+  LayoutGrid
 } from 'lucide-react';
 import { defaultCmsContent, CmsContentSchema } from '@/utils/cmsStore';
 import { Module } from '@/utils/db';
@@ -53,8 +55,7 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
   const [activeVideoUrl, setActiveVideoUrl] = useState('');
   const [activeVideoTitle, setActiveVideoTitle] = useState('');
   const [content, setContent] = useState<CmsContentSchema>(initialContent || defaultCmsContent);
-  const videoScrollRef = useRef<HTMLDivElement>(null);
-  const [isAutoScrolling, setIsAutoScrolling] = useState(true);
+  const [videoReviewMode, setVideoReviewMode] = useState<'moving' | 'grid'>('moving');
 
   useEffect(() => {
     const syncData = async () => {
@@ -111,25 +112,6 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
     };
   }, []);
 
-  // Automatic gentle carousel advance for video reviews
-  useEffect(() => {
-    if (!isAutoScrolling) return;
-
-    const interval = setInterval(() => {
-      if (videoScrollRef.current) {
-        const container = videoScrollRef.current;
-        const maxScroll = container.scrollWidth - container.clientWidth;
-        if (container.scrollLeft >= maxScroll - 20) {
-          container.scrollTo({ left: 0, behavior: 'smooth' });
-        } else {
-          container.scrollBy({ left: 340, behavior: 'smooth' });
-        }
-      }
-    }, 4500);
-
-    return () => clearInterval(interval);
-  }, [isAutoScrolling]);
-
   const hero = content.hero || defaultCmsContent.hero;
   const stats = content.stats || defaultCmsContent.stats;
   const mentor = content.mentor || defaultCmsContent.mentor;
@@ -145,17 +127,6 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
     setActiveVideoTitle(title);
     setActiveVideoUrl(url);
     setIsVideoOpen(true);
-  };
-
-  const scrollReviews = (direction: 'left' | 'right') => {
-    setIsAutoScrolling(false);
-    if (videoScrollRef.current) {
-      const scrollAmount = 340;
-      videoScrollRef.current.scrollBy({
-        left: direction === 'left' ? -scrollAmount : scrollAmount,
-        behavior: 'smooth'
-      });
-    }
   };
 
   const videoReviews = [
@@ -650,109 +621,154 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
       </section>
 
       {/* ========================================================================= */}
-      {/* 6. REAL STUDENT VIDEO REVIEWS WITH AUTO-MOVING CAROUSEL & CONTROLS */}
+      {/* 6. REAL STUDENT VIDEO REVIEWS WITH CONTINUOUS MOVING STREAM */}
       {/* ========================================================================= */}
-      <section className="py-14 sm:py-20 bg-white">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="py-12 sm:py-20 bg-white overflow-hidden">
+        <div className="max-w-6xl mx-auto px-3 sm:px-6 lg:px-8">
           
-          <div className="text-center max-w-3xl mx-auto mb-8 sm:mb-10">
+          <div className="text-center max-w-3xl mx-auto mb-6 sm:mb-10">
             <span className="section-tag-pill">REAL STUDENT RESULTS</span>
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 tracking-tight mb-3">
+            <h2 className="text-2xl xs:text-3xl sm:text-4xl font-black text-slate-900 tracking-tight mb-2 sm:mb-3">
               Hear What Our Students Are Saying
             </h2>
-            <p className="text-xs sm:text-sm md:text-base text-slate-600 font-medium">
+            <p className="text-xs sm:text-sm md:text-base text-slate-600 font-medium px-2">
               Real student video reviews sharing their experience, support, and results after joining Ecom With Sami.
             </p>
           </div>
 
-          {/* Navigation Controls */}
-          <div className="flex items-center justify-between max-w-5xl mx-auto mb-4 px-2">
-            <span className="text-[11px] sm:text-xs font-bold text-slate-500 flex items-center gap-1.5">
+          {/* Interactive Mode Switcher & Status Indicator */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 max-w-5xl mx-auto mb-5 px-2">
+            <div className="flex items-center gap-2 text-[11px] sm:text-xs font-bold text-slate-500">
               <span className="w-2.5 h-2.5 rounded-full bg-[#00A0DF] animate-ping flex-shrink-0" />
-              <span>Auto-moving video reviews &bull; Swipe or click arrows</span>
-            </span>
-            <div className="flex items-center gap-1.5 sm:gap-2">
+              <span>Auto-moving video reviews &bull; Hover or tap to pause &amp; watch</span>
+            </div>
+
+            <div className="flex items-center bg-gray-100 p-1 rounded-xl border border-gray-200 text-xs font-bold shadow-inner">
               <button
-                onClick={() => scrollReviews('left')}
-                className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gray-100 hover:bg-[#00A0DF] hover:text-white text-slate-700 flex items-center justify-center transition-colors shadow-sm cursor-pointer active:scale-95"
-                aria-label="Previous reviews"
+                onClick={() => setVideoReviewMode('moving')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all text-xs ${
+                  videoReviewMode === 'moving'
+                    ? 'bg-white text-[#00A0DF] shadow-sm font-black'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
               >
-                <ChevronLeft size={16} />
+                <MoveHorizontal size={14} />
+                <span>Moving Stream</span>
               </button>
               <button
-                onClick={() => scrollReviews('right')}
-                className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gray-100 hover:bg-[#00A0DF] hover:text-white text-slate-700 flex items-center justify-center transition-colors shadow-sm cursor-pointer active:scale-95"
-                aria-label="Next reviews"
+                onClick={() => setVideoReviewMode('grid')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all text-xs ${
+                  videoReviewMode === 'grid'
+                    ? 'bg-white text-[#00A0DF] shadow-sm font-black'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
               >
-                <ChevronRight size={16} />
+                <LayoutGrid size={14} />
+                <span>Grid View</span>
               </button>
             </div>
           </div>
 
-          {/* Horizontal Auto-Scrollable Video Reviews Track */}
-          <div 
-            ref={videoScrollRef}
-            onMouseEnter={() => setIsAutoScrolling(false)}
-            onMouseLeave={() => setIsAutoScrolling(true)}
-            onTouchStart={() => setIsAutoScrolling(false)}
-            onTouchEnd={() => {
-              // resume auto-scrolling 4 seconds after user finishes touching
-              setTimeout(() => setIsAutoScrolling(true), 4000);
-            }}
-            className="flex items-stretch gap-3.5 sm:gap-5 overflow-x-auto pb-6 scrollbar-none snap-x snap-mandatory px-2 marquee-fade-mask touch-pan-x touch-scroll"
-          >
-            {videoReviews.map((rev, idx) => (
-              <div
-                key={idx}
-                className="w-[275px] xs:w-[305px] sm:w-[340px] bg-white border border-gray-200 rounded-2xl p-4 sm:p-5 shadow-sm hover:shadow-2xl hover:border-[#00A0DF] transition-all flex flex-col justify-between flex-shrink-0 snap-start card-hover-lift"
-              >
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex gap-0.5 sm:gap-1 text-amber-400">
-                      {[...Array(rev.stars)].map((_, i) => (
-                        <Star key={i} size={14} className="fill-amber-400 text-amber-400 animate-star-twinkle" />
-                      ))}
-                    </div>
-                    <span className="text-[10px] font-extrabold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
-                      {rev.result}
-                    </span>
-                  </div>
-
-                  <h3 className="text-xs sm:text-sm md:text-base font-bold text-slate-900 mb-3 min-h-[44px] leading-snug">
-                    {rev.headline}
-                  </h3>
-                </div>
-
-                <div>
-                  <div 
+          {/* 1. CONTINUOUS MOVING STREAM (HARDWARE ACCELERATED MARQUEE) */}
+          {videoReviewMode === 'moving' ? (
+            <div className="space-y-4 overflow-hidden py-2 marquee-fade-mask relative touch-pan-x">
+              <div className="animate-marquee-slow flex items-stretch gap-3.5 sm:gap-5">
+                {[...videoReviews, ...videoReviews, ...videoReviews, ...videoReviews].map((rev, idx) => (
+                  <div
+                    key={idx}
                     onClick={() => openReviewVideo(rev.headline, rev.videoUrl)}
-                    className="relative cursor-pointer rounded-xl overflow-hidden bg-slate-950 aspect-video flex items-center justify-center group mb-2.5 shadow-inner"
+                    className="w-[265px] xs:w-[295px] sm:w-[340px] bg-white border border-gray-200 rounded-2xl p-4 sm:p-5 shadow-sm hover:shadow-2xl hover:border-[#00A0DF] transition-all flex flex-col justify-between flex-shrink-0 cursor-pointer card-hover-lift group"
                   >
-                    <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-[#00A0DF] text-white flex items-center justify-center group-hover:scale-115 transition-transform shadow-lg shadow-[#00A0DF]/50">
-                      <Play size={18} className="fill-current ml-0.5" />
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex gap-0.5 sm:gap-1 text-amber-400">
+                          {[...Array(rev.stars)].map((_, i) => (
+                            <Star key={i} size={13} className="fill-amber-400 text-amber-400 animate-star-twinkle" />
+                          ))}
+                        </div>
+                        <span className="text-[9px] sm:text-[10px] font-extrabold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+                          {rev.result}
+                        </span>
+                      </div>
+
+                      <h3 className="text-xs sm:text-sm md:text-base font-bold text-slate-900 mb-3 min-h-[44px] leading-snug group-hover:text-[#00A0DF] transition-colors">
+                        {rev.headline}
+                      </h3>
                     </div>
-                    <span className="absolute bottom-2 left-2 text-[9px] sm:text-[10px] font-bold text-white bg-black/70 px-2 py-0.5 rounded backdrop-blur-sm">
-                      ▶ Watch Feedback
-                    </span>
+
+                    <div>
+                      <div className="relative cursor-pointer rounded-xl overflow-hidden bg-slate-950 aspect-video flex items-center justify-center group-hover:border-[#00A0DF] mb-2.5 shadow-inner">
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-[#00A0DF] text-white flex items-center justify-center group-hover:scale-115 transition-transform shadow-lg shadow-[#00A0DF]/50">
+                          <Play size={18} className="fill-current ml-0.5" />
+                        </div>
+                        <span className="absolute bottom-2 left-2 text-[9px] sm:text-[10px] font-bold text-white bg-black/75 px-2 py-0.5 rounded backdrop-blur-sm">
+                          ▶ Watch Video
+                        </span>
+                      </div>
+
+                      <div className="flex items-center justify-between text-[10px] sm:text-[11px] text-slate-500 font-semibold">
+                        <span>{rev.author}</span>
+                        <span className="text-[#00A0DF] font-bold">{rev.market}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            /* 2. GRID VIEW */
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 max-w-6xl mx-auto px-2">
+              {videoReviews.map((rev, idx) => (
+                <div
+                  key={idx}
+                  onClick={() => openReviewVideo(rev.headline, rev.videoUrl)}
+                  className="bg-white border border-gray-200 rounded-2xl p-4 sm:p-5 shadow-sm hover:shadow-xl hover:border-[#00A0DF] transition-all flex flex-col justify-between cursor-pointer card-hover-lift group"
+                >
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex gap-0.5 sm:gap-1 text-amber-400">
+                        {[...Array(rev.stars)].map((_, i) => (
+                          <Star key={i} size={13} className="fill-amber-400 text-amber-400" />
+                        ))}
+                      </div>
+                      <span className="text-[9px] sm:text-[10px] font-extrabold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+                        {rev.result}
+                      </span>
+                    </div>
+
+                    <h3 className="text-xs sm:text-sm font-bold text-slate-900 mb-3 min-h-[44px] leading-snug group-hover:text-[#00A0DF] transition-colors">
+                      {rev.headline}
+                    </h3>
                   </div>
 
-                  <div className="flex items-center justify-between text-[10px] sm:text-[11px] text-slate-500 font-semibold">
-                    <span>{rev.author}</span>
-                    <span className="text-[#00A0DF] font-bold">{rev.market}</span>
+                  <div>
+                    <div className="relative rounded-xl overflow-hidden bg-slate-950 aspect-video flex items-center justify-center mb-2.5 shadow-inner">
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-[#00A0DF] text-white flex items-center justify-center group-hover:scale-115 transition-transform shadow-lg shadow-[#00A0DF]/50">
+                        <Play size={18} className="fill-current ml-0.5" />
+                      </div>
+                      <span className="absolute bottom-2 left-2 text-[9px] sm:text-[10px] font-bold text-white bg-black/75 px-2 py-0.5 rounded backdrop-blur-sm">
+                        ▶ Watch Video
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between text-[10px] sm:text-[11px] text-slate-500 font-semibold">
+                      <span>{rev.author}</span>
+                      <span className="text-[#00A0DF] font-bold">{rev.market}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
 
-          <div className="text-center mt-6">
+          <div className="text-center mt-8">
             <Link
               href="/enrollment"
-              className="lwa-btn px-10 py-4 text-sm sm:text-base font-black rounded-xl"
+              className="lwa-btn px-8 sm:px-10 py-3.5 sm:py-4 text-xs xs:text-sm sm:text-base font-black rounded-xl"
             >
               YES! I WANT TO LEARN THIS
             </Link>
-            <p className="text-xs text-slate-500 font-semibold mt-3">
+            <p className="text-[11px] sm:text-xs text-slate-500 font-semibold mt-2.5">
               Learn step-by-step with lifetime mentorship support.
             </p>
           </div>

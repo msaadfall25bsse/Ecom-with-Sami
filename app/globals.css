@@ -364,56 +364,70 @@ body {
 /* ========================================================================= */
 /* Marquee & Continuous Moving Track Animations (Hardware Accelerated) */
 /* ========================================================================= */
+@-webkit-keyframes marqueeLeft {
+  0% { -webkit-transform: translate3d(0, 0, 0); transform: translate3d(0, 0, 0); }
+  100% { -webkit-transform: translate3d(-50%, 0, 0); transform: translate3d(-50%, 0, 0); }
+}
+
 @keyframes marqueeLeft {
-  0% { transform: translate3d(0, 0, 0); }
-  100% { transform: translate3d(-50%, 0, 0); }
+  0% { -webkit-transform: translate3d(0, 0, 0); transform: translate3d(0, 0, 0); }
+  100% { -webkit-transform: translate3d(-50%, 0, 0); transform: translate3d(-50%, 0, 0); }
+}
+
+@-webkit-keyframes marqueeRight {
+  0% { -webkit-transform: translate3d(-50%, 0, 0); transform: translate3d(-50%, 0, 0); }
+  100% { -webkit-transform: translate3d(0, 0, 0); transform: translate3d(0, 0, 0); }
 }
 
 @keyframes marqueeRight {
-  0% { transform: translate3d(-50%, 0, 0); }
-  100% { transform: translate3d(0, 0, 0); }
+  0% { -webkit-transform: translate3d(-50%, 0, 0); transform: translate3d(-50%, 0, 0); }
+  100% { -webkit-transform: translate3d(0, 0, 0); transform: translate3d(0, 0, 0); }
 }
 
 .animate-marquee {
-  display: flex;
-  width: max-content;
-  animation: marqueeLeft 28s linear infinite;
+  display: flex !important;
+  width: max-content !important;
+  -webkit-animation: marqueeLeft 26s linear infinite !important;
+  animation: marqueeLeft 26s linear infinite !important;
   will-change: transform;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
-}
-
-.animate-marquee:hover,
-.animate-marquee:active {
-  animation-play-state: paused;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
 }
 
 .animate-marquee-slow {
-  display: flex;
-  width: max-content;
-  animation: marqueeLeft 36s linear infinite;
+  display: flex !important;
+  width: max-content !important;
+  -webkit-animation: marqueeLeft 32s linear infinite !important;
+  animation: marqueeLeft 32s linear infinite !important;
   will-change: transform;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
-}
-
-.animate-marquee-slow:hover,
-.animate-marquee-slow:active {
-  animation-play-state: paused;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
 }
 
 .animate-marquee-reverse {
-  display: flex;
-  width: max-content;
-  animation: marqueeRight 34s linear infinite;
+  display: flex !important;
+  width: max-content !important;
+  -webkit-animation: marqueeRight 30s linear infinite !important;
+  animation: marqueeRight 30s linear infinite !important;
   will-change: transform;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
 }
 
-.animate-marquee-reverse:hover,
-.animate-marquee-reverse:active {
-  animation-play-state: paused;
+/* Only pause on desktop pointer hover, never on mobile touch */
+@media (hover: hover) and (pointer: fine) {
+  .animate-marquee:hover,
+  .animate-marquee-slow:hover,
+  .animate-marquee-reverse:hover {
+    -webkit-animation-play-state: paused;
+    animation-play-state: paused;
+  }
 }
 
 /* Soft Fade Masks for Horizontal Carousels */

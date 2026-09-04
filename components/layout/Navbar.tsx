@@ -32,22 +32,23 @@ export function Navbar() {
       className={`sticky top-0 z-50 w-full transition-all duration-200 ${
         scrolled
           ? 'bg-white/95 backdrop-blur-md shadow-md border-b border-gray-200 py-2 sm:py-2.5'
-          : 'bg-white border-b border-gray-100 py-3 sm:py-3.5'
+          : 'bg-white border-b border-gray-100 py-2.5 sm:py-3.5'
       }`}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-12 sm:h-14">
+      <div className="max-w-7xl mx-auto px-3 xs:px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-11 sm:h-14">
           
           {/* Brand Logo */}
-          <Link href="/" className="flex items-center gap-2.5 group flex-shrink-0">
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-[#00A0DF] flex items-center justify-center text-white shadow-md group-hover:scale-105 transition-transform">
-              <ShoppingBag size={18} className="stroke-[2.5]" />
+          <Link href="/" className="flex items-center gap-1.5 xs:gap-2 sm:gap-2.5 group flex-shrink-0 min-w-0">
+            <div className="w-6 h-6 xs:w-7 xs:h-7 sm:w-9 sm:h-9 rounded-lg bg-[#00A0DF] flex items-center justify-center text-white shadow-sm group-hover:scale-105 transition-transform flex-shrink-0">
+              <ShoppingBag size={13} className="stroke-[2.5] xs:hidden" />
+              <ShoppingBag size={16} className="stroke-[2.5] hidden xs:block" />
             </div>
-            <div className="flex flex-col">
-              <span className="text-base sm:text-lg font-black text-slate-900 tracking-tight leading-none">
+            <div className="flex flex-col min-w-0">
+              <span className="text-[12px] xs:text-[13px] sm:text-base font-black text-slate-900 tracking-tight leading-none truncate">
                 Ecom <span className="text-[#00A0DF]">With Sami</span>
               </span>
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-0.5">
+              <span className="text-[8px] xs:text-[9px] font-bold text-slate-400 uppercase tracking-wider mt-0.5 hidden sm:block truncate">
                 GCC Dropshipping Academy
               </span>
             </div>
@@ -83,24 +84,24 @@ export function Navbar() {
           </nav>
 
           {/* Right Action & Mobile Toggle */}
-          <div className="flex items-center gap-1.5 sm:gap-3 flex-shrink-0">
+          <div className="flex items-center gap-1.5 xs:gap-2 sm:gap-3 flex-shrink-0">
             {/* Header Enrollment CTA */}
             <Link
               href="/enrollment"
-              className="bg-[#00A0DF] hover:bg-[#008ac2] text-white px-3 sm:px-6 py-2 sm:py-2.5 rounded-lg text-[11px] sm:text-xs font-black uppercase tracking-wider shadow-md hover:shadow-lg transition-all inline-flex items-center gap-1 sm:gap-2 flex-shrink-0"
+              className="bg-[#00A0DF] hover:bg-[#008ac2] text-white px-2.5 xs:px-3 sm:px-5 py-1.5 xs:py-2 sm:py-2 rounded-lg text-[10px] xs:text-[11px] sm:text-xs font-black uppercase tracking-wider shadow-sm hover:shadow-md transition-all inline-flex items-center gap-1 sm:gap-2 flex-shrink-0 active:scale-95"
             >
               <span className="hidden sm:inline">YES! I WANT TO LEARN</span>
-              <span className="sm:hidden">ENROLL NOW</span>
-              <ArrowRight size={12} className="stroke-[3]" />
+              <span className="sm:hidden">ENROLL</span>
+              <ArrowRight size={10} className="stroke-[3]" />
             </Link>
 
             {/* Mobile Hamburger Toggle */}
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
-              className="lg:hidden p-1.5 sm:p-2 rounded-lg text-slate-700 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+              className="lg:hidden p-1.5 xs:p-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 transition-colors active:scale-95 flex items-center justify-center flex-shrink-0 border border-slate-200/60"
               aria-label="Toggle menu"
             >
-              {mobileOpen ? <X size={20} /> : <Menu size={20} />}
+              {mobileOpen ? <X size={17} /> : <Menu size={17} />}
             </button>
           </div>
 
