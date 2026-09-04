@@ -315,57 +315,69 @@ export default function AdminCmsPage() {
     uploadVideoFile(file, moduleId);
   };
 
-  const uploadVideoFile = (file: File, moduleId: number) => {
+  const uploadVideoFile = async (file: File, moduleId: number) => {
     setUploadingVideo(true);
     setUploadProgress(0);
     setVideoUploadSuccess(false);
     setUploadError('');
-    setUploadStatusText('Starting upload...');
+    setUploadStatusText('Preparing video upload...');
 
-    const formData = new FormData();
-    formData.append('video', file);
-    formData.append('moduleId', String(moduleId));
+    const ext = file.name.substring(file.name.lastIndexOf('.')) || '.mp4';
+    const cleanBase = file.name.replace(/\.[^/.]+$/, '').replace(/[^a-zA-Z0-9_-]/g, '_');
+    const fileName = `mod${moduleId || '1'}_${Date.now()}_${cleanBase}${ext}`;
 
-    const xhr = new XMLHttpRequest();
-    xhr.open('POST', '/api/admin/cms/upload-video', true);
+    const chunkSize = 4 * 1024 * 1024; // 4MB per chunk - bypasses Hostinger Nginx 413 limit
+    const totalChunks = Math.ceil(file.size / chunkSize);
+    const uploadId = `upl_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
 
-    xhr.upload.onprogress = (event) => {
-      if (event.lengthComputable) {
-        const percent = Math.round((event.loaded / event.total) * 100);
-        setUploadProgress(percent);
-        const loadedMB = (event.loaded / (1024 * 1024)).toFixed(1);
-        const totalMB = (event.total / (1024 * 1024)).toFixed(1);
-        setUploadStatusText(`${loadedMB} MB / ${totalMB} MB (${percent}%)`);
-      }
-    };
+    for (let i = 0; i < totalChunks; i++) {
+      const start = i * chunkSize;
+      const end = Math.min(start + chunkSize, file.size);
+      const chunkBlob = file.slice(start, end);
 
-    xhr.onload = () => {
-      setUploadingVideo(false);
-      if (xhr.status >= 200 && xhr.status < 300) {
-        try {
-          const res = JSON.parse(xhr.responseText);
-          if (res.success && res.url) {
-            setNewLessonUrl(res.url);
-            setUploadProgress(100);
-            setVideoUploadSuccess(true);
-            setUploadStatusText('Upload complete!');
-          } else {
-            setUploadError(res.message || 'Upload failed');
-          }
-        } catch {
-          setUploadError('Invalid server response');
+      const formData = new FormData();
+      formData.append('chunk', chunkBlob);
+      formData.append('chunkIndex', String(i));
+      formData.append('totalChunks', String(totalChunks));
+      formData.append('uploadId', uploadId);
+      formData.append('fileName', fileName);
+      formData.append('moduleId', String(moduleId));
+
+      try {
+        const res = await fetch('/api/admin/cms/upload-chunk', {
+          method: 'POST',
+          body: formData
+        });
+
+        if (!res.ok) {
+          throw new Error(`Upload error at chunk ${i + 1}/${totalChunks} (Status ${res.status})`);
         }
-      } else {
-        setUploadError(`Upload failed with server status ${xhr.status}`);
+
+        const data = await res.json();
+        if (!data.success) {
+          throw new Error(data.message || `Chunk ${i + 1} rejected`);
+        }
+
+        const percent = Math.round((end / file.size) * 100);
+        setUploadProgress(percent);
+        const uploadedMB = (end / (1024 * 1024)).toFixed(1);
+        const totalMB = (file.size / (1024 * 1024)).toFixed(1);
+        setUploadStatusText(`${uploadedMB} MB / ${totalMB} MB (${percent}%)`);
+
+        if (data.isComplete && data.url) {
+          setNewLessonUrl(data.url);
+          setUploadProgress(100);
+          setUploadingVideo(false);
+          setVideoUploadSuccess(true);
+          setUploadStatusText('Upload complete 100%!');
+          return;
+        }
+      } catch (err: any) {
+        setUploadingVideo(false);
+        setUploadError(err.message || 'Video upload failed. Please try again.');
+        return;
       }
-    };
-
-    xhr.onerror = () => {
-      setUploadingVideo(false);
-      setUploadError('Network error during video upload. Please check connection and try again.');
-    };
-
-    xhr.send(formData);
+    }
   };
 
   // --- LMS LESSON ACTIONS ---
