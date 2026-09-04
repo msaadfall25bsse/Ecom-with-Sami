@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Navbar, Footer, TopMarquee } from '@/components/layout';
 import { 
   ArrowRight, 
@@ -51,10 +52,15 @@ export default function AboutPage() {
             {/* Left Photo & Stats Card */}
             <div className="lg:col-span-5 flex flex-col items-center">
               <div className="w-full max-w-sm bg-slate-950 rounded-3xl p-6 border-2 border-[#00A0DF]/30 shadow-2xl text-center">
-                <div className="w-40 h-40 sm:w-48 sm:h-48 mx-auto rounded-full bg-gradient-to-tr from-[#00A0DF] to-emerald-400 p-1.5 mb-6 shadow-xl shadow-[#00A0DF]/30">
-                  <div className="w-full h-full rounded-full bg-slate-900 flex items-center justify-center text-5xl font-black text-[#00A0DF]">
-                    SAMI
-                  </div>
+                <div className="w-40 h-40 sm:w-48 sm:h-48 mx-auto rounded-full bg-gradient-to-tr from-[#00A0DF] to-emerald-400 p-1.5 mb-6 shadow-xl shadow-[#00A0DF]/30 overflow-hidden">
+                  <Image
+                    src="/images/sami-logo.jpg"
+                    alt="Muhammad Sami - Founder & Lead eCommerce Mentor"
+                    width={192}
+                    height={192}
+                    className="w-full h-full rounded-full object-cover"
+                    priority
+                  />
                 </div>
                 <h2 className="text-2xl font-black text-white mb-1">Muhammad Sami</h2>
                 <p className="text-xs font-bold text-[#00A0DF] uppercase tracking-wider mb-4">

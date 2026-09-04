@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { 
   Navbar, 
   Footer, 
@@ -545,13 +546,15 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
               
               {/* Mentor Avatar */}
               <div className="lg:col-span-5 flex flex-col items-center text-center">
-                <div className="relative w-44 h-44 sm:w-56 sm:h-56 rounded-3xl bg-gradient-to-tr from-[#00A0DF] to-emerald-400 p-1.5 shadow-2xl mb-4 animate-float">
-                  <div className="w-full h-full rounded-2xl bg-slate-950 flex flex-col items-center justify-center text-4xl sm:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-br from-[#00A0DF] to-emerald-400">
-                    SAMI
-                    <span className="text-[11px] text-slate-400 font-bold uppercase tracking-widest mt-1">
-                      Mentor
-                    </span>
-                  </div>
+                <div className="relative w-44 h-44 sm:w-56 sm:h-56 rounded-3xl bg-gradient-to-tr from-[#00A0DF] to-emerald-400 p-1.5 shadow-2xl mb-4 animate-float overflow-hidden">
+                  <Image
+                    src="/images/sami-logo.jpg"
+                    alt={mentor.name || 'Mentor Muhammad Sami'}
+                    width={224}
+                    height={224}
+                    className="w-full h-full rounded-2xl object-cover"
+                    priority
+                  />
                 </div>
                 <span className="inline-flex items-center gap-1.5 bg-[#00A0DF]/20 text-[#00A0DF] border border-[#00A0DF]/30 text-xs font-black px-3.5 py-1 rounded-full uppercase tracking-wider">
                   <Star size={12} className="fill-[#00A0DF]" />
