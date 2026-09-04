@@ -29,7 +29,9 @@ import {
   ExternalLink,
   Send,
   Lock,
-  RefreshCw
+  RefreshCw,
+  Trash2,
+  Loader2
 } from 'lucide-react';
 import { Enrollment, Student } from '@/utils/db';
 
@@ -82,6 +84,8 @@ export default function AdminDashboardPage() {
   const [searchStudent, setSearchStudent] = useState('');
   const [loading, setLoading] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Selected Receipt Preview modal state
   const [previewReceipt, setPreviewReceipt] = useState<Enrollment | null>(null);
@@ -188,22 +192,100 @@ export default function AdminDashboardPage() {
     fetchDashboardData();
   }, []);
 
-  const handleUpdateStatus = async (id: string, status: 'approved' | 'rejected') => {
+  const handleApprove = async (enrollment: Enrollment) => {
+    setActionLoadingId(`approve-${enrollment.id}`);
+    try {
+      const matchingStudent = students.find(s => s.email.toLowerCase() === enrollment.email.toLowerCase());
+      const passToUse = matchingStudent?.password || `Sami@${Math.floor(1000 + Math.random() * 9000)}`;
+
+      const res = await fetch('/api/admin/enrollments', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: enrollment.id,
+          status: 'approved',
+          password: passToUse
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setEnrollments(prev => prev.map(e => (e.id === enrollment.id || e.trackingCode === enrollment.id) ? { ...e, status: 'approved' } : e));
+        setToastMessage(`✅ ${enrollment.name} Approved! LMS Portal Account is now ACTIVE.`);
+        setTimeout(() => setToastMessage(null), 5000);
+        fetchDashboardData();
+      } else {
+        alert(data.message || 'Failed to approve enrollment');
+      }
+    } catch (e: any) {
+      console.error(e);
+      alert('Network error while approving');
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
+  const handleReject = async (enrollment: Enrollment) => {
+    if (!confirm(`Are you sure you want to REJECT enrollment for ${enrollment.name}?`)) return;
+    setActionLoadingId(`reject-${enrollment.id}`);
     try {
       const res = await fetch('/api/admin/enrollments', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, status })
+        body: JSON.stringify({
+          id: enrollment.id,
+          status: 'rejected'
+        })
       });
       const data = await res.json();
       if (data.success) {
-        if (previewReceipt && (previewReceipt.id === id || previewReceipt.trackingCode === id)) {
-          setPreviewReceipt(null);
-        }
+        setEnrollments(prev => prev.map(e => (e.id === enrollment.id || e.trackingCode === enrollment.id) ? { ...e, status: 'rejected' } : e));
+        setToastMessage(`❌ Enrollment for ${enrollment.name} marked as Rejected.`);
+        setTimeout(() => setToastMessage(null), 5000);
         fetchDashboardData();
+      } else {
+        alert(data.message || 'Failed to reject enrollment');
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
+      alert('Network error while rejecting');
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
+  const handleDelete = async (enrollment: Enrollment) => {
+    if (!confirm(`⚠️ PERMANENT DELETE:\nAre you sure you want to permanently delete enrollment for "${enrollment.name}" (${enrollment.trackingCode})?\n\nThis will completely remove this record from the database.`)) {
+      return;
+    }
+    setActionLoadingId(`delete-${enrollment.id}`);
+    try {
+      const res = await fetch('/api/admin/enrollments', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: enrollment.id })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setEnrollments(prev => prev.filter(e => e.id !== enrollment.id && e.trackingCode !== enrollment.id));
+        setToastMessage(`🗑️ Enrollment record for ${enrollment.name} permanently deleted.`);
+        setTimeout(() => setToastMessage(null), 5000);
+        fetchDashboardData();
+      } else {
+        alert(data.message || 'Failed to delete enrollment');
+      }
+    } catch (e: any) {
+      console.error(e);
+      alert('Network error while deleting');
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
+  const handleUpdateStatus = async (id: string, status: 'approved' | 'rejected') => {
+    const enr = enrollments.find(e => e.id === id || e.trackingCode === id);
+    if (enr) {
+      if (status === 'approved') return handleApprove(enr);
+      if (status === 'rejected') return handleReject(enr);
     }
   };
 
@@ -467,8 +549,19 @@ export default function AdminDashboardPage() {
 
       {/* Main Stage */}
       <main className="flex-1 p-4 sm:p-6 md:p-10 overflow-y-auto max-h-screen">
-        <div className="max-w-6xl mx-auto space-y-6 sm:space-y-8">
+        <div className="max-w-6xl mx-auto space-y-6 sm:space-y-8 relative">
           
+          {/* Toast Notification */}
+          {toastMessage && (
+            <div className="fixed top-5 right-4 sm:right-8 z-50 bg-[#111827] border-2 border-emerald-500/60 shadow-2xl rounded-2xl px-5 py-3.5 flex items-center gap-3 text-white text-xs sm:text-sm font-bold animate-in fade-in slide-in-from-top duration-300">
+              <Sparkles size={16} className="text-emerald-400 flex-shrink-0" />
+              <span>{toastMessage}</span>
+              <button onClick={() => setToastMessage(null)} className="ml-2 text-slate-400 hover:text-white p-1">
+                <X size={14} />
+              </button>
+            </div>
+          )}
+
           {/* Header */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div>
@@ -645,22 +738,54 @@ export default function AdminDashboardPage() {
                         </td>
                         <td className="py-3 text-right">
                           <div className="inline-flex items-center gap-1.5 justify-end">
-                            <button
-                              onClick={() => handleOpenAccessModal(r)}
-                              className="px-2.5 py-1 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-lg font-bold text-[11px] flex items-center gap-1 shadow-sm active:scale-95 transition-all"
-                              title="Grant LMS Access & Send WhatsApp"
-                            >
-                              <KeyRound size={12} className="text-amber-300" />
-                              <span>Get Access</span>
-                            </button>
-                            {r.status === 'pending' && (
+                            {r.status !== 'approved' ? (
                               <button
-                                onClick={() => handleUpdateStatus(r.id, 'rejected')}
-                                className="px-2 py-1 bg-red-600/20 hover:bg-red-600/40 text-red-400 rounded-lg font-bold text-[11px]"
+                                onClick={() => handleApprove(r)}
+                                disabled={actionLoadingId === `approve-${r.id}`}
+                                className="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white rounded-lg font-bold text-[11px] flex items-center gap-1 shadow-sm active:scale-95 transition-all"
+                                title="Approve Enrollment & Activate LMS Account"
                               >
-                                Reject
+                                {actionLoadingId === `approve-${r.id}` ? (
+                                  <Loader2 size={12} className="animate-spin text-white" />
+                                ) : (
+                                  <Check size={12} className="text-white font-black" />
+                                )}
+                                <span>Approve</span>
+                              </button>
+                            ) : (
+                              <span className="px-2 py-1 rounded-lg text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1">
+                                <CheckCircle2 size={11} /> Active
+                              </span>
+                            )}
+
+                            {r.status !== 'rejected' && (
+                              <button
+                                onClick={() => handleReject(r)}
+                                disabled={actionLoadingId === `reject-${r.id}`}
+                                className="px-2 py-1.5 bg-red-600/20 hover:bg-red-600/40 disabled:opacity-50 text-red-400 rounded-lg font-bold text-[11px] flex items-center gap-1 active:scale-95 transition-all border border-red-500/20"
+                                title="Reject Enrollment"
+                              >
+                                {actionLoadingId === `reject-${r.id}` ? (
+                                  <Loader2 size={12} className="animate-spin text-red-400" />
+                                ) : (
+                                  <X size={11} />
+                                )}
+                                <span>Reject</span>
                               </button>
                             )}
+
+                            <button
+                              onClick={() => handleDelete(r)}
+                              disabled={actionLoadingId === `delete-${r.id}`}
+                              className="p-1.5 bg-slate-800 hover:bg-red-900/50 text-slate-400 hover:text-red-300 rounded-lg text-[11px] flex items-center justify-center active:scale-95 transition-all border border-white/5"
+                              title="Permanently Delete Enrollment"
+                            >
+                              {actionLoadingId === `delete-${r.id}` ? (
+                                <Loader2 size={12} className="animate-spin text-red-400" />
+                              ) : (
+                                <Trash2 size={12} />
+                              )}
+                            </button>
                           </div>
                         </td>
                       </tr>
@@ -762,22 +887,54 @@ export default function AdminDashboardPage() {
                         </td>
                         <td className="py-3 text-right">
                           <div className="inline-flex items-center gap-1.5 justify-end">
-                            <button
-                              onClick={() => handleOpenAccessModal(r)}
-                              className="px-2.5 py-1 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-lg font-bold text-[11px] flex items-center gap-1 shadow-sm active:scale-95 transition-all"
-                              title="Grant LMS Access & Send WhatsApp"
-                            >
-                              <KeyRound size={12} className="text-amber-300" />
-                              <span>Get Access</span>
-                            </button>
+                            {r.status !== 'approved' ? (
+                              <button
+                                onClick={() => handleApprove(r)}
+                                disabled={actionLoadingId === `approve-${r.id}`}
+                                className="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white rounded-lg font-bold text-[11px] flex items-center gap-1 shadow-sm active:scale-95 transition-all"
+                                title="Approve Enrollment & Activate LMS Account"
+                              >
+                                {actionLoadingId === `approve-${r.id}` ? (
+                                  <Loader2 size={12} className="animate-spin text-white" />
+                                ) : (
+                                  <Check size={12} className="text-white font-black" />
+                                )}
+                                <span>Approve</span>
+                              </button>
+                            ) : (
+                              <span className="px-2 py-1 rounded-lg text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1">
+                                <CheckCircle2 size={11} /> Active
+                              </span>
+                            )}
+
                             {r.status !== 'rejected' && (
                               <button
-                                onClick={() => handleUpdateStatus(r.id, 'rejected')}
-                                className="px-2 py-1 bg-red-600/20 hover:bg-red-600/40 text-red-400 rounded-lg font-bold text-[11px]"
+                                onClick={() => handleReject(r)}
+                                disabled={actionLoadingId === `reject-${r.id}`}
+                                className="px-2 py-1.5 bg-red-600/20 hover:bg-red-600/40 disabled:opacity-50 text-red-400 rounded-lg font-bold text-[11px] flex items-center gap-1 active:scale-95 transition-all border border-red-500/20"
+                                title="Reject Enrollment"
                               >
-                                Revoke
+                                {actionLoadingId === `reject-${r.id}` ? (
+                                  <Loader2 size={12} className="animate-spin text-red-400" />
+                                ) : (
+                                  <X size={11} />
+                                )}
+                                <span>Reject</span>
                               </button>
                             )}
+
+                            <button
+                              onClick={() => handleDelete(r)}
+                              disabled={actionLoadingId === `delete-${r.id}`}
+                              className="p-1.5 bg-slate-800 hover:bg-red-900/50 text-slate-400 hover:text-red-300 rounded-lg text-[11px] flex items-center justify-center active:scale-95 transition-all border border-white/5"
+                              title="Permanently Delete Enrollment"
+                            >
+                              {actionLoadingId === `delete-${r.id}` ? (
+                                <Loader2 size={12} className="animate-spin text-red-400" />
+                              ) : (
+                                <Trash2 size={12} />
+                              )}
+                            </button>
                           </div>
                         </td>
                       </tr>
@@ -881,23 +1038,41 @@ export default function AdminDashboardPage() {
             </div>
 
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 justify-between pt-2 border-t border-white/5">
-              <button
-                onClick={() => handleUpdateStatus(previewReceipt.id, 'rejected')}
-                className="px-3.5 py-2.5 rounded-xl bg-red-600/20 hover:bg-red-600/40 text-red-400 text-xs font-bold transition-colors"
-              >
-                Reject Proof
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    const r = previewReceipt;
+                    setPreviewReceipt(null);
+                    handleReject(r);
+                  }}
+                  className="px-3.5 py-2.5 rounded-xl bg-red-600/20 hover:bg-red-600/40 text-red-400 text-xs font-bold transition-colors flex items-center gap-1.5"
+                >
+                  <X size={14} />
+                  <span>Reject</span>
+                </button>
+                <button
+                  onClick={() => {
+                    const r = previewReceipt;
+                    setPreviewReceipt(null);
+                    handleDelete(r);
+                  }}
+                  className="px-3.5 py-2.5 rounded-xl bg-slate-800 hover:bg-red-900/50 text-slate-400 hover:text-red-300 text-xs font-bold transition-colors flex items-center gap-1.5 border border-white/5"
+                >
+                  <Trash2 size={13} />
+                  <span>Delete</span>
+                </button>
+              </div>
+
               <button
                 onClick={() => {
                   const r = previewReceipt;
                   setPreviewReceipt(null);
-                  handleOpenAccessModal(r);
+                  handleApprove(r);
                 }}
-                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-black flex items-center justify-center gap-2 shadow-xl shadow-emerald-600/30 transition-all active:scale-95"
+                className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black flex items-center justify-center gap-2 shadow-xl shadow-emerald-600/30 transition-all active:scale-95"
               >
-                <KeyRound size={15} className="text-amber-300" />
-                <span>Get Access &amp; Send WhatsApp</span>
-                <MessageSquare size={14} className="text-emerald-200" />
+                <Check size={16} />
+                <span>Approve &amp; Activate LMS</span>
               </button>
             </div>
           </div>

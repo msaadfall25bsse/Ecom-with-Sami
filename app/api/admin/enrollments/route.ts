@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
-import { dbGetEnrollments, dbUpdateEnrollmentStatus } from '@/lib/database';
+import { dbGetEnrollments, dbUpdateEnrollmentStatus, dbDeleteEnrollment } from '@/lib/database';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -78,6 +78,38 @@ export async function PUT(request: NextRequest) {
       password: generatedPassword,
       whatsappUrl,
       studentPhoneClean
+    }, { headers: NO_CACHE_HEADERS });
+  } catch (error: any) {
+    return NextResponse.json({ success: false, message: error.message }, { status: 500, headers: NO_CACHE_HEADERS });
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const url = new URL(request.url);
+    let id = url.searchParams.get('id');
+
+    if (!id) {
+      try {
+        const body = await request.json();
+        id = body.id;
+      } catch (e) {}
+    }
+
+    if (!id) {
+      return NextResponse.json({ success: false, message: 'Missing enrollment id' }, { status: 400, headers: NO_CACHE_HEADERS });
+    }
+
+    await dbDeleteEnrollment(id);
+
+    try {
+      revalidatePath('/admin', 'page');
+      revalidatePath('/admin/cms', 'page');
+    } catch (e) {}
+
+    return NextResponse.json({
+      success: true,
+      message: 'Enrollment record permanently deleted from database.'
     }, { headers: NO_CACHE_HEADERS });
   } catch (error: any) {
     return NextResponse.json({ success: false, message: error.message }, { status: 500, headers: NO_CACHE_HEADERS });

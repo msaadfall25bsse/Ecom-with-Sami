@@ -478,7 +478,7 @@ export async function dbUpdateEnrollmentStatus(
     if (existing) {
       await dbUpdateStudent(existing.id, { 
         isActive: true,
-        password: finalPassword,
+        password: finalPassword || existing.password || 'studentpass2026',
         phone: enr.phone || existing.phone,
         city: enr.city || existing.city
       });
@@ -495,9 +495,40 @@ export async function dbUpdateEnrollmentStatus(
         completedLessons: []
       });
     }
+  } else if (status === 'rejected') {
+    const existing = await dbGetStudentByEmail(enr.email);
+    if (existing) {
+      await dbUpdateStudent(existing.id, { isActive: false });
+    }
   }
 
   return { enrollment: enr, password: finalPassword };
+}
+
+export async function dbDeleteEnrollment(id: string): Promise<boolean> {
+  const enrollments = await dbGetEnrollments();
+  const enr = enrollments.find(e => e.id === id || e.trackingCode === id);
+  const targetId = enr ? enr.id : id;
+
+  if (supabase) {
+    try {
+      const { error } = await supabase.from('enrollments').delete().eq('id', targetId);
+      if (error) {
+        await supabase.from('enrollments').delete().eq('tracking_code', targetId);
+      }
+    } catch (e) {
+      console.error('Supabase delete enrollment error:', e);
+    }
+  }
+
+  try {
+    const idx = initialEnrollments.findIndex(e => e.id === targetId || e.trackingCode === targetId);
+    if (idx !== -1) {
+      initialEnrollments.splice(idx, 1);
+    }
+  } catch (e) {}
+
+  return true;
 }
 
 // -----------------------------------------------------------------------------

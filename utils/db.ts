@@ -466,6 +466,15 @@ class DatabaseStore {
     return null;
   }
 
+  deleteEnrollment(id: string) {
+    const idx = this.enrollments.findIndex(e => e.id === id || e.trackingCode === id);
+    if (idx !== -1) {
+      const removed = this.enrollments.splice(idx, 1);
+      return removed[0];
+    }
+    return null;
+  }
+
   // Modules & LMS Methods
   getModules() {
     return this.modules;
