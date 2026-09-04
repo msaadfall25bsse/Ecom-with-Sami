@@ -83,20 +83,21 @@ export function Navbar() {
           </nav>
 
           {/* Right Action & Mobile Toggle */}
-          <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-3 flex-shrink-0">
             {/* Header Enrollment CTA */}
             <Link
               href="/enrollment"
-              className="bg-[#00A0DF] hover:bg-[#008ac2] text-white px-4 sm:px-6 py-2 sm:py-2.5 rounded-lg text-xs font-black uppercase tracking-wider shadow-md hover:shadow-lg transition-all inline-flex items-center gap-2"
+              className="bg-[#00A0DF] hover:bg-[#008ac2] text-white px-3 sm:px-6 py-2 sm:py-2.5 rounded-lg text-[11px] sm:text-xs font-black uppercase tracking-wider shadow-md hover:shadow-lg transition-all inline-flex items-center gap-1 sm:gap-2 flex-shrink-0"
             >
-              <span>YES! I WANT TO LEARN</span>
-              <ArrowRight size={13} className="stroke-[3]" />
+              <span className="hidden sm:inline">YES! I WANT TO LEARN</span>
+              <span className="sm:hidden">ENROLL NOW</span>
+              <ArrowRight size={12} className="stroke-[3]" />
             </Link>
 
             {/* Mobile Hamburger Toggle */}
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
-              className="lg:hidden p-2 rounded-lg text-slate-700 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+              className="lg:hidden p-1.5 sm:p-2 rounded-lg text-slate-700 hover:text-slate-900 hover:bg-slate-100 transition-colors"
               aria-label="Toggle menu"
             >
               {mobileOpen ? <X size={20} /> : <Menu size={20} />}

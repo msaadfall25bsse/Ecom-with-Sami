@@ -135,48 +135,48 @@ export function ProofWall({ customTestimonials }: { customTestimonials?: any[] }
 
       {/* 1. AUTO MOVING HORIZONTAL MARQUEE STREAMS */}
       {viewMode === 'moving' ? (
-        <div className="space-y-4 overflow-hidden py-3 marquee-fade-mask relative">
+        <div className="space-y-4 overflow-hidden py-3 marquee-fade-mask relative touch-pan-x">
           
           {/* Row 1: Smooth Leftward Moving Track */}
-          <div className="animate-marquee-slow flex items-stretch gap-4 sm:gap-5">
+          <div className="animate-marquee-slow flex items-stretch gap-3.5 sm:gap-5">
             {[...testimonials, ...testimonials, ...testimonials, ...testimonials].map((t, idx) => (
               <div
                 key={`r1-${idx}`}
-                className="w-[300px] sm:w-[350px] bg-white border border-gray-200 rounded-2xl p-5 shadow-sm hover:shadow-2xl hover:border-[#00A0DF] transition-all flex flex-col justify-between flex-shrink-0 cursor-pointer card-hover-lift"
+                className="w-[275px] xs:w-[305px] sm:w-[350px] bg-white border border-gray-200 rounded-2xl p-4 sm:p-5 shadow-sm hover:shadow-2xl hover:border-[#00A0DF] transition-all flex flex-col justify-between flex-shrink-0 cursor-pointer card-hover-lift"
               >
                 <div>
                   <div className="flex items-center justify-between mb-2.5">
-                    <div className="flex gap-1 text-amber-400">
+                    <div className="flex gap-0.5 sm:gap-1 text-amber-400">
                       {[...Array(5)].map((_, i) => (
-                        <Star key={i} size={14} className="fill-amber-400 text-amber-400 drop-shadow-sm" />
+                        <Star key={i} size={13} className="fill-amber-400 text-amber-400 drop-shadow-sm" />
                       ))}
                     </div>
-                    <span className="text-[10px] font-black uppercase tracking-wider bg-[#00A0DF]/10 text-[#00A0DF] px-2.5 py-0.5 rounded-full border border-[#00A0DF]/20">
+                    <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider bg-[#00A0DF]/10 text-[#00A0DF] px-2 sm:px-2.5 py-0.5 rounded-full border border-[#00A0DF]/20">
                       {t.market || 'Verified Student'}
                     </span>
                   </div>
 
-                  <p className="text-xs sm:text-sm text-slate-700 font-medium leading-relaxed mb-4">
+                  <p className="text-xs sm:text-sm text-slate-700 font-medium leading-relaxed mb-3 sm:mb-4">
                     &ldquo;{t.quote}&rdquo;
                   </p>
                 </div>
 
-                <div className="pt-3 border-t border-gray-100 flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#00A0DF] to-emerald-400 text-white flex items-center justify-center font-black text-xs shadow-sm">
+                <div className="pt-2.5 sm:pt-3 border-t border-gray-100 flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-tr from-[#00A0DF] to-emerald-400 text-white flex items-center justify-center font-black text-[11px] sm:text-xs shadow-sm">
                       {t.initials || t.name?.substring(0, 2).toUpperCase() || 'ST'}
                     </div>
                     <div>
                       <h4 className="text-xs font-bold text-slate-900 flex items-center gap-1">
                         <span>{t.name}</span>
-                        <ShieldCheck size={13} className="text-[#00A0DF]" />
+                        <ShieldCheck size={12} className="text-[#00A0DF]" />
                       </h4>
-                      <p className="text-[10px] text-slate-500 font-semibold">{t.city}</p>
+                      <p className="text-[9px] sm:text-[10px] text-slate-500 font-semibold">{t.city}</p>
                     </div>
                   </div>
 
                   {t.sales && (
-                    <span className="inline-block text-[10px] sm:text-[11px] font-extrabold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-md shadow-xs">
+                    <span className="inline-block text-[9px] sm:text-[11px] font-extrabold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md shadow-xs">
                       {t.sales}
                     </span>
                   )}
@@ -186,45 +186,45 @@ export function ProofWall({ customTestimonials }: { customTestimonials?: any[] }
           </div>
 
           {/* Row 2: Smooth Reverse Moving Track */}
-          <div className="animate-marquee-reverse flex items-stretch gap-4 sm:gap-5">
+          <div className="animate-marquee-reverse flex items-stretch gap-3.5 sm:gap-5">
             {[...testimonials, ...testimonials, ...testimonials, ...testimonials].reverse().map((t, idx) => (
               <div
                 key={`r2-${idx}`}
-                className="w-[300px] sm:w-[350px] bg-[#0B0F19] text-white border border-slate-800 rounded-2xl p-5 shadow-md hover:shadow-2xl hover:border-emerald-400 transition-all flex flex-col justify-between flex-shrink-0 cursor-pointer card-hover-lift"
+                className="w-[275px] xs:w-[305px] sm:w-[350px] bg-[#0B0F19] text-white border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-md hover:shadow-2xl hover:border-emerald-400 transition-all flex flex-col justify-between flex-shrink-0 cursor-pointer card-hover-lift"
               >
                 <div>
                   <div className="flex items-center justify-between mb-2.5">
-                    <div className="flex gap-1 text-amber-400">
+                    <div className="flex gap-0.5 sm:gap-1 text-amber-400">
                       {[...Array(5)].map((_, i) => (
-                        <Star key={i} size={14} className="fill-amber-400 text-amber-400 drop-shadow-sm" />
+                        <Star key={i} size={13} className="fill-amber-400 text-amber-400 drop-shadow-sm" />
                       ))}
                     </div>
-                    <span className="text-[10px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-400 px-2.5 py-0.5 rounded-full border border-emerald-500/30">
+                    <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-400 px-2 sm:px-2.5 py-0.5 rounded-full border border-emerald-500/30">
                       {t.market || 'Verified Student'}
                     </span>
                   </div>
 
-                  <p className="text-xs sm:text-sm text-slate-200 font-medium leading-relaxed mb-4">
+                  <p className="text-xs sm:text-sm text-slate-200 font-medium leading-relaxed mb-3 sm:mb-4">
                     &ldquo;{t.quote}&rdquo;
                   </p>
                 </div>
 
-                <div className="pt-3 border-t border-slate-800 flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center font-black text-xs shadow-sm">
+                <div className="pt-2.5 sm:pt-3 border-t border-slate-800 flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center font-black text-[11px] sm:text-xs shadow-sm">
                       {t.initials || t.name?.substring(0, 2).toUpperCase() || 'ST'}
                     </div>
                     <div>
                       <h4 className="text-xs font-bold text-white flex items-center gap-1">
                         <span>{t.name}</span>
-                        <ShieldCheck size={13} className="text-emerald-400" />
+                        <ShieldCheck size={12} className="text-emerald-400" />
                       </h4>
-                      <p className="text-[10px] text-slate-400 font-semibold">{t.city}</p>
+                      <p className="text-[9px] sm:text-[10px] text-slate-400 font-semibold">{t.city}</p>
                     </div>
                   </div>
 
                   {t.sales && (
-                    <span className="inline-block text-[10px] sm:text-[11px] font-extrabold text-emerald-400 bg-emerald-950/60 border border-emerald-500/40 px-2.5 py-0.5 rounded-md shadow-xs">
+                    <span className="inline-block text-[9px] sm:text-[11px] font-extrabold text-emerald-400 bg-emerald-950/60 border border-emerald-500/40 px-2 py-0.5 rounded-md shadow-xs">
                       {t.sales}
                     </span>
                   )}

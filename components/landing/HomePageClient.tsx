@@ -245,25 +245,25 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
       {/* ========================================================================= */}
       {/* 1. HERO SECTION (LEARNWITHAFAQ STYLE) */}
       {/* ========================================================================= */}
-      <section className="relative pt-8 pb-14 sm:pt-14 sm:pb-20 md:pt-16 md:pb-24 overflow-hidden bg-gradient-to-b from-[#f0f9ff]/40 via-white to-white">
+      <section className="relative pt-6 pb-12 sm:pt-14 sm:pb-20 md:pt-16 md:pb-24 overflow-hidden bg-gradient-to-b from-[#f0f9ff]/40 via-white to-white">
         {/* Soft Background Blur Orbs */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[550px] pointer-events-none overflow-hidden -z-10">
-          <div className="absolute top-[-80px] left-[15%] w-[450px] h-[450px] bg-[#00A0DF]/12 rounded-full blur-3xl animate-pulse-glow" />
-          <div className="absolute top-[40px] right-[10%] w-[400px] h-[400px] bg-emerald-400/10 rounded-full blur-3xl animate-pulse-glow" style={{ animationDelay: '2.5s' }} />
+          <div className="absolute top-[-80px] left-[15%] w-[350px] sm:w-[450px] h-[350px] sm:h-[450px] bg-[#00A0DF]/12 rounded-full blur-3xl animate-pulse-glow" />
+          <div className="absolute top-[40px] right-[10%] w-[300px] sm:w-[400px] h-[300px] sm:h-[400px] bg-emerald-400/10 rounded-full blur-3xl animate-pulse-glow" style={{ animationDelay: '2.5s' }} />
         </div>
 
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-6xl mx-auto px-3.5 sm:px-6 lg:px-8">
           <div className="flex flex-col items-center text-center max-w-4xl mx-auto">
             
             {/* Top Pill Badge */}
-            <div className="dropshipping-badge mb-5 cursor-pointer animate-float">
+            <div className="dropshipping-badge mb-4 sm:mb-5 cursor-pointer animate-float">
               <span className="badge-dot" />
               <span className="badge-blue">PAKISTAN’S #1</span>
               <span className="badge-dark">{hero.badge || "UAE/KSA DROPSHIPPING TRAINING"}</span>
             </div>
 
             {/* Main Bold Headline */}
-            <h1 className="text-3xl xs:text-4xl sm:text-5xl md:text-6xl font-black text-slate-900 tracking-tight leading-[1.15] mb-4">
+            <h1 className="text-2xl xs:text-3xl sm:text-5xl md:text-6xl font-black text-slate-900 tracking-tight leading-[1.18] sm:leading-[1.15] mb-3.5 sm:mb-4 px-1">
               {hero.title_line1 || 'Learn How to Start Online Dropshipping Store in UAE & KSA'}{' '}
               <span className="text-[#00A0DF] drop-shadow-xs">
                 {hero.title_highlight || 'Step-by-Step Training'}
@@ -271,22 +271,22 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
             </h1>
 
             {/* Sub-headline */}
-            <p className="text-base sm:text-lg md:text-xl text-slate-600 font-semibold max-w-2xl mx-auto mb-7 sm:mb-8">
+            <p className="text-xs xs:text-sm sm:text-lg md:text-xl text-slate-600 font-semibold max-w-2xl mx-auto mb-6 sm:mb-8 px-2">
               {hero.subtitle || 'Beginner Friendly Training from Basics — Zero Experience Required'}
             </p>
 
-            {/* Desktop Quick CTA & Social Proof */}
-            <div className="flex flex-col items-center gap-3 mb-8">
+            {/* Quick CTA & Social Proof */}
+            <div className="flex flex-col items-center gap-3 mb-6 sm:mb-8 w-full xs:w-auto px-2">
               <Link
                 href="/enrollment"
-                className="lwa-btn px-10 py-4 text-sm sm:text-base font-black rounded-xl hover:bg-[#008ac2] transition-all shadow-xl"
+                className="lwa-btn w-full xs:w-auto px-8 sm:px-10 py-3.5 sm:py-4 text-xs xs:text-sm sm:text-base font-black rounded-xl hover:bg-[#008ac2] transition-all shadow-xl"
               >
                 {hero.cta_text || 'YES! I WANT TO LEARN THIS'}
               </Link>
-              <div className="flex items-center gap-2 text-xs font-bold text-slate-500">
+              <div className="flex items-center gap-2 text-[11px] sm:text-xs font-bold text-slate-500">
                 <div className="flex text-amber-400">
                   {[...Array(5)].map((_, i) => (
-                    <Star key={i} size={14} className="fill-amber-400 text-amber-400 animate-star-twinkle" />
+                    <Star key={i} size={13} className="fill-amber-400 text-amber-400 animate-star-twinkle" />
                   ))}
                 </div>
                 <span>Trusted by 9,700+ Students</span>
@@ -296,12 +296,12 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
             {/* Video Preview Card Container */}
             <div className="w-full max-w-3xl relative">
               {/* Mini Pill Tag over Video */}
-              <div className="inline-flex items-center gap-1.5 bg-[#00A0DF] text-white px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-wider mb-3 shadow-md">
-                <Sparkles size={13} className="text-amber-300 animate-spin" style={{ animationDuration: '6s' }} />
+              <div className="inline-flex items-center gap-1.5 bg-[#00A0DF] text-white px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-black uppercase tracking-wider mb-2.5 sm:mb-3 shadow-md">
+                <Sparkles size={12} className="text-amber-300 animate-spin" style={{ animationDuration: '6s' }} />
                 <span>Ecommstory Masterclass</span>
               </div>
 
-              <h2 className="text-sm sm:text-base font-bold text-slate-700 mb-3">
+              <h2 className="text-xs sm:text-base font-bold text-slate-700 mb-2.5 sm:mb-3">
                 Watch this 128 seconds of video to learn how easy it is
               </h2>
 
@@ -313,25 +313,25 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
                 
                 {/* Radiant Play Button */}
-                <div className="relative z-10 flex flex-col items-center gap-3">
-                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-[#00A0DF] text-white flex items-center justify-center shadow-2xl shadow-[#00A0DF]/70 group-hover:scale-115 transition-transform duration-300 animate-radar">
-                    <Play className="fill-current ml-1" size={26} />
+                <div className="relative z-10 flex flex-col items-center gap-2 sm:gap-3 p-2 text-center">
+                  <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-full bg-[#00A0DF] text-white flex items-center justify-center shadow-2xl shadow-[#00A0DF]/70 group-hover:scale-115 transition-transform duration-300 animate-radar">
+                    <Play className="fill-current ml-1" size={22} />
                   </div>
-                  <span className="text-white font-extrabold text-xs sm:text-sm tracking-wide bg-black/70 px-4 py-1.5 rounded-full border border-white/20 backdrop-blur-md">
+                  <span className="text-white font-extrabold text-[10px] xs:text-xs sm:text-sm tracking-wide bg-black/75 px-3 sm:px-4 py-1 sm:py-1.5 rounded-full border border-white/20 backdrop-blur-md max-w-[90%] truncate">
                     {hero.video_title || 'Click to Watch Free Blueprint Overview'}
                   </span>
                 </div>
               </div>
 
               {/* Strikethrough Pricing Box */}
-              <div className="mt-6 bg-white border border-gray-200 rounded-xl px-5 py-3.5 shadow-sm inline-block card-hover-lift">
-                <p className="text-xs sm:text-sm md:text-base font-semibold text-gray-800">
+              <div className="mt-5 sm:mt-6 bg-white border border-gray-200 rounded-xl px-4 sm:px-5 py-3 sm:py-3.5 shadow-sm inline-block card-hover-lift max-w-full">
+                <p className="text-xs sm:text-sm md:text-base font-semibold text-gray-800 leading-snug">
                   Originally{' '}
                   <span className="line-through font-extrabold text-red-500">
                     {hero.original_price || '32,500 PKR'}
                   </span>{' '}
                   — Get Instant Access Today for Just{' '}
-                  <span className="font-extrabold text-[#00A0DF]">
+                  <span className="font-extrabold text-[#00A0DF] block xs:inline">
                     {hero.current_price || '3,900 PKR'}
                   </span>
                 </p>
@@ -667,24 +667,24 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
 
           {/* Navigation Controls */}
           <div className="flex items-center justify-between max-w-5xl mx-auto mb-4 px-2">
-            <span className="text-xs font-bold text-slate-500 flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#00A0DF] animate-ping" />
-              <span>Auto-moving video reviews &bull; Swipe or click arrows to explore</span>
+            <span className="text-[11px] sm:text-xs font-bold text-slate-500 flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-[#00A0DF] animate-ping flex-shrink-0" />
+              <span>Auto-moving video reviews &bull; Swipe or click arrows</span>
             </span>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 sm:gap-2">
               <button
                 onClick={() => scrollReviews('left')}
-                className="w-9 h-9 rounded-xl bg-gray-100 hover:bg-[#00A0DF] hover:text-white text-slate-700 flex items-center justify-center transition-colors shadow-sm cursor-pointer"
+                className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gray-100 hover:bg-[#00A0DF] hover:text-white text-slate-700 flex items-center justify-center transition-colors shadow-sm cursor-pointer active:scale-95"
                 aria-label="Previous reviews"
               >
-                <ChevronLeft size={18} />
+                <ChevronLeft size={16} />
               </button>
               <button
                 onClick={() => scrollReviews('right')}
-                className="w-9 h-9 rounded-xl bg-gray-100 hover:bg-[#00A0DF] hover:text-white text-slate-700 flex items-center justify-center transition-colors shadow-sm cursor-pointer"
+                className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gray-100 hover:bg-[#00A0DF] hover:text-white text-slate-700 flex items-center justify-center transition-colors shadow-sm cursor-pointer active:scale-95"
                 aria-label="Next reviews"
               >
-                <ChevronRight size={18} />
+                <ChevronRight size={16} />
               </button>
             </div>
           </div>
@@ -695,26 +695,30 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
             onMouseEnter={() => setIsAutoScrolling(false)}
             onMouseLeave={() => setIsAutoScrolling(true)}
             onTouchStart={() => setIsAutoScrolling(false)}
-            className="flex items-stretch gap-5 overflow-x-auto pb-6 scrollbar-none snap-x snap-mandatory px-2 marquee-fade-mask"
+            onTouchEnd={() => {
+              // resume auto-scrolling 4 seconds after user finishes touching
+              setTimeout(() => setIsAutoScrolling(true), 4000);
+            }}
+            className="flex items-stretch gap-3.5 sm:gap-5 overflow-x-auto pb-6 scrollbar-none snap-x snap-mandatory px-2 marquee-fade-mask touch-pan-x touch-scroll"
           >
             {videoReviews.map((rev, idx) => (
               <div
                 key={idx}
-                className="w-[300px] sm:w-[340px] bg-white border border-gray-200 rounded-2xl p-5 shadow-sm hover:shadow-2xl hover:border-[#00A0DF] transition-all flex flex-col justify-between flex-shrink-0 snap-start card-hover-lift"
+                className="w-[275px] xs:w-[305px] sm:w-[340px] bg-white border border-gray-200 rounded-2xl p-4 sm:p-5 shadow-sm hover:shadow-2xl hover:border-[#00A0DF] transition-all flex flex-col justify-between flex-shrink-0 snap-start card-hover-lift"
               >
                 <div>
-                  <div className="flex items-center justify-between mb-2.5">
-                    <div className="flex gap-1 text-amber-400">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex gap-0.5 sm:gap-1 text-amber-400">
                       {[...Array(rev.stars)].map((_, i) => (
-                        <Star key={i} size={15} className="fill-amber-400 text-amber-400 animate-star-twinkle" />
+                        <Star key={i} size={14} className="fill-amber-400 text-amber-400 animate-star-twinkle" />
                       ))}
                     </div>
-                    <span className="text-[11px] font-extrabold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
+                    <span className="text-[10px] font-extrabold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
                       {rev.result}
                     </span>
                   </div>
 
-                  <h3 className="text-sm sm:text-base font-bold text-slate-900 mb-4 min-h-[48px]">
+                  <h3 className="text-xs sm:text-sm md:text-base font-bold text-slate-900 mb-3 min-h-[44px] leading-snug">
                     {rev.headline}
                   </h3>
                 </div>
@@ -722,17 +726,17 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
                 <div>
                   <div 
                     onClick={() => openReviewVideo(rev.headline, rev.videoUrl)}
-                    className="relative cursor-pointer rounded-xl overflow-hidden bg-slate-950 aspect-video flex items-center justify-center group mb-3 shadow-inner"
+                    className="relative cursor-pointer rounded-xl overflow-hidden bg-slate-950 aspect-video flex items-center justify-center group mb-2.5 shadow-inner"
                   >
-                    <div className="w-12 h-12 rounded-full bg-[#00A0DF] text-white flex items-center justify-center group-hover:scale-115 transition-transform shadow-lg shadow-[#00A0DF]/50">
-                      <Play size={20} className="fill-current ml-0.5" />
+                    <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-[#00A0DF] text-white flex items-center justify-center group-hover:scale-115 transition-transform shadow-lg shadow-[#00A0DF]/50">
+                      <Play size={18} className="fill-current ml-0.5" />
                     </div>
-                    <span className="absolute bottom-2 left-2 text-[10px] font-bold text-white bg-black/70 px-2 py-0.5 rounded backdrop-blur-sm">
+                    <span className="absolute bottom-2 left-2 text-[9px] sm:text-[10px] font-bold text-white bg-black/70 px-2 py-0.5 rounded backdrop-blur-sm">
                       ▶ Watch Feedback
                     </span>
                   </div>
 
-                  <div className="flex items-center justify-between text-[11px] text-slate-500 font-semibold">
+                  <div className="flex items-center justify-between text-[10px] sm:text-[11px] text-slate-500 font-semibold">
                     <span>{rev.author}</span>
                     <span className="text-[#00A0DF] font-bold">{rev.market}</span>
                   </div>
@@ -914,21 +918,21 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
               </span>
             </div>
 
-            <div className="overflow-hidden py-3 marquee-fade-mask">
-              <div className="animate-marquee flex items-center gap-4 sm:gap-6">
+            <div className="overflow-hidden py-3 marquee-fade-mask touch-pan-x">
+              <div className="animate-marquee flex items-center gap-3 sm:gap-6">
                 {[...studentEarningsScreenshots, ...studentEarningsScreenshots, ...studentEarningsScreenshots, ...studentEarningsScreenshots].map((s, idx) => (
                   <div
                     key={idx}
-                    className="bg-[#0B0F19] text-white border border-slate-800 rounded-2xl p-4 sm:p-5 w-[240px] sm:w-[270px] flex-shrink-0 shadow-lg hover:border-[#00A0DF] transition-colors card-hover-lift cursor-pointer"
+                    className="bg-[#0B0F19] text-white border border-slate-800 rounded-2xl p-3.5 sm:p-5 w-[215px] xs:w-[240px] sm:w-[270px] flex-shrink-0 shadow-lg hover:border-[#00A0DF] transition-colors card-hover-lift cursor-pointer"
                   >
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-[10px] font-bold text-slate-400">{s.label}</span>
+                    <div className="flex items-center justify-between mb-1.5 sm:mb-2">
+                      <span className="text-[9px] sm:text-[10px] font-bold text-slate-400">{s.label}</span>
                       <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
                     </div>
-                    <div className="text-lg sm:text-xl font-black text-emerald-400 mb-1">
+                    <div className="text-base sm:text-xl font-black text-emerald-400 mb-1">
                       {s.profit}
                     </div>
-                    <div className="flex items-center justify-between text-[11px] text-slate-300 font-semibold">
+                    <div className="flex items-center justify-between text-[10px] sm:text-[11px] text-slate-300 font-semibold">
                       <span>{s.name}</span>
                       <span className="text-[#00A0DF] font-bold">{s.orders}</span>
                     </div>

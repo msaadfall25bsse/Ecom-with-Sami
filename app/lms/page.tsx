@@ -685,42 +685,45 @@ export default function LmsClassroomPage() {
       </div>
 
       {/* Mobile Fixed Bottom Navigation Bar */}
-      <div className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-[#111827] border-t border-white/10 px-2 py-1.5 flex items-center justify-around text-[10px] font-bold">
+      <div 
+        className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-[#111827]/95 backdrop-blur-md border-t border-white/10 px-2 py-1.5 flex items-center justify-around text-[10px] font-bold shadow-2xl"
+        style={{ paddingBottom: 'max(0.4rem, env(safe-area-inset-bottom, 0px))' }}
+      >
         <button
           onClick={() => { setSidebarOpen(true); }}
-          className="flex flex-col items-center gap-1 p-1 text-slate-400 hover:text-white"
+          className="flex flex-col items-center gap-1 p-1 text-slate-400 hover:text-white active:scale-95 transition-transform"
         >
-          <BookOpen size={16} className="text-[#00A0DF]" />
+          <BookOpen size={17} className="text-[#00A0DF]" />
           <span>Lectures</span>
         </button>
         <button
           onClick={() => { setActiveTab('video'); setSidebarOpen(false); }}
-          className={`flex flex-col items-center gap-1 p-1 ${activeTab === 'video' ? 'text-[#00A0DF]' : 'text-slate-400'}`}
+          className={`flex flex-col items-center gap-1 p-1 active:scale-95 transition-transform ${activeTab === 'video' ? 'text-[#00A0DF]' : 'text-slate-400'}`}
         >
-          <Play size={16} />
+          <Play size={17} />
           <span>Watch</span>
         </button>
         <button
           onClick={() => { setActiveTab('suppliers'); setSidebarOpen(false); }}
-          className={`flex flex-col items-center gap-1 p-1 ${activeTab === 'suppliers' ? 'text-[#00A0DF]' : 'text-slate-400'}`}
+          className={`flex flex-col items-center gap-1 p-1 active:scale-95 transition-transform ${activeTab === 'suppliers' ? 'text-[#00A0DF]' : 'text-slate-400'}`}
         >
-          <ShoppingBag size={16} />
+          <ShoppingBag size={17} />
           <span>Suppliers</span>
         </button>
         <button
           onClick={() => { setActiveTab('resources'); setSidebarOpen(false); }}
-          className={`flex flex-col items-center gap-1 p-1 ${activeTab === 'resources' ? 'text-[#00A0DF]' : 'text-slate-400'}`}
+          className={`flex flex-col items-center gap-1 p-1 active:scale-95 transition-transform ${activeTab === 'resources' ? 'text-[#00A0DF]' : 'text-slate-400'}`}
         >
-          <Download size={16} />
+          <Download size={17} />
           <span>Bonuses</span>
         </button>
         <a
           href="https://wa.me/923158960026?text=Assalam%20o%20Alaikum%20Sami!"
           target="_blank"
           rel="noopener noreferrer"
-          className="flex flex-col items-center gap-1 p-1 text-emerald-400"
+          className="flex flex-col items-center gap-1 p-1 text-emerald-400 active:scale-95 transition-transform"
         >
-          <MessageSquare size={16} />
+          <MessageSquare size={17} />
           <span>WhatsApp</span>
         </a>
       </div>

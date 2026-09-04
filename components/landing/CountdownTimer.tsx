@@ -39,7 +39,7 @@ export function CountdownTimer({
         </div>
 
         {/* 3 Box Digital Countdown Timer */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 xs:gap-2">
           {[
             { val: mounted ? pad(hours) : pad(initialHours), lbl: 'HOURS' },
             { val: mounted ? pad(minutes) : pad(initialMinutes), lbl: 'MINS' },
@@ -47,12 +47,12 @@ export function CountdownTimer({
           ].map((unit, idx) => (
             <div
               key={idx}
-              className="bg-slate-950 text-white rounded-xl py-2 px-3 sm:px-4 text-center min-w-[58px] sm:min-w-[68px] border border-[#00A0DF]/30 shadow-inner"
+              className="bg-slate-950 text-white rounded-xl py-1.5 xs:py-2 px-2.5 xs:px-3.5 sm:px-4 text-center min-w-[52px] xs:min-w-[60px] sm:min-w-[68px] border border-[#00A0DF]/30 shadow-inner"
             >
-              <div className="text-xl sm:text-2xl font-black font-mono text-[#00A0DF] leading-none">
+              <div className="text-lg xs:text-xl sm:text-2xl font-black font-mono text-[#00A0DF] leading-none">
                 {unit.val}
               </div>
-              <div className="text-[9px] sm:text-[10px] font-bold text-slate-400 tracking-wider mt-1">
+              <div className="text-[8px] xs:text-[9px] sm:text-[10px] font-bold text-slate-400 tracking-wider mt-1">
                 {unit.lbl}
               </div>
             </div>

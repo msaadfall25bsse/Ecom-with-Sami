@@ -500,6 +500,46 @@ export default function AdminDashboardPage() {
             </div>
           </div>
 
+          {/* Mobile Quick-Tab Switcher Bar */}
+          <div className="md:hidden flex items-center gap-2 overflow-x-auto no-scrollbar py-1 text-xs font-bold border-b border-white/10 pb-3">
+            <button
+              onClick={() => setActiveTab('overview')}
+              className={`px-3.5 py-1.5 rounded-xl whitespace-nowrap transition-colors ${
+                activeTab === 'overview' ? 'bg-[#00A0DF] text-white shadow-md shadow-[#00A0DF]/30 font-black' : 'bg-[#111827] text-slate-400'
+              }`}
+            >
+              Overview
+            </button>
+            <button
+              onClick={() => setActiveTab('enrollments')}
+              className={`px-3.5 py-1.5 rounded-xl whitespace-nowrap flex items-center gap-1.5 transition-colors ${
+                activeTab === 'enrollments' ? 'bg-[#00A0DF] text-white shadow-md shadow-[#00A0DF]/30 font-black' : 'bg-[#111827] text-slate-400'
+              }`}
+            >
+              <span>Queue</span>
+              {stats.pendingApprovals > 0 && (
+                <span className="bg-amber-400 text-slate-950 font-black px-1.5 py-0.2 rounded-full text-[9px]">
+                  {stats.pendingApprovals}
+                </span>
+              )}
+            </button>
+            <button
+              onClick={() => setActiveTab('students')}
+              className={`px-3.5 py-1.5 rounded-xl whitespace-nowrap transition-colors ${
+                activeTab === 'students' ? 'bg-[#00A0DF] text-white shadow-md shadow-[#00A0DF]/30 font-black' : 'bg-[#111827] text-slate-400'
+              }`}
+            >
+              Students ({students.length})
+            </button>
+            <Link
+              href="/admin/cms"
+              className="px-3.5 py-1.5 rounded-xl whitespace-nowrap bg-[#00A0DF]/15 text-[#00A0DF] border border-[#00A0DF]/30 flex items-center gap-1"
+            >
+              <Sparkles size={12} />
+              <span>CMS</span>
+            </Link>
+          </div>
+
           {/* Metric Cards Grid */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             <div className="bg-[#111827] border border-white/10 rounded-2xl p-4 sm:p-5 shadow-xl">
