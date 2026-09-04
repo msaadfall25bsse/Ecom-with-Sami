@@ -27,7 +27,9 @@ import {
   Globe2, 
   ShieldCheck, 
   Check, 
-  ListVideo 
+  ListVideo,
+  AlertCircle,
+  RotateCcw
 } from 'lucide-react';
 import { Module, Supplier, ResourceItem } from '@/utils/db';
 
@@ -39,6 +41,7 @@ export default function LmsClassroomPage() {
   const [user, setUser] = useState<any>(null);
   const [authChecking, setAuthChecking] = useState(true);
   const [activeLesson, setActiveLesson] = useState<any>(null);
+  const [videoLoadError, setVideoLoadError] = useState(false);
   const [completedLessons, setCompletedLessons] = useState<string[]>([]);
   const [openModuleId, setOpenModuleId] = useState<number>(1);
   const [activeTab, setActiveTab] = useState<'video' | 'suppliers' | 'resources' | 'mentorship'>('video');
@@ -470,14 +473,48 @@ export default function LmsClassroomPage() {
                     activeLesson.videoUrl.startsWith('/uploads/') ||
                     activeLesson.videoUrl.startsWith('/api/videos/')
                   ) ? (
-                    <video
-                      key={activeLesson.id + activeLesson.videoUrl}
-                      src={activeLesson.videoUrl}
-                      controls
-                      controlsList="nodownload"
-                      playsInline
-                      className="w-full h-full object-contain bg-black"
-                    />
+                    <div className="relative w-full h-full flex items-center justify-center bg-black">
+                      <video
+                        key={activeLesson.id + activeLesson.videoUrl}
+                        controls
+                        controlsList="nodownload"
+                        playsInline
+                        preload="metadata"
+                        onError={() => setVideoLoadError(true)}
+                        onLoadedData={() => setVideoLoadError(false)}
+                        className="w-full h-full object-contain bg-black"
+                      >
+                        <source src={activeLesson.videoUrl} />
+                        {activeLesson.videoUrl.startsWith('/api/videos/') && (
+                          <source src={activeLesson.videoUrl.replace('/api/videos/', '/uploads/videos/')} />
+                        )}
+                        Your browser does not support HTML5 video streaming.
+                      </video>
+
+                      {videoLoadError && (
+                        <div className="absolute inset-0 bg-black/90 flex flex-col items-center justify-center p-4 text-center z-20">
+                          <AlertCircle size={32} className="text-amber-400 mb-2 animate-bounce" />
+                          <p className="text-sm font-bold text-white mb-1">Video stream connection loading...</p>
+                          <p className="text-xs text-slate-400 mb-4 max-w-sm">
+                            Click below to refresh the video stream buffer.
+                          </p>
+                          <button
+                            onClick={() => {
+                              setVideoLoadError(false);
+                              const vid = document.querySelector('video');
+                              if (vid) {
+                                vid.load();
+                                vid.play().catch(() => {});
+                              }
+                            }}
+                            className="px-4 py-2 rounded-xl bg-[#00A0DF] hover:bg-[#008bc2] text-xs font-bold text-white flex items-center gap-1.5 transition-colors shadow-lg shadow-[#00A0DF]/30"
+                          >
+                            <RotateCcw size={13} />
+                            <span>Reload Video Stream</span>
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   ) : (
                     <iframe
                       src={getEmbedUrl(activeLesson?.videoUrl)}

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
+import { Readable } from 'stream';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -14,7 +15,7 @@ export async function GET(
     const { filename } = await params;
     const sanitizedFilename = path.basename(filename);
     
-    // Check primary and fallback storage directories
+    // Check primary and fallback storage directories on Hostinger
     const candidatePaths = [
       path.join(process.cwd(), 'public', 'uploads', 'videos', sanitizedFilename),
       path.join(os.tmpdir(), 'ecom_videos', sanitizedFilename),
@@ -41,53 +42,79 @@ export async function GET(
     };
     const contentType = mimeTypes[ext] || 'video/mp4';
 
-    if (range) {
-      const parts = range.replace(/bytes=/, '').split('-');
-      const start = parseInt(parts[0], 10);
-      const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
-      const chunkSize = end - start + 1;
+    // HTTP 206 Partial Content Range handling
+    if (range && range.startsWith('bytes=')) {
+      const rangeVal = range.replace('bytes=', '').trim();
+      let start: number;
+      let end: number;
 
-      const fileStream = fs.createReadStream(filePath, { start, end });
-      // Convert Node stream to Web ReadableStream
-      const stream = new ReadableStream({
-        start(controller) {
-          fileStream.on('data', (chunk) => controller.enqueue(chunk));
-          fileStream.on('end', () => controller.close());
-          fileStream.on('error', (err) => controller.error(err));
+      if (rangeVal.startsWith('-')) {
+        // Suffix range: bytes=-1048576 (get last N bytes for MP4 moov metadata atom)
+        const suffixLength = parseInt(rangeVal.substring(1), 10);
+        if (isNaN(suffixLength) || suffixLength <= 0) {
+          return new NextResponse('Range Not Satisfiable', {
+            status: 416,
+            headers: { 'Content-Range': `bytes */${fileSize}` }
+          });
         }
-      });
+        start = Math.max(fileSize - suffixLength, 0);
+        end = fileSize - 1;
+      } else if (rangeVal.endsWith('-')) {
+        // Open range: bytes=1024- (cap chunk to 5MB for instant smooth buffering)
+        start = parseInt(rangeVal.replace('-', ''), 10);
+        if (isNaN(start) || start >= fileSize) {
+          return new NextResponse('Range Not Satisfiable', {
+            status: 416,
+            headers: { 'Content-Range': `bytes */${fileSize}` }
+          });
+        }
+        const MAX_CHUNK = 5 * 1024 * 1024; // 5MB fast chunk
+        end = Math.min(start + MAX_CHUNK - 1, fileSize - 1);
+      } else {
+        // Explicit range: bytes=0-1023
+        const parts = rangeVal.split('-');
+        start = parseInt(parts[0], 10);
+        end = parseInt(parts[1], 10);
+        if (isNaN(start) || isNaN(end) || start > end || start >= fileSize) {
+          return new NextResponse('Range Not Satisfiable', {
+            status: 416,
+            headers: { 'Content-Range': `bytes */${fileSize}` }
+          });
+        }
+        end = Math.min(end, fileSize - 1);
+      }
 
-      return new NextResponse(stream as any, {
+      const chunkSize = end - start + 1;
+      const fileStream = fs.createReadStream(filePath, { start, end });
+      const webStream = Readable.toWeb(fileStream);
+
+      return new NextResponse(webStream as any, {
         status: 206,
         headers: {
           'Content-Range': `bytes ${start}-${end}/${fileSize}`,
           'Accept-Ranges': 'bytes',
           'Content-Length': String(chunkSize),
           'Content-Type': contentType,
-          'Cache-Control': 'public, max-age=31536000, immutable'
+          'Cache-Control': 'public, max-age=3600'
         }
       });
     } else {
+      // Full file stream with Accept-Ranges declared
       const fileStream = fs.createReadStream(filePath);
-      const stream = new ReadableStream({
-        start(controller) {
-          fileStream.on('data', (chunk) => controller.enqueue(chunk));
-          fileStream.on('end', () => controller.close());
-          fileStream.on('error', (err) => controller.error(err));
-        }
-      });
+      const webStream = Readable.toWeb(fileStream);
 
-      return new NextResponse(stream as any, {
+      return new NextResponse(webStream as any, {
         status: 200,
         headers: {
           'Content-Length': String(fileSize),
           'Content-Type': contentType,
           'Accept-Ranges': 'bytes',
-          'Cache-Control': 'public, max-age=31536000, immutable'
+          'Cache-Control': 'public, max-age=3600'
         }
       });
     }
   } catch (error: any) {
+    console.error('Video streaming error:', error);
     return new NextResponse(error.message || 'Stream error', { status: 500 });
   }
 }
