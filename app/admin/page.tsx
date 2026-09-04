@@ -136,6 +136,19 @@ export default function AdminDashboardPage() {
   });
 
   useEffect(() => {
+    // 1. Instant Cache Hydration: If admin visited before, immediately display cached stats with 0ms delay
+    try {
+      const cached = localStorage.getItem('sami_admin_dashboard_cache');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (parsed.stats) setStats(parsed.stats);
+        if (parsed.enrollments && Array.isArray(parsed.enrollments)) setEnrollments(parsed.enrollments);
+        if (parsed.students && Array.isArray(parsed.students)) setStudents(parsed.students);
+        setLoading(false);
+      }
+    } catch (e) {}
+
+    // 2. Verify admin authentication and fetch fresh live data
     fetch('/api/auth/me?t=' + Date.now())
       .then(res => res.json())
       .then(data => {
@@ -158,63 +171,39 @@ export default function AdminDashboardPage() {
     router.replace('/admin/login');
   };
 
-  const fetchDashboardData = () => {
+  const fetchDashboardData = async () => {
     setLoading(true);
     const timestamp = Date.now();
 
-    // Overview
-    fetch(`/api/admin/overview?t=${timestamp}`, {
-      cache: 'no-store',
-      headers: {
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Pragma': 'no-cache'
-      }
-    })
-      .then(r => r.json())
-      .then(res => {
-        if (res.success && res.stats) {
-          setStats(res.stats);
+    try {
+      // Single unified fast fetch that retrieves stats, enrollments, and students in one quick roundtrip
+      const res = await fetch(`/api/admin/overview?t=${timestamp}`, {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache'
         }
-      })
-      .catch(() => {});
+      });
+      const data = await res.json();
+      if (data.success) {
+        if (data.stats) setStats(data.stats);
+        if (data.enrollments && Array.isArray(data.enrollments)) setEnrollments(data.enrollments);
+        if (data.students && Array.isArray(data.students)) setStudents(data.students);
 
-    // Enrollments
-    fetch(`/api/admin/enrollments?t=${timestamp}`, {
-      cache: 'no-store',
-      headers: {
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Pragma': 'no-cache'
+        try {
+          localStorage.setItem('sami_admin_dashboard_cache', JSON.stringify({
+            stats: data.stats,
+            enrollments: data.enrollments,
+            students: data.students
+          }));
+        } catch (e) {}
       }
-    })
-      .then(r => r.json())
-      .then(res => {
-        if (res.success && res.enrollments) {
-          setEnrollments(res.enrollments);
-        }
-      })
-      .catch(() => {});
-
-    // Students
-    fetch(`/api/admin/students?t=${timestamp}`, {
-      cache: 'no-store',
-      headers: {
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Pragma': 'no-cache'
-      }
-    })
-      .then(r => r.json())
-      .then(res => {
-        if (res.success && res.students) {
-          setStudents(res.students);
-        }
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false));
+    } catch (err) {
+      console.error('Fetch dashboard overview error:', err);
+    } finally {
+      setLoading(false);
+    }
   };
-
-  useEffect(() => {
-    fetchDashboardData();
-  }, []);
 
   const handleApprove = async (enrollment: Enrollment) => {
     setActionLoadingId(`approve-${enrollment.id}`);
@@ -764,10 +753,11 @@ export default function AdminDashboardPage() {
             <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
               <button
                 onClick={fetchDashboardData}
-                className="p-2 sm:p-2.5 rounded-xl bg-[#111827] border border-white/10 hover:bg-slate-800 text-slate-300 transition-colors"
+                disabled={loading}
+                className="p-2 sm:p-2.5 rounded-xl bg-[#111827] border border-white/10 hover:bg-slate-800 text-slate-300 transition-colors disabled:opacity-60"
                 title="Refresh Live Data"
               >
-                <RotateCcw size={15} />
+                <RotateCcw size={15} className={loading ? 'animate-spin text-[#00A0DF]' : ''} />
               </button>
               <button
                 onClick={() => {

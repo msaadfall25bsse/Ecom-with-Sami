@@ -300,12 +300,31 @@ export function generateStableNumericPassword(seed: string): string {
   return num.toString();
 }
 
-export async function dbGetStudents(): Promise<Student[]> {
+interface MemoryCacheEntry<T> {
+  data: T;
+  expiry: number;
+}
+
+let cachedStudents: MemoryCacheEntry<Student[]> | null = null;
+let cachedEnrollments: MemoryCacheEntry<Enrollment[]> | null = null;
+const CACHE_TTL_MS = 10000; // 10 seconds cache for instant response
+
+export function clearDatabaseCache() {
+  cachedStudents = null;
+  cachedEnrollments = null;
+}
+
+export async function dbGetStudents(forceFresh = false): Promise<Student[]> {
+  if (!forceFresh && cachedStudents && Date.now() < cachedStudents.expiry) {
+    return cachedStudents.data;
+  }
+
+  let result: Student[] = [];
   if (supabase) {
     try {
       const { data, error } = await supabase.from('students').select('*').order('enrolled_at', { ascending: false });
       if (!error && data && data.length > 0) {
-        return data.map((r: any) => {
+        result = data.map((r: any) => {
           let pass = r.password;
           if (!pass || pass === 'studentpass2026') {
             pass = generateStableNumericPassword(r.id || r.email);
@@ -329,10 +348,15 @@ export async function dbGetStudents(): Promise<Student[]> {
     }
   }
 
-  return initialStudents.map(s => ({
-    ...s,
-    password: (!s.password || s.password === 'studentpass2026') ? generateStableNumericPassword(s.id || s.email) : s.password
-  }));
+  if (result.length === 0) {
+    result = initialStudents.map(s => ({
+      ...s,
+      password: (!s.password || s.password === 'studentpass2026') ? generateStableNumericPassword(s.id || s.email) : s.password
+    }));
+  }
+
+  cachedStudents = { data: result, expiry: Date.now() + CACHE_TTL_MS };
+  return result;
 }
 
 export async function dbGetStudentByEmail(email: string): Promise<Student | null> {
@@ -367,6 +391,7 @@ export async function dbGetStudentByEmail(email: string): Promise<Student | null
 }
 
 export async function dbAddStudent(student: Student): Promise<Student> {
+  clearDatabaseCache();
   if (supabase) {
     try {
       await supabase.from('students').upsert({
@@ -390,6 +415,7 @@ export async function dbAddStudent(student: Student): Promise<Student> {
 }
 
 export async function dbUpdateStudent(id: string, patch: Partial<Student>): Promise<Student | null> {
+  clearDatabaseCache();
   const students = await dbGetStudents();
   const target = students.find(s => s.id === id);
   if (!target) return null;
@@ -419,8 +445,12 @@ export async function dbUpdateStudent(id: string, patch: Partial<Student>): Prom
 // -----------------------------------------------------------------------------
 // 5. ENROLLMENTS (100% DIRECT SUPABASE REAL-TIME READ/WRITE)
 // -----------------------------------------------------------------------------
-export async function dbGetEnrollments(): Promise<Enrollment[]> {
-  const students = await dbGetStudents();
+export async function dbGetEnrollments(providedStudents?: Student[], forceFresh = false): Promise<Enrollment[]> {
+  if (!forceFresh && cachedEnrollments && Date.now() < cachedEnrollments.expiry) {
+    return cachedEnrollments.data;
+  }
+
+  const students = providedStudents || await dbGetStudents(forceFresh);
   const studentMap = new Map<string, Student>();
   students.forEach(s => {
     if (s.email) studentMap.set(s.email.toLowerCase(), s);
@@ -460,7 +490,7 @@ export async function dbGetEnrollments(): Promise<Enrollment[]> {
   }
 
   // Attach accurate student password to each enrollment
-  return list.map(enr => {
+  const mapped = list.map(enr => {
     const std = studentMap.get(enr.email?.toLowerCase() || '') || (enr.studentId ? studentMap.get(enr.studentId) : null);
     let pass = std?.password;
     if (!pass || pass === 'studentpass2026') {
@@ -471,9 +501,13 @@ export async function dbGetEnrollments(): Promise<Enrollment[]> {
       password: pass
     };
   });
+
+  cachedEnrollments = { data: mapped, expiry: Date.now() + CACHE_TTL_MS };
+  return mapped;
 }
 
 export async function dbAddEnrollment(enr: Enrollment): Promise<Enrollment> {
+  clearDatabaseCache();
   if (supabase) {
     try {
       await supabase.from('enrollments').insert({
@@ -505,6 +539,7 @@ export async function dbUpdateEnrollmentStatus(
   status: 'approved' | 'rejected', 
   customPassword?: string
 ): Promise<{ enrollment: Enrollment; password?: string } | null> {
+  clearDatabaseCache();
   const enrollments = await dbGetEnrollments();
   const enr = enrollments.find(e => e.id === id || e.trackingCode === id);
   if (!enr) return null;
@@ -563,6 +598,7 @@ export async function dbResetStudentPassword(
   identifier: string, 
   customNewPassword?: string
 ): Promise<{ success: boolean; email: string; newPassword: string } | null> {
+  clearDatabaseCache();
   const newPass = customNewPassword || generateRandomNumericPassword();
 
   let student = await dbGetStudentByEmail(identifier);
@@ -605,6 +641,7 @@ export async function dbResetStudentPassword(
 }
 
 export async function dbDeleteEnrollment(id: string): Promise<boolean> {
+  clearDatabaseCache();
   const enrollments = await dbGetEnrollments();
   const enr = enrollments.find(e => e.id === id || e.trackingCode === id);
   const targetId = enr ? enr.id : id;

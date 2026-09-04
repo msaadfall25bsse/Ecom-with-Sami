@@ -14,7 +14,7 @@ const NO_CACHE_HEADERS = {
 export async function GET() {
   try {
     const students = await dbGetStudents();
-    const enrollments = await dbGetEnrollments();
+    const enrollments = await dbGetEnrollments(students);
 
     const pendingEnrollments = enrollments.filter(e => e.status === 'pending');
     const approvedEnrollments = enrollments.filter(e => e.status === 'approved');
@@ -39,7 +39,9 @@ export async function GET() {
         courseFee: 3799,
         courseFeeFormatted: 'PKR 3,799',
         recentEnrollments: enrollments.slice(0, 8)
-      }
+      },
+      enrollments,
+      students
     }, { headers: NO_CACHE_HEADERS });
   } catch (error: any) {
     return NextResponse.json({ success: false, message: error.message }, { status: 500, headers: NO_CACHE_HEADERS });
