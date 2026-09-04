@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
+import os from 'os';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -12,9 +13,17 @@ export async function GET(
   try {
     const { filename } = await params;
     const sanitizedFilename = path.basename(filename);
-    const filePath = path.join(process.cwd(), 'public', 'uploads', 'videos', sanitizedFilename);
+    
+    // Check primary and fallback storage directories
+    const candidatePaths = [
+      path.join(process.cwd(), 'public', 'uploads', 'videos', sanitizedFilename),
+      path.join(os.tmpdir(), 'ecom_videos', sanitizedFilename),
+      path.join(os.tmpdir(), sanitizedFilename)
+    ];
 
-    if (!fs.existsSync(filePath)) {
+    const filePath = candidatePaths.find(p => fs.existsSync(p));
+
+    if (!filePath) {
       return new NextResponse('Video not found', { status: 404 });
     }
 

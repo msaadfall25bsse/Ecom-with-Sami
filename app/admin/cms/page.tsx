@@ -69,6 +69,7 @@ export default function AdminCmsPage() {
   const [videoUploadSuccess, setVideoUploadSuccess] = useState(false);
   const [uploadError, setUploadError] = useState('');
   const uploadXhrRef = useRef<XMLHttpRequest | null>(null);
+  const uploadAbortRef = useRef<AbortController | null>(null);
 
   // New Supplier form state
   const [showAddSupplierModal, setShowAddSupplierModal] = useState(false);
@@ -321,75 +322,100 @@ export default function AdminCmsPage() {
     setUploadProgress(0);
     setVideoUploadSuccess(false);
     setUploadError('');
-    setUploadStatusText('Authorizing secure cloud storage upload...');
+    setUploadStatusText('Preparing 2MB chunks for Hostinger storage...');
+
+    const ext = file.name.substring(file.name.lastIndexOf('.')) || '.mp4';
+    const cleanBase = file.name.replace(/\.[^/.]+$/, '').replace(/[^a-zA-Z0-9_-]/g, '_');
+    const fileName = `mod${moduleId || '1'}_${Date.now()}_${cleanBase}${ext}`;
+
+    const chunkSize = 2 * 1024 * 1024; // 2MB safe chunks - passes Hostinger Nginx without 413
+    const totalChunks = Math.ceil(file.size / chunkSize);
+    const uploadId = `upl_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+
+    const controller = new AbortController();
+    uploadAbortRef.current = controller;
 
     try {
-      // 1. Request presigned upload URL from our server (keeps secrets secure on backend)
-      const res = await fetch('/api/admin/cms/get-upload-url', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          originalName: file.name,
-          moduleId,
-          contentType: file.type || 'video/mp4'
-        })
-      });
+      for (let i = 0; i < totalChunks; i++) {
+        if (controller.signal.aborted) {
+          throw new Error('Upload cancelled');
+        }
 
-      const data = await res.json();
-      if (!res.ok || !data.success || !data.signedUrl) {
-        throw new Error(data.message || 'Could not authorize video upload');
+        const start = i * chunkSize;
+        const end = Math.min(start + chunkSize, file.size);
+        const chunkBlob = file.slice(start, end);
+
+        let attempt = 0;
+        let success = false;
+        let lastError = '';
+
+        while (attempt < 3 && !success) {
+          if (controller.signal.aborted) {
+            throw new Error('Upload cancelled');
+          }
+          attempt++;
+
+          try {
+            const formData = new FormData();
+            formData.append('chunk', chunkBlob);
+            formData.append('chunkIndex', String(i));
+            formData.append('totalChunks', String(totalChunks));
+            formData.append('uploadId', uploadId);
+            formData.append('fileName', fileName);
+            formData.append('moduleId', String(moduleId));
+
+            const res = await fetch('/api/admin/cms/upload-chunk', {
+              method: 'POST',
+              body: formData,
+              signal: controller.signal
+            });
+
+            const data = await res.json().catch(() => ({}));
+
+            if (!res.ok || !data.success) {
+              throw new Error(data.message || `Chunk ${i + 1}/${totalChunks} failed (Status ${res.status})`);
+            }
+
+            // Chunk saved successfully on server
+            success = true;
+
+            const percent = i === totalChunks - 1 ? 100 : Math.min(Math.round((end / file.size) * 100), 99);
+            setUploadProgress(percent);
+            const uploadedMB = (end / (1024 * 1024)).toFixed(1);
+            const totalMB = (file.size / (1024 * 1024)).toFixed(1);
+            setUploadStatusText(`${uploadedMB} MB / ${totalMB} MB (${percent}%) - Chunk ${i + 1}/${totalChunks}`);
+
+            if (data.isComplete && data.url) {
+              setNewLessonUrl(data.url);
+              setUploadProgress(100);
+              setUploadingVideo(false);
+              setVideoUploadSuccess(true);
+              setUploadStatusText(`Upload complete 100%! (${totalMB} MB ready on Hostinger)`);
+              uploadAbortRef.current = null;
+              return;
+            }
+          } catch (chunkErr: any) {
+            if (controller.signal.aborted) throw chunkErr;
+            lastError = chunkErr.message || 'Chunk transmission failed';
+            console.warn(`Retry ${attempt}/3 for chunk ${i + 1}: ${lastError}`);
+            if (attempt < 3) {
+              await new Promise(r => setTimeout(r, 1000));
+            }
+          }
+        }
+
+        if (!success) {
+          throw new Error(`Failed to upload chunk ${i + 1}/${totalChunks} after 3 attempts: ${lastError}`);
+        }
       }
-
-      setUploadStatusText('Streaming video directly to cloud storage...');
-
-      // 2. Direct HTTP PUT upload stream to Supabase Storage (bypasses Hostinger limits completely)
-      const xhr = new XMLHttpRequest();
-      uploadXhrRef.current = xhr;
-
-      xhr.upload.onprogress = (event) => {
-        if (event.lengthComputable) {
-          const percent = Math.min(Math.round((event.loaded / event.total) * 100), 99);
-          setUploadProgress(percent);
-          const loadedMB = (event.loaded / (1024 * 1024)).toFixed(1);
-          const totalMB = (event.total / (1024 * 1024)).toFixed(1);
-          setUploadStatusText(`${loadedMB} MB / ${totalMB} MB (${percent}%)`);
-        }
-      };
-
-      xhr.onload = () => {
-        uploadXhrRef.current = null;
-        if (xhr.status >= 200 && xhr.status < 300) {
-          setNewLessonUrl(data.publicUrl);
-          setUploadProgress(100);
-          setUploadingVideo(false);
-          setVideoUploadSuccess(true);
-          const totalMB = (file.size / (1024 * 1024)).toFixed(1);
-          setUploadStatusText(`Uploaded ${totalMB} MB successfully (100%)!`);
-        } else {
-          setUploadingVideo(false);
-          setUploadError(`Storage upload failed with status ${xhr.status}. Please try again.`);
-        }
-      };
-
-      xhr.onerror = () => {
-        uploadXhrRef.current = null;
-        setUploadingVideo(false);
-        setUploadError('Network connection interrupted during upload. Please try again.');
-      };
-
-      xhr.onabort = () => {
-        uploadXhrRef.current = null;
-        setUploadingVideo(false);
-        setUploadError('Upload cancelled');
-      };
-
-      xhr.open('PUT', data.signedUrl, true);
-      xhr.setRequestHeader('Content-Type', file.type || 'video/mp4');
-      xhr.send(file);
-
     } catch (err: any) {
       setUploadingVideo(false);
-      setUploadError(err.message || 'Video upload initialization failed');
+      uploadAbortRef.current = null;
+      if (err.name === 'AbortError' || err.message === 'Upload cancelled') {
+        setUploadError('Upload cancelled');
+      } else {
+        setUploadError(err.message || 'Video upload failed. Please try again.');
+      }
     }
   };
 
@@ -864,6 +890,9 @@ export default function AdminCmsPage() {
                               <button
                                 type="button"
                                 onClick={() => {
+                                  if (uploadAbortRef.current) {
+                                    uploadAbortRef.current.abort();
+                                  }
                                   if (uploadXhrRef.current) {
                                     uploadXhrRef.current.abort();
                                   }

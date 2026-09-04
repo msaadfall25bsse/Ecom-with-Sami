@@ -1,11 +1,40 @@
 import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
-import { supabase } from '@/lib/supabase';
+import os from 'os';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 export const maxDuration = 300;
+
+// Dual-path directory resolver: checks primary web root, falls back to os.tmpdir()
+export function getVideoStorageDir(): string {
+  // Primary: public/uploads/videos
+  const primaryDir = path.join(process.cwd(), 'public', 'uploads', 'videos');
+  try {
+    if (!fs.existsSync(primaryDir)) {
+      fs.mkdirSync(primaryDir, { recursive: true });
+    }
+    // Test write permission
+    const testFile = path.join(primaryDir, `.test_${Date.now()}`);
+    fs.writeFileSync(testFile, 'ok');
+    fs.unlinkSync(testFile);
+    return primaryDir;
+  } catch {
+    // Primary path restricted, use os.tmpdir fallback
+  }
+
+  // Fallback: guaranteed writable directory on Linux/Hostinger
+  const fallbackDir = path.join(os.tmpdir(), 'ecom_videos');
+  try {
+    if (!fs.existsSync(fallbackDir)) {
+      fs.mkdirSync(fallbackDir, { recursive: true });
+    }
+    return fallbackDir;
+  } catch {
+    return os.tmpdir();
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,64 +46,44 @@ export async function POST(request: NextRequest) {
     const fileName = (formData.get('fileName') as string || `video_${Date.now()}.mp4`).replace(/[^a-zA-Z0-9._-]/g, '_');
 
     if (!chunk) {
-      return NextResponse.json({ success: false, message: 'Missing chunk data' }, { status: 400 });
+      return NextResponse.json({ success: false, message: 'Missing chunk payload' }, { status: 400 });
     }
 
-    const uploadsDir = path.join(process.cwd(), 'public', 'uploads', 'videos');
-    if (!fs.existsSync(uploadsDir)) {
-      fs.mkdirSync(uploadsDir, { recursive: true });
-    }
-
-    const tempFilePath = path.join(uploadsDir, `temp_${uploadId}.part`);
+    const storageDir = getVideoStorageDir();
+    const tempFilePath = path.join(storageDir, `temp_${uploadId}.part`);
     const buffer = Buffer.from(await chunk.arrayBuffer());
 
-    // Append chunk to temp file
+    // Clean up temp file on first chunk
     if (chunkIndex === 0 && fs.existsSync(tempFilePath)) {
-      fs.unlinkSync(tempFilePath);
+      try { fs.unlinkSync(tempFilePath); } catch {}
     }
+
+    // Append chunk buffer to temp file
     fs.appendFileSync(tempFilePath, buffer);
 
-    // If this is the final chunk, assemble and finalize
+    // If this is the final chunk, assemble and finalize video
     if (chunkIndex === totalChunks - 1) {
-      const finalFilePath = path.join(uploadsDir, fileName);
-      if (fs.existsSync(finalFilePath)) {
-        fs.unlinkSync(finalFilePath);
+      const finalFilePath = path.join(/*turbopackIgnore: true*/ storageDir, fileName);
+      if (fs.existsSync(/*turbopackIgnore: true*/ finalFilePath)) {
+        try { fs.unlinkSync(finalFilePath); } catch {}
       }
       fs.renameSync(tempFilePath, finalFilePath);
 
-      let finalPublicUrl = `/uploads/videos/${fileName}`;
+      const stat = fs.statSync(/*turbopackIgnore: true*/ finalFilePath);
 
-      // Upload assembled video to Supabase Storage if available
-      if (supabase) {
-        try {
-          const fileData = fs.readFileSync(finalFilePath);
-          const { error: sbError } = await supabase.storage
-            .from('videos')
-            .upload(fileName, fileData, {
-              contentType: 'video/mp4',
-              upsert: true
-            });
-
-          if (!sbError) {
-            const { data: pUrl } = supabase.storage.from('videos').getPublicUrl(fileName);
-            if (pUrl?.publicUrl) {
-              finalPublicUrl = pUrl.publicUrl;
-            }
-          }
-        } catch (e: any) {
-          console.warn('Supabase chunk assemble upload error, using local url:', e.message);
-        }
-      }
+      // Fast streaming endpoint on Hostinger
+      const videoStreamUrl = `/api/videos/${encodeURIComponent(fileName)}`;
 
       return NextResponse.json({
         success: true,
         isComplete: true,
-        url: finalPublicUrl,
-        filename: fileName
+        url: videoStreamUrl,
+        filename: fileName,
+        size: stat.size
       });
     }
 
-    // Chunk saved successfully, request next chunk
+    // Non-final chunk processed successfully
     return NextResponse.json({
       success: true,
       isComplete: false,
@@ -83,9 +92,9 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error: any) {
-    console.error('Chunk upload error:', error);
+    console.error('Chunk upload processing error:', error);
     return NextResponse.json(
-      { success: false, message: error.message || 'Error processing video chunk' },
+      { success: false, message: error.message || 'Error processing video chunk on server' },
       { status: 500 }
     );
   }
