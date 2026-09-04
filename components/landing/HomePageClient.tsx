@@ -54,6 +54,7 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
   const [activeVideoTitle, setActiveVideoTitle] = useState('');
   const [content, setContent] = useState<CmsContentSchema>(initialContent || defaultCmsContent);
   const videoScrollRef = useRef<HTMLDivElement>(null);
+  const [isAutoScrolling, setIsAutoScrolling] = useState(true);
 
   useEffect(() => {
     const syncData = async () => {
@@ -110,6 +111,25 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
     };
   }, []);
 
+  // Automatic gentle carousel advance for video reviews
+  useEffect(() => {
+    if (!isAutoScrolling) return;
+
+    const interval = setInterval(() => {
+      if (videoScrollRef.current) {
+        const container = videoScrollRef.current;
+        const maxScroll = container.scrollWidth - container.clientWidth;
+        if (container.scrollLeft >= maxScroll - 20) {
+          container.scrollTo({ left: 0, behavior: 'smooth' });
+        } else {
+          container.scrollBy({ left: 340, behavior: 'smooth' });
+        }
+      }
+    }, 4500);
+
+    return () => clearInterval(interval);
+  }, [isAutoScrolling]);
+
   const hero = content.hero || defaultCmsContent.hero;
   const stats = content.stats || defaultCmsContent.stats;
   const mentor = content.mentor || defaultCmsContent.mentor;
@@ -128,6 +148,7 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
   };
 
   const scrollReviews = (direction: 'left' | 'right') => {
+    setIsAutoScrolling(false);
     if (videoScrollRef.current) {
       const scrollAmount = 340;
       videoScrollRef.current.scrollBy({
@@ -143,6 +164,7 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
       headline: '“Total beginners are now getting AED 1,000–1,500 in daily sales.”',
       author: 'Ali Raza — Lahore',
       result: 'AED 1,500 / Day',
+      market: 'UAE Market',
       videoUrl: hero.video_url || 'https://www.youtube.com/embed/dQw4w9WgXcQ'
     },
     {
@@ -150,6 +172,7 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
       headline: '“After getting mentorship and watching the course, I made €662 in sales within 6 days.”',
       author: 'Raza Ali — Karachi',
       result: '€662 in 6 Days',
+      market: 'GCC & Global',
       videoUrl: hero.video_url || 'https://www.youtube.com/embed/dQw4w9WgXcQ'
     },
     {
@@ -157,6 +180,7 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
       headline: '“AED 5,000 in sales and 56 orders within 5 days with supplier help.”',
       author: 'Hamza Tariq — Islamabad',
       result: 'AED 5,000 / Week',
+      market: 'UAE Dropship',
       videoUrl: hero.video_url || 'https://www.youtube.com/embed/dQw4w9WgXcQ'
     },
     {
@@ -164,6 +188,7 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
       headline: '“Students say the course is very easy to understand and follow on mobile.”',
       author: 'Zainab Bibi — Faisalabad',
       result: 'PKR 480,000 / Mo',
+      market: 'Saudi & UAE',
       videoUrl: hero.video_url || 'https://www.youtube.com/embed/dQw4w9WgXcQ'
     },
     {
@@ -171,6 +196,7 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
       headline: '“26 orders and AED 2,500 in sales with the direct help of Mentor Sami.”',
       author: 'Usman Ghani — Rawalpindi',
       result: 'AED 2,500 Sales',
+      market: 'UAE Market',
       videoUrl: hero.video_url || 'https://www.youtube.com/embed/dQw4w9WgXcQ'
     },
     {
@@ -178,6 +204,15 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
       headline: '“AED 1,485 in sales in just 3 days while working from home.”',
       author: 'Bilal Farooq — Multan',
       result: 'SAR 3,485 Profit',
+      market: 'Saudi Market',
+      videoUrl: hero.video_url || 'https://www.youtube.com/embed/dQw4w9WgXcQ'
+    },
+    {
+      stars: 5,
+      headline: '“I tried many courses before, but Sami’s practical GCC supplier list made all the difference.”',
+      author: 'Farhan Sheikh — Peshawar',
+      result: 'SAR 6,100 / 10 Days',
+      market: 'KSA Market',
       videoUrl: hero.video_url || 'https://www.youtube.com/embed/dQw4w9WgXcQ'
     }
   ];
@@ -213,8 +248,8 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
       <section className="relative pt-8 pb-14 sm:pt-14 sm:pb-20 md:pt-16 md:pb-24 overflow-hidden bg-gradient-to-b from-[#f0f9ff]/40 via-white to-white">
         {/* Soft Background Blur Orbs */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[550px] pointer-events-none overflow-hidden -z-10">
-          <div className="absolute top-[-80px] left-[15%] w-[450px] h-[450px] bg-[#00A0DF]/10 rounded-full blur-3xl animate-pulse-glow" />
-          <div className="absolute top-[40px] right-[10%] w-[400px] h-[400px] bg-emerald-400/8 rounded-full blur-3xl animate-pulse-glow" style={{ animationDelay: '2.5s' }} />
+          <div className="absolute top-[-80px] left-[15%] w-[450px] h-[450px] bg-[#00A0DF]/12 rounded-full blur-3xl animate-pulse-glow" />
+          <div className="absolute top-[40px] right-[10%] w-[400px] h-[400px] bg-emerald-400/10 rounded-full blur-3xl animate-pulse-glow" style={{ animationDelay: '2.5s' }} />
         </div>
 
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -230,7 +265,7 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
             {/* Main Bold Headline */}
             <h1 className="text-3xl xs:text-4xl sm:text-5xl md:text-6xl font-black text-slate-900 tracking-tight leading-[1.15] mb-4">
               {hero.title_line1 || 'Learn How to Start Online Dropshipping Store in UAE & KSA'}{' '}
-              <span className="text-[#00A0DF]">
+              <span className="text-[#00A0DF] drop-shadow-xs">
                 {hero.title_highlight || 'Step-by-Step Training'}
               </span>
             </h1>
@@ -251,7 +286,7 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
               <div className="flex items-center gap-2 text-xs font-bold text-slate-500">
                 <div className="flex text-amber-400">
                   {[...Array(5)].map((_, i) => (
-                    <Star key={i} size={14} className="fill-amber-400 text-amber-400" />
+                    <Star key={i} size={14} className="fill-amber-400 text-amber-400 animate-star-twinkle" />
                   ))}
                 </div>
                 <span>Trusted by 9,700+ Students</span>
@@ -270,16 +305,16 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
                 Watch this 128 seconds of video to learn how easy it is
               </h2>
 
-              {/* Video Player Card */}
+              {/* Video Player Card with Glowing Radar Pulse */}
               <div 
                 onClick={openMainVideo}
-                className="relative cursor-pointer rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl border-2 border-[#00A0DF]/30 bg-slate-950 aspect-video flex items-center justify-center group transition-all duration-300 hover:border-[#00A0DF] hover:scale-[1.01]"
+                className="relative cursor-pointer rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl border-2 border-[#00A0DF]/40 bg-slate-950 aspect-video flex items-center justify-center group transition-all duration-300 hover:border-[#00A0DF] hover:scale-[1.01]"
               >
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
                 
-                {/* Glowing Play Button */}
+                {/* Radiant Play Button */}
                 <div className="relative z-10 flex flex-col items-center gap-3">
-                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-[#00A0DF] text-white flex items-center justify-center shadow-2xl shadow-[#00A0DF]/70 group-hover:scale-115 transition-transform duration-300">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-[#00A0DF] text-white flex items-center justify-center shadow-2xl shadow-[#00A0DF]/70 group-hover:scale-115 transition-transform duration-300 animate-radar">
                     <Play className="fill-current ml-1" size={26} />
                   </div>
                   <span className="text-white font-extrabold text-xs sm:text-sm tracking-wide bg-black/70 px-4 py-1.5 rounded-full border border-white/20 backdrop-blur-md">
@@ -289,7 +324,7 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
               </div>
 
               {/* Strikethrough Pricing Box */}
-              <div className="mt-6 bg-white border border-gray-200 rounded-xl px-5 py-3.5 shadow-sm inline-block">
+              <div className="mt-6 bg-white border border-gray-200 rounded-xl px-5 py-3.5 shadow-sm inline-block card-hover-lift">
                 <p className="text-xs sm:text-sm md:text-base font-semibold text-gray-800">
                   Originally{' '}
                   <span className="line-through font-extrabold text-red-500">
@@ -615,7 +650,7 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
       </section>
 
       {/* ========================================================================= */}
-      {/* 6. REAL STUDENT VIDEO REVIEWS WITH INTERACTIVE SCROLLING & MOVING EFFECT */}
+      {/* 6. REAL STUDENT VIDEO REVIEWS WITH AUTO-MOVING CAROUSEL & CONTROLS */}
       {/* ========================================================================= */}
       <section className="py-14 sm:py-20 bg-white">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -633,20 +668,20 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
           {/* Navigation Controls */}
           <div className="flex items-center justify-between max-w-5xl mx-auto mb-4 px-2">
             <span className="text-xs font-bold text-slate-500 flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-[#00A0DF] animate-ping" />
-              <span>Tap arrows or swipe to watch more student feedback</span>
+              <span className="w-2.5 h-2.5 rounded-full bg-[#00A0DF] animate-ping" />
+              <span>Auto-moving video reviews &bull; Swipe or click arrows to explore</span>
             </span>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => scrollReviews('left')}
-                className="w-9 h-9 rounded-xl bg-gray-100 hover:bg-[#00A0DF] hover:text-white text-slate-700 flex items-center justify-center transition-colors shadow-sm"
+                className="w-9 h-9 rounded-xl bg-gray-100 hover:bg-[#00A0DF] hover:text-white text-slate-700 flex items-center justify-center transition-colors shadow-sm cursor-pointer"
                 aria-label="Previous reviews"
               >
                 <ChevronLeft size={18} />
               </button>
               <button
                 onClick={() => scrollReviews('right')}
-                className="w-9 h-9 rounded-xl bg-gray-100 hover:bg-[#00A0DF] hover:text-white text-slate-700 flex items-center justify-center transition-colors shadow-sm"
+                className="w-9 h-9 rounded-xl bg-gray-100 hover:bg-[#00A0DF] hover:text-white text-slate-700 flex items-center justify-center transition-colors shadow-sm cursor-pointer"
                 aria-label="Next reviews"
               >
                 <ChevronRight size={18} />
@@ -654,21 +689,24 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
             </div>
           </div>
 
-          {/* Horizontal Scrollable Video Reviews Track */}
+          {/* Horizontal Auto-Scrollable Video Reviews Track */}
           <div 
             ref={videoScrollRef}
-            className="flex items-stretch gap-5 overflow-x-auto pb-6 scrollbar-none snap-x snap-mandatory px-2"
+            onMouseEnter={() => setIsAutoScrolling(false)}
+            onMouseLeave={() => setIsAutoScrolling(true)}
+            onTouchStart={() => setIsAutoScrolling(false)}
+            className="flex items-stretch gap-5 overflow-x-auto pb-6 scrollbar-none snap-x snap-mandatory px-2 marquee-fade-mask"
           >
             {videoReviews.map((rev, idx) => (
               <div
                 key={idx}
-                className="w-[300px] sm:w-[340px] bg-white border border-gray-200 rounded-2xl p-5 shadow-sm hover:shadow-xl hover:border-[#00A0DF]/60 transition-all flex flex-col justify-between flex-shrink-0 snap-start card-hover-lift"
+                className="w-[300px] sm:w-[340px] bg-white border border-gray-200 rounded-2xl p-5 shadow-sm hover:shadow-2xl hover:border-[#00A0DF] transition-all flex flex-col justify-between flex-shrink-0 snap-start card-hover-lift"
               >
                 <div>
                   <div className="flex items-center justify-between mb-2.5">
                     <div className="flex gap-1 text-amber-400">
                       {[...Array(rev.stars)].map((_, i) => (
-                        <Star key={i} size={15} className="fill-amber-400 text-amber-400" />
+                        <Star key={i} size={15} className="fill-amber-400 text-amber-400 animate-star-twinkle" />
                       ))}
                     </div>
                     <span className="text-[11px] font-extrabold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
@@ -694,8 +732,9 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
                     </span>
                   </div>
 
-                  <div className="text-[11px] text-slate-500 font-semibold">
-                    {rev.author}
+                  <div className="flex items-center justify-between text-[11px] text-slate-500 font-semibold">
+                    <span>{rev.author}</span>
+                    <span className="text-[#00A0DF] font-bold">{rev.market}</span>
                   </div>
                 </div>
               </div>
@@ -870,28 +909,28 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
           {/* Continuous Moving Live Profit Dashboard Streams */}
           <div className="mt-12 pt-10 border-t border-gray-200">
             <div className="text-center mb-6">
-              <span className="text-xs font-black uppercase tracking-wider text-[#00A0DF] bg-[#00A0DF]/10 px-3 py-1 rounded-full border border-[#00A0DF]/20">
-                LIVE STORE DASHBOARD WINS
+              <span className="text-xs font-black uppercase tracking-wider text-[#00A0DF] bg-[#00A0DF]/10 px-3.5 py-1 rounded-full border border-[#00A0DF]/20 shadow-xs">
+                ⚡ LIVE STORE DASHBOARD WINS
               </span>
             </div>
 
-            <div className="overflow-hidden py-2 marquee-fade-mask">
+            <div className="overflow-hidden py-3 marquee-fade-mask">
               <div className="animate-marquee flex items-center gap-4 sm:gap-6">
-                {[...studentEarningsScreenshots, ...studentEarningsScreenshots, ...studentEarningsScreenshots].map((s, idx) => (
+                {[...studentEarningsScreenshots, ...studentEarningsScreenshots, ...studentEarningsScreenshots, ...studentEarningsScreenshots].map((s, idx) => (
                   <div
                     key={idx}
-                    className="bg-[#0B0F19] text-white border border-slate-800 rounded-2xl p-4 sm:p-5 w-[240px] sm:w-[270px] flex-shrink-0 shadow-lg hover:border-[#00A0DF] transition-colors"
+                    className="bg-[#0B0F19] text-white border border-slate-800 rounded-2xl p-4 sm:p-5 w-[240px] sm:w-[270px] flex-shrink-0 shadow-lg hover:border-[#00A0DF] transition-colors card-hover-lift cursor-pointer"
                   >
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-[10px] font-bold text-slate-400">{s.label}</span>
-                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
                     </div>
                     <div className="text-lg sm:text-xl font-black text-emerald-400 mb-1">
                       {s.profit}
                     </div>
                     <div className="flex items-center justify-between text-[11px] text-slate-300 font-semibold">
                       <span>{s.name}</span>
-                      <span className="text-[#00A0DF]">{s.orders}</span>
+                      <span className="text-[#00A0DF] font-bold">{s.orders}</span>
                     </div>
                   </div>
                 ))}
@@ -1095,7 +1134,7 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
           </div>
 
           {/* Decision Banner */}
-          <div className="bg-[#0B0F19] text-white rounded-2xl p-5 text-center mb-8 border border-slate-800">
+          <div className="bg-[#0B0F19] text-white rounded-2xl p-5 text-center mb-8 border border-slate-800 card-hover-lift">
             <span className="text-sm sm:text-base font-bold">
               🎯 This isn&apos;t just a course decision. <strong>It&apos;s a decision about where you&apos;ll be 6 months from now.</strong>
             </span>
@@ -1132,7 +1171,7 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
             {faqs.map((faq, idx) => (
               <details
                 key={idx}
-                className="group bg-white border border-gray-200 rounded-2xl p-5 sm:p-6 transition-all duration-200 open:border-[#00A0DF] open:shadow-md"
+                className="group bg-white border border-gray-200 rounded-2xl p-5 sm:p-6 transition-all duration-200 open:border-[#00A0DF] open:shadow-md card-hover-lift"
               >
                 <summary className="font-extrabold text-sm sm:text-base text-slate-900 cursor-pointer list-none flex justify-between items-center select-none">
                   <span>{faq.q}</span>
@@ -1155,11 +1194,11 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
       {/* ========================================================================= */}
       <section className="py-16 sm:py-24 bg-[#0B0F19] text-white text-center relative overflow-hidden">
         {/* Glow ambient background */}
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(0,160,223,0.15)_0,transparent_70%)] pointer-events-none" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(0,160,223,0.18)_0,transparent_70%)] pointer-events-none" />
 
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           
-          <span className="inline-block bg-[#00A0DF]/20 text-[#00A0DF] border border-[#00A0DF]/30 text-xs font-black uppercase tracking-wider px-4 py-1.5 rounded-full mb-4">
+          <span className="inline-block bg-[#00A0DF]/20 text-[#00A0DF] border border-[#00A0DF]/30 text-xs font-black uppercase tracking-wider px-4 py-1.5 rounded-full mb-4 animate-float">
             JOIN 9,700+ STUDENTS
           </span>
 

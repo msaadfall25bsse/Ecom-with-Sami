@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Star, ShieldCheck, Sparkles, LayoutGrid, MoveHorizontal } from 'lucide-react';
+import { Star, ShieldCheck, Sparkles, LayoutGrid, MoveHorizontal, CheckCircle2 } from 'lucide-react';
 
 export function ProofWall({ customTestimonials }: { customTestimonials?: any[] }) {
   const defaultList = [
@@ -97,36 +97,33 @@ export function ProofWall({ customTestimonials }: { customTestimonials?: any[] }
       .catch(() => {});
   }, [customTestimonials]);
 
-  const row1 = testimonials.slice(0, Math.ceil(testimonials.length / 2));
-  const row2 = testimonials.slice(Math.ceil(testimonials.length / 2));
-
   return (
     <div className="space-y-6">
       
-      {/* Interactive Mode Switcher */}
-      <div className="flex items-center justify-between max-w-5xl mx-auto px-4">
+      {/* Interactive Mode Switcher & Status Indicator */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 max-w-5xl mx-auto px-4">
         <div className="flex items-center gap-2 text-xs font-bold text-slate-500">
-          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
-          <span>Live Moving Student Reviews (Hover to pause)</span>
+          <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping" />
+          <span>Real-time Moving Student Feedbacks (Hover over any review to pause)</span>
         </div>
 
-        <div className="flex items-center bg-gray-100 p-1 rounded-xl border border-gray-200 text-xs font-bold">
+        <div className="flex items-center bg-gray-100 p-1 rounded-xl border border-gray-200 text-xs font-bold shadow-inner">
           <button
             onClick={() => setViewMode('moving')}
-            className={`flex items-center gap-1.5 px-3 py-1 rounded-lg transition-all ${
+            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg transition-all ${
               viewMode === 'moving'
-                ? 'bg-white text-[#00A0DF] shadow-sm'
+                ? 'bg-white text-[#00A0DF] shadow-sm font-black'
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             <MoveHorizontal size={14} />
-            <span>Auto Moving</span>
+            <span>Continuous Moving Stream</span>
           </button>
           <button
             onClick={() => setViewMode('grid')}
-            className={`flex items-center gap-1.5 px-3 py-1 rounded-lg transition-all ${
+            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg transition-all ${
               viewMode === 'grid'
-                ? 'bg-white text-[#00A0DF] shadow-sm'
+                ? 'bg-white text-[#00A0DF] shadow-sm font-black'
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
@@ -138,23 +135,23 @@ export function ProofWall({ customTestimonials }: { customTestimonials?: any[] }
 
       {/* 1. AUTO MOVING HORIZONTAL MARQUEE STREAMS */}
       {viewMode === 'moving' ? (
-        <div className="space-y-4 overflow-hidden py-2 marquee-fade-mask relative">
+        <div className="space-y-4 overflow-hidden py-3 marquee-fade-mask relative">
           
-          {/* Row 1: Leftward Moving Stream */}
+          {/* Row 1: Smooth Leftward Moving Track */}
           <div className="animate-marquee-slow flex items-stretch gap-4 sm:gap-5">
-            {[...testimonials, ...testimonials, ...testimonials].map((t, idx) => (
+            {[...testimonials, ...testimonials, ...testimonials, ...testimonials].map((t, idx) => (
               <div
                 key={`r1-${idx}`}
-                className="w-[300px] sm:w-[350px] bg-white border border-gray-200 rounded-2xl p-5 shadow-sm hover:shadow-xl hover:border-[#00A0DF]/50 transition-all flex flex-col justify-between flex-shrink-0 cursor-pointer"
+                className="w-[300px] sm:w-[350px] bg-white border border-gray-200 rounded-2xl p-5 shadow-sm hover:shadow-2xl hover:border-[#00A0DF] transition-all flex flex-col justify-between flex-shrink-0 cursor-pointer card-hover-lift"
               >
                 <div>
                   <div className="flex items-center justify-between mb-2.5">
                     <div className="flex gap-1 text-amber-400">
                       {[...Array(5)].map((_, i) => (
-                        <Star key={i} size={14} className="fill-amber-400 text-amber-400" />
+                        <Star key={i} size={14} className="fill-amber-400 text-amber-400 drop-shadow-sm" />
                       ))}
                     </div>
-                    <span className="text-[10px] font-black uppercase tracking-wider bg-[#00A0DF]/10 text-[#00A0DF] px-2 py-0.5 rounded-full border border-[#00A0DF]/20">
+                    <span className="text-[10px] font-black uppercase tracking-wider bg-[#00A0DF]/10 text-[#00A0DF] px-2.5 py-0.5 rounded-full border border-[#00A0DF]/20">
                       {t.market || 'Verified Student'}
                     </span>
                   </div>
@@ -165,21 +162,21 @@ export function ProofWall({ customTestimonials }: { customTestimonials?: any[] }
                 </div>
 
                 <div className="pt-3 border-t border-gray-100 flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-full bg-[#00A0DF] text-white flex items-center justify-center font-black text-[11px]">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#00A0DF] to-emerald-400 text-white flex items-center justify-center font-black text-xs shadow-sm">
                       {t.initials || t.name?.substring(0, 2).toUpperCase() || 'ST'}
                     </div>
                     <div>
                       <h4 className="text-xs font-bold text-slate-900 flex items-center gap-1">
                         <span>{t.name}</span>
-                        <ShieldCheck size={12} className="text-[#00A0DF]" />
+                        <ShieldCheck size={13} className="text-[#00A0DF]" />
                       </h4>
                       <p className="text-[10px] text-slate-500 font-semibold">{t.city}</p>
                     </div>
                   </div>
 
                   {t.sales && (
-                    <span className="inline-block text-[10px] sm:text-[11px] font-extrabold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md">
+                    <span className="inline-block text-[10px] sm:text-[11px] font-extrabold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-md shadow-xs">
                       {t.sales}
                     </span>
                   )}
@@ -188,21 +185,21 @@ export function ProofWall({ customTestimonials }: { customTestimonials?: any[] }
             ))}
           </div>
 
-          {/* Row 2: Reverse Moving Stream */}
+          {/* Row 2: Smooth Reverse Moving Track */}
           <div className="animate-marquee-reverse flex items-stretch gap-4 sm:gap-5">
-            {[...testimonials, ...testimonials, ...testimonials].reverse().map((t, idx) => (
+            {[...testimonials, ...testimonials, ...testimonials, ...testimonials].reverse().map((t, idx) => (
               <div
                 key={`r2-${idx}`}
-                className="w-[300px] sm:w-[350px] bg-slate-900 text-white border border-slate-800 rounded-2xl p-5 shadow-sm hover:shadow-xl hover:border-emerald-500/50 transition-all flex flex-col justify-between flex-shrink-0 cursor-pointer"
+                className="w-[300px] sm:w-[350px] bg-[#0B0F19] text-white border border-slate-800 rounded-2xl p-5 shadow-md hover:shadow-2xl hover:border-emerald-400 transition-all flex flex-col justify-between flex-shrink-0 cursor-pointer card-hover-lift"
               >
                 <div>
                   <div className="flex items-center justify-between mb-2.5">
                     <div className="flex gap-1 text-amber-400">
                       {[...Array(5)].map((_, i) => (
-                        <Star key={i} size={14} className="fill-amber-400 text-amber-400" />
+                        <Star key={i} size={14} className="fill-amber-400 text-amber-400 drop-shadow-sm" />
                       ))}
                     </div>
-                    <span className="text-[10px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full border border-emerald-500/30">
+                    <span className="text-[10px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-400 px-2.5 py-0.5 rounded-full border border-emerald-500/30">
                       {t.market || 'Verified Student'}
                     </span>
                   </div>
@@ -213,21 +210,21 @@ export function ProofWall({ customTestimonials }: { customTestimonials?: any[] }
                 </div>
 
                 <div className="pt-3 border-t border-slate-800 flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-full bg-emerald-500 text-white flex items-center justify-center font-black text-[11px]">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center font-black text-xs shadow-sm">
                       {t.initials || t.name?.substring(0, 2).toUpperCase() || 'ST'}
                     </div>
                     <div>
                       <h4 className="text-xs font-bold text-white flex items-center gap-1">
                         <span>{t.name}</span>
-                        <ShieldCheck size={12} className="text-emerald-400" />
+                        <ShieldCheck size={13} className="text-emerald-400" />
                       </h4>
                       <p className="text-[10px] text-slate-400 font-semibold">{t.city}</p>
                     </div>
                   </div>
 
                   {t.sales && (
-                    <span className="inline-block text-[10px] sm:text-[11px] font-extrabold text-emerald-400 bg-emerald-950/60 border border-emerald-500/40 px-2 py-0.5 rounded-md">
+                    <span className="inline-block text-[10px] sm:text-[11px] font-extrabold text-emerald-400 bg-emerald-950/60 border border-emerald-500/40 px-2.5 py-0.5 rounded-md shadow-xs">
                       {t.sales}
                     </span>
                   )}
@@ -238,12 +235,12 @@ export function ProofWall({ customTestimonials }: { customTestimonials?: any[] }
 
         </div>
       ) : (
-        /* 2. GRID VIEW FALLBACK */
+        /* 2. GRID VIEW */
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 max-w-6xl mx-auto px-4">
           {testimonials.map((t, index) => (
             <div
               key={index}
-              className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm hover:shadow-md hover:border-[#00A0DF]/40 transition-all flex flex-col justify-between"
+              className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm hover:shadow-lg hover:border-[#00A0DF] transition-all flex flex-col justify-between card-hover-lift"
             >
               <div>
                 <div className="flex items-center justify-between mb-3">
@@ -264,7 +261,7 @@ export function ProofWall({ customTestimonials }: { customTestimonials?: any[] }
 
               <div className="pt-3 border-t border-gray-100 flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-full bg-[#00A0DF] text-white flex items-center justify-center font-black text-xs">
+                  <div className="w-8 h-8 rounded-full bg-[#00A0DF] text-white flex items-center justify-center font-black text-xs">
                     {t.initials || t.name?.substring(0, 2).toUpperCase() || 'ST'}
                   </div>
                   <div>

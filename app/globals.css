@@ -6,7 +6,7 @@
   --primary: #00a0df;
   --primary-hover: #008ac2;
   --primary-dark: #0074a6;
-  --primary-glow: rgba(0, 160, 223, 0.4);
+  --primary-glow: rgba(0, 160, 223, 0.45);
   --accent-green: #16a34a;
   --accent-emerald: #10b981;
   --accent-amber: #f5a623;
@@ -66,11 +66,13 @@ body {
   letter-spacing: 0.05em;
   border: 1px solid rgba(255, 255, 255, 0.15);
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
-  transition: transform 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .dropshipping-badge:hover {
-  transform: scale(1.03);
+  transform: scale(1.04) translateY(-1px);
+  border-color: rgba(0, 160, 223, 0.5);
+  box-shadow: 0 12px 30px -5px rgba(0, 160, 223, 0.35);
 }
 
 .badge-dot {
@@ -111,6 +113,7 @@ body {
   position: relative;
   overflow: hidden;
   text-transform: uppercase;
+  cursor: pointer;
 }
 
 .lwa-btn:hover,
@@ -124,7 +127,7 @@ body {
 .lwa-btn:active,
 .btn-primary-lwa:active,
 .btn-glow:active {
-  transform: translateY(0);
+  transform: translateY(0) scale(0.98);
 }
 
 /* Shimmer Light Sweep on Buttons */
@@ -140,7 +143,7 @@ body {
   background: linear-gradient(
     90deg,
     rgba(255, 255, 255, 0) 0%,
-    rgba(255, 255, 255, 0.3) 50%,
+    rgba(255, 255, 255, 0.35) 50%,
     rgba(255, 255, 255, 0) 100%
   );
   transform: rotate(25deg);
@@ -181,6 +184,12 @@ body {
   border-radius: 9999px;
   border: 1px solid rgba(0, 160, 223, 0.25);
   margin-bottom: 0.75rem;
+  transition: all 0.2s ease;
+}
+
+.section-tag-pill:hover {
+  background: rgba(0, 160, 223, 0.15);
+  transform: translateY(-1px);
 }
 
 .section-tag-green {
@@ -214,12 +223,13 @@ body {
   padding: 1.25rem 1rem;
   border-radius: 1rem;
   text-align: center;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .lwa-stat-lite:hover {
   border-color: rgba(0, 160, 223, 0.6);
-  transform: translateY(-2px);
+  transform: translateY(-3px);
+  box-shadow: 0 10px 25px -5px rgba(0, 160, 223, 0.2);
 }
 
 .lwa-stat-icon-lite {
@@ -242,22 +252,23 @@ body {
 }
 
 /* ========================================================================= */
-/* Marquee & Continuous Moving Track Animations */
+/* Marquee & Continuous Moving Track Animations (Hardware Accelerated) */
 /* ========================================================================= */
-@keyframes marquee {
-  0% { transform: translateX(0%); }
-  100% { transform: translateX(-50%); }
+@keyframes marqueeLeft {
+  0% { transform: translate3d(0, 0, 0); }
+  100% { transform: translate3d(-50%, 0, 0); }
 }
 
-@keyframes marqueeReverse {
-  0% { transform: translateX(-50%); }
-  100% { transform: translateX(0%); }
+@keyframes marqueeRight {
+  0% { transform: translate3d(-50%, 0, 0); }
+  100% { transform: translate3d(0, 0, 0); }
 }
 
 .animate-marquee {
   display: flex;
   width: max-content;
-  animation: marquee 35s linear infinite;
+  animation: marqueeLeft 30s linear infinite;
+  will-change: transform;
 }
 
 .animate-marquee:hover {
@@ -267,7 +278,8 @@ body {
 .animate-marquee-slow {
   display: flex;
   width: max-content;
-  animation: marquee 45s linear infinite;
+  animation: marqueeLeft 42s linear infinite;
+  will-change: transform;
 }
 
 .animate-marquee-slow:hover {
@@ -277,7 +289,8 @@ body {
 .animate-marquee-reverse {
   display: flex;
   width: max-content;
-  animation: marqueeReverse 40s linear infinite;
+  animation: marqueeRight 38s linear infinite;
+  will-change: transform;
 }
 
 .animate-marquee-reverse:hover {
@@ -286,18 +299,19 @@ body {
 
 /* Soft Fade Masks for Horizontal Carousels */
 .marquee-fade-mask {
-  mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
-  -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+  mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
 }
 
+/* Ambient Pulsing Glow */
 @keyframes pulseGlow {
   0%, 100% {
-    opacity: 0.3;
+    opacity: 0.35;
     transform: scale(1);
   }
   50% {
-    opacity: 0.7;
-    transform: scale(1.06);
+    opacity: 0.8;
+    transform: scale(1.08);
   }
 }
 
@@ -308,20 +322,37 @@ body {
 /* Floating Animation */
 @keyframes floatY {
   0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-6px); }
+  50% { transform: translateY(-7px); }
 }
 
 .animate-float {
   animation: floatY 4s ease-in-out infinite;
 }
 
+/* Radar Pulse for Play Button */
+@keyframes radarPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(0, 160, 223, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 18px rgba(0, 160, 223, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(0, 160, 223, 0);
+  }
+}
+
+.animate-radar {
+  animation: radarPulse 2s infinite;
+}
+
 /* WhatsApp Floating Pulse */
 @keyframes whatsappPulse {
   0% {
-    box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.7);
+    box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.75);
   }
   70% {
-    box-shadow: 0 0 0 16px rgba(37, 211, 102, 0);
+    box-shadow: 0 0 0 18px rgba(37, 211, 102, 0);
   }
   100% {
     box-shadow: 0 0 0 0 rgba(37, 211, 102, 0);
@@ -334,11 +365,21 @@ body {
 
 /* Interactive Card Lift */
 .card-hover-lift {
-  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.28s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.28s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .card-hover-lift:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 15px 30px -10px rgba(0, 160, 223, 0.18);
-  border-color: rgba(0, 160, 223, 0.45);
+  transform: translateY(-5px);
+  box-shadow: 0 20px 35px -10px rgba(0, 160, 223, 0.2);
+  border-color: rgba(0, 160, 223, 0.5);
+}
+
+/* Twinkle Effect for Rating Stars */
+@keyframes starTwinkle {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.75; transform: scale(1.15); }
+}
+
+.animate-star-twinkle {
+  animation: starTwinkle 3s ease-in-out infinite;
 }
