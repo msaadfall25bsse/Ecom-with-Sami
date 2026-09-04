@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAdminSessionFromRequest, getStudentSessionFromRequest } from '@/lib/auth';
 import { dbGetStudentByEmail, dbGetStudents } from '@/lib/database';
+import { supabase } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
 
@@ -9,6 +10,23 @@ export async function GET(request: NextRequest) {
     // 1. Check Admin Session
     const adminSession = getAdminSessionFromRequest(request);
     if (adminSession) {
+      let adminCompletedLessons: string[] = [];
+      if (supabase) {
+        try {
+          const { data } = await supabase
+            .from('cms_settings')
+            .select('value_json')
+            .eq('key', 'admin_progress')
+            .maybeSingle();
+          if (data && data.value_json) {
+            const parsed = typeof data.value_json === 'string' ? JSON.parse(data.value_json) : data.value_json;
+            if (Array.isArray(parsed)) adminCompletedLessons = parsed;
+          }
+        } catch (e) {
+          console.error('Supabase admin progress load error:', e);
+        }
+      }
+
       return NextResponse.json({
         authenticated: true,
         role: 'ADMIN',
@@ -16,7 +34,8 @@ export async function GET(request: NextRequest) {
           id: adminSession.id,
           name: 'Muhammad Sami',
           email: adminSession.email || 'admin@samiecom.com',
-          role: 'SUPER_ADMIN'
+          role: 'SUPER_ADMIN',
+          completedLessons: adminCompletedLessons
         }
       });
     }

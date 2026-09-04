@@ -29,7 +29,10 @@ import {
   Check, 
   ListVideo,
   AlertCircle,
-  RotateCcw
+  RotateCcw,
+  Lock,
+  Cloud,
+  Loader2
 } from 'lucide-react';
 import { Module, Supplier, ResourceItem } from '@/utils/db';
 
@@ -49,6 +52,9 @@ export default function LmsClassroomPage() {
   const [supplierCountryFilter, setSupplierCountryFilter] = useState<'ALL' | 'UAE' | 'Saudi Arabia'>('ALL');
   const [supplierSearch, setSupplierSearch] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [watchProgress, setWatchProgress] = useState<{ [lessonId: string]: number }>({});
+  const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'synced'>('idle');
+  const [syncFeedback, setSyncFeedback] = useState<string>('');
 
   const getEmbedUrl = (url?: string) => {
     if (!url) return 'https://www.youtube.com/embed/dQw4w9WgXcQ';
@@ -76,6 +82,21 @@ export default function LmsClassroomPage() {
   };
 
   useEffect(() => {
+    // 0. Instant restore from LocalStorage so refresh has 0ms delay and no 0% reset
+    try {
+      const cached = localStorage.getItem('sami_lms_completed_cache');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setCompletedLessons(parsed);
+        }
+      }
+      const watchCache = localStorage.getItem('sami_lms_watch_progress');
+      if (watchCache) {
+        setWatchProgress(JSON.parse(watchCache));
+      }
+    } catch (e) {}
+
     const timestamp = Date.now();
 
     // 1. Strict Authentication Check
@@ -90,7 +111,22 @@ export default function LmsClassroomPage() {
       .then(res => {
         if (res.authenticated && res.user) {
           setUser(res.user);
-          setCompletedLessons(res.user.completedLessons || []);
+          const serverLessons: string[] = Array.isArray(res.user.completedLessons) ? res.user.completedLessons : [];
+          let localLessons: string[] = [];
+          try {
+            const userKey = `sami_lms_completed_${res.user.email}`;
+            const localSaved = localStorage.getItem(userKey);
+            if (localSaved) localLessons = JSON.parse(localSaved);
+          } catch (e) {}
+
+          const merged = Array.from(new Set([...serverLessons, ...localLessons]));
+          setCompletedLessons(merged);
+          try {
+            localStorage.setItem('sami_lms_completed_cache', JSON.stringify(merged));
+            if (res.user.email) {
+              localStorage.setItem(`sami_lms_completed_${res.user.email}`, JSON.stringify(merged));
+            }
+          } catch (e) {}
           setAuthChecking(false);
         } else {
           // Check cookie fallback for static hosting
@@ -162,29 +198,60 @@ export default function LmsClassroomPage() {
       });
   }, []);
 
-  const toggleLessonComplete = async (lessonId: string) => {
+  const isAdmin = Boolean(
+    user?.role === 'SUPER_ADMIN' || 
+    user?.role === 'ADMIN' || 
+    user?.email === 'admin@samiecom.com'
+  );
+
+  const markLessonComplete = async (lessonId: string, forceStatus?: boolean) => {
     const isCompleted = completedLessons.includes(lessonId);
-    const newStatus = !isCompleted;
-    
-    let updated = isCompleted 
-      ? completedLessons.filter(id => id !== lessonId)
-      : [...completedLessons, lessonId];
+    const newStatus = forceStatus !== undefined ? forceStatus : !isCompleted;
+    if (isCompleted === newStatus) return;
+
+    const updated = newStatus 
+      ? Array.from(new Set([...completedLessons, lessonId]))
+      : completedLessons.filter(id => id !== lessonId);
     
     setCompletedLessons(updated);
+    setSyncStatus('syncing');
+    setSyncFeedback('⚡ Syncing to Cloud Database...');
+
+    // Save to localStorage immediately
+    try {
+      localStorage.setItem('sami_lms_completed_cache', JSON.stringify(updated));
+      if (user?.email) {
+        localStorage.setItem(`sami_lms_completed_${user.email}`, JSON.stringify(updated));
+      }
+    } catch (e) {}
 
     try {
-      await fetch('/api/lms/progress', {
+      const res = await fetch('/api/lms/progress', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           studentId: user?.id || 'demo',
+          email: user?.email || '',
           lessonId,
           completed: newStatus
         })
       });
+      const data = await res.json();
+      if (data.success) {
+        setSyncStatus('synced');
+        setSyncFeedback(newStatus ? '✓ Saved to Supabase Cloud' : 'Progress updated');
+        setTimeout(() => setSyncFeedback(''), 4000);
+      } else {
+        setSyncStatus('idle');
+      }
     } catch (e) {
-      console.error(e);
+      console.error('Progress sync error:', e);
+      setSyncStatus('idle');
     }
+  };
+
+  const toggleLessonComplete = (lessonId: string) => {
+    markLessonComplete(lessonId);
   };
 
   // Find all lessons in flat list for next/prev navigation
@@ -195,6 +262,11 @@ export default function LmsClassroomPage() {
 
   const totalLessons = allLessons.length || 36;
   const progressPercent = Math.round((completedLessons.length / totalLessons) * 100);
+
+  const isCurrentDone = activeLesson ? completedLessons.includes(activeLesson.id) : false;
+  const currentLessonWatchPct = activeLesson 
+    ? (isCurrentDone ? 100 : (watchProgress[activeLesson.id] || 0)) 
+    : 0;
 
   const filteredSuppliers = suppliers.filter(s => {
     const matchesCountry = supplierCountryFilter === 'ALL' || s.country === supplierCountryFilter;
@@ -244,6 +316,18 @@ export default function LmsClassroomPage() {
           </div>
           <strong className="text-[#00A0DF] font-bold text-[11px] sm:text-xs">{progressPercent}%</strong>
           <span className="text-slate-500 text-[10px] hidden md:inline">({completedLessons.length}/{totalLessons})</span>
+          {syncStatus === 'syncing' && (
+            <span className="flex items-center gap-1 text-[10px] text-amber-400 font-semibold animate-pulse ml-0.5">
+              <Loader2 size={10} className="animate-spin" />
+              <span className="hidden xs:inline">Syncing...</span>
+            </span>
+          )}
+          {syncStatus === 'synced' && (
+            <span className="flex items-center gap-1 text-[10px] text-emerald-400 font-bold ml-0.5" title="Permanently saved to Supabase Cloud Database">
+              <Cloud size={11} />
+              <span className="hidden xs:inline">Cloud Saved</span>
+            </span>
+          )}
         </div>
 
         {/* User Profile & Sign Out */}
@@ -369,14 +453,21 @@ export default function LmsClassroomPage() {
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    toggleLessonComplete(lesson.id);
+                                    const lessonWatch = watchProgress[lesson.id] || 0;
+                                    if (isAdmin || isDone || lessonWatch >= 90) {
+                                      toggleLessonComplete(lesson.id);
+                                    } else {
+                                      setSyncFeedback('🔒 Please watch 90% of the video to complete this lecture');
+                                      setTimeout(() => setSyncFeedback(''), 4000);
+                                    }
                                   }}
+                                  title={isDone ? 'Completed' : isAdmin ? 'Admin override toggle' : 'Watch 90% to unlock completion'}
                                   className="flex-shrink-0 text-slate-400 hover:text-emerald-400 p-0.5"
                                 >
                                   {isDone ? (
                                     <CheckCircle2 size={14} className="text-emerald-400" />
                                   ) : (
-                                    <div className="w-3.5 h-3.5 rounded border border-slate-500" />
+                                    <div className="w-3.5 h-3.5 rounded border border-slate-500 hover:border-[#00A0DF]" />
                                   )}
                                 </button>
                                 <span className="truncate">{lesson.title}</span>
@@ -482,6 +573,46 @@ export default function LmsClassroomPage() {
                         preload="metadata"
                         onError={() => setVideoLoadError(true)}
                         onLoadedData={() => setVideoLoadError(false)}
+                        onLoadedMetadata={(e) => {
+                          setVideoLoadError(false);
+                          try {
+                            const savedPos = localStorage.getItem(`sami_lms_pos_${activeLesson.id}`);
+                            if (savedPos && Number(savedPos) > 5 && Number(savedPos) < e.currentTarget.duration - 10) {
+                              e.currentTarget.currentTime = Number(savedPos);
+                            }
+                          } catch (err) {}
+                        }}
+                        onTimeUpdate={(e) => {
+                          const vid = e.currentTarget;
+                          if (!vid.duration || !isFinite(vid.duration) || vid.duration <= 0) return;
+                          const pct = Math.min(100, Math.round((vid.currentTime / vid.duration) * 100));
+
+                          try {
+                            localStorage.setItem(`sami_lms_pos_${activeLesson.id}`, String(Math.floor(vid.currentTime)));
+                          } catch (err) {}
+
+                          setWatchProgress(prev => {
+                            const current = prev[activeLesson.id] || 0;
+                            if (pct > current) {
+                              const nextMap = { ...prev, [activeLesson.id]: pct };
+                              try {
+                                localStorage.setItem('sami_lms_watch_progress', JSON.stringify(nextMap));
+                              } catch (err) {}
+                              return nextMap;
+                            }
+                            return prev;
+                          });
+
+                          // Auto complete when >= 90%
+                          if (pct >= 90 && activeLesson && !completedLessons.includes(activeLesson.id)) {
+                            markLessonComplete(activeLesson.id, true);
+                          }
+                        }}
+                        onEnded={() => {
+                          if (activeLesson && !completedLessons.includes(activeLesson.id)) {
+                            markLessonComplete(activeLesson.id, true);
+                          }
+                        }}
                         className="w-full h-full object-contain bg-black"
                       >
                         <source src={activeLesson.videoUrl} />
@@ -526,6 +657,60 @@ export default function LmsClassroomPage() {
                   )}
                 </div>
 
+                {/* Live Watch Verification Bar & Cloud Sync Banner */}
+                <div className="bg-[#111827] border border-white/10 rounded-2xl px-4 sm:px-5 py-3 shadow-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                  <div className="flex-1 w-full">
+                    <div className="flex items-center justify-between text-xs mb-1.5">
+                      <div className="flex items-center gap-2 font-bold text-white">
+                        <span className="w-2 h-2 rounded-full bg-[#00A0DF] animate-pulse" />
+                        <span>Lecture Watch Progress:</span>
+                        <span className={isCurrentDone ? 'text-emerald-400 font-black' : 'text-[#00A0DF] font-black'}>
+                          {isCurrentDone ? '100% Completed' : `${currentLessonWatchPct}% Watched`}
+                        </span>
+                      </div>
+                      <span className="text-[11px] text-slate-400 font-medium">
+                        {isCurrentDone 
+                          ? '✓ Verified & Cloud Saved' 
+                          : `${Math.max(0, 90 - currentLessonWatchPct)}% more needed to complete`}
+                      </span>
+                    </div>
+                    {/* Visual Progress Track */}
+                    <div className="w-full bg-slate-800 rounded-full h-2 overflow-hidden border border-slate-700/60 relative">
+                      <div className="absolute top-0 bottom-0 left-[90%] w-0.5 bg-amber-400/80 z-10" title="90% Completion Unlock Target" />
+                      <div
+                        className={`h-full rounded-full transition-all duration-300 ${
+                          isCurrentDone
+                            ? 'bg-gradient-to-r from-emerald-500 to-teal-400'
+                            : currentLessonWatchPct >= 90
+                            ? 'bg-gradient-to-r from-[#00A0DF] to-emerald-400'
+                            : 'bg-gradient-to-r from-[#00A0DF] to-[#0077aa]'
+                        }`}
+                        style={{ width: `${isCurrentDone ? 100 : Math.min(100, currentLessonWatchPct)}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Cloud Database Sync Status */}
+                  <div className="flex-shrink-0 flex items-center gap-2 self-end sm:self-center">
+                    {syncStatus === 'syncing' ? (
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-semibold animate-pulse">
+                        <Loader2 size={12} className="animate-spin" />
+                        <span>Syncing to Supabase...</span>
+                      </span>
+                    ) : syncFeedback ? (
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-bold">
+                        <CheckCircle2 size={12} className="text-emerald-400" />
+                        <span>{syncFeedback}</span>
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-800/80 border border-white/5 text-slate-300 text-xs">
+                        <Cloud size={12} className="text-[#00A0DF]" />
+                        <span>Cloud Synced</span>
+                      </span>
+                    )}
+                  </div>
+                </div>
+
                 {/* Mobile Next / Prev Control Buttons */}
                 <div className="flex sm:hidden items-center justify-between gap-2">
                   <button
@@ -560,21 +745,54 @@ export default function LmsClassroomPage() {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-3 w-full sm:w-auto">
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full sm:w-auto">
+                    {/* Admin Instant Test Toggle */}
+                    {isAdmin && (
+                      <button
+                        onClick={() => activeLesson && markLessonComplete(activeLesson.id)}
+                        title="Admin Override: Test complete/uncomplete instantly without watching full video"
+                        className="px-3.5 py-2.5 rounded-xl text-xs font-bold bg-amber-500/20 border border-amber-500/40 text-amber-300 hover:bg-amber-500/30 active:scale-95 transition-all flex items-center justify-center gap-1.5 shadow-md"
+                      >
+                        <Zap size={14} className="text-amber-400 fill-amber-400" />
+                        <span>Admin Test Bypass</span>
+                      </button>
+                    )}
+
+                    {/* Main Smart Completion Button */}
                     <button
-                      onClick={() => activeLesson && toggleLessonComplete(activeLesson.id)}
-                      className={`w-full sm:w-auto px-4 sm:px-5 py-2.5 sm:py-3 rounded-xl text-xs sm:text-sm font-black flex items-center justify-center gap-2 transition-all shadow-lg active:scale-95 ${
-                        activeLesson && completedLessons.includes(activeLesson.id)
-                          ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
-                          : 'bg-[#00A0DF] hover:bg-[#008ec7] text-white shadow-[#00A0DF]/30'
+                      onClick={() => {
+                        if (!activeLesson) return;
+                        if (isCurrentDone) {
+                          markLessonComplete(activeLesson.id, false);
+                        } else if (currentLessonWatchPct >= 90 || isAdmin) {
+                          markLessonComplete(activeLesson.id, true);
+                        }
+                      }}
+                      disabled={!isCurrentDone && currentLessonWatchPct < 90 && !isAdmin}
+                      className={`w-full sm:w-auto px-5 py-3 rounded-xl text-xs sm:text-sm font-black flex items-center justify-center gap-2 transition-all shadow-lg ${
+                        isCurrentDone
+                          ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-900/40 active:scale-95 cursor-pointer'
+                          : currentLessonWatchPct >= 90 || isAdmin
+                          ? 'bg-[#00A0DF] hover:bg-[#008ec7] text-white shadow-[#00A0DF]/30 active:scale-95 cursor-pointer'
+                          : 'bg-slate-800/80 text-slate-400 border border-white/5 cursor-not-allowed opacity-80'
                       }`}
                     >
-                      <CheckCircle2 size={16} />
-                      <span>
-                        {activeLesson && completedLessons.includes(activeLesson.id)
-                          ? 'Completed (Click to Undo)'
-                          : 'Mark as Completed'}
-                      </span>
+                      {isCurrentDone ? (
+                        <>
+                          <CheckCircle2 size={16} />
+                          <span>Completed (Click to Undo)</span>
+                        </>
+                      ) : currentLessonWatchPct >= 90 ? (
+                        <>
+                          <CheckCircle2 size={16} />
+                          <span>Mark as Completed ({currentLessonWatchPct}%)</span>
+                        </>
+                      ) : (
+                        <>
+                          <Lock size={15} className="text-slate-400" />
+                          <span>Watch 90% to Complete ({currentLessonWatchPct}%)</span>
+                        </>
+                      )}
                     </button>
                   </div>
                 </div>
