@@ -2,8 +2,9 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { ShoppingBag, Menu, X, ArrowRight, GraduationCap, Sparkles } from 'lucide-react';
+import { Menu, X, ArrowRight, GraduationCap } from 'lucide-react';
 
 export function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -40,9 +41,15 @@ export function Navbar() {
           
           {/* Brand Logo */}
           <Link href="/" className="flex items-center gap-1.5 xs:gap-2 sm:gap-2.5 group flex-shrink-0 min-w-0">
-            <div className="w-6 h-6 xs:w-7 xs:h-7 sm:w-9 sm:h-9 rounded-lg bg-[#00A0DF] flex items-center justify-center text-white shadow-sm group-hover:scale-105 transition-transform flex-shrink-0">
-              <ShoppingBag size={13} className="stroke-[2.5] xs:hidden" />
-              <ShoppingBag size={16} className="stroke-[2.5] hidden xs:block" />
+            <div className="w-7 h-7 xs:w-8 xs:h-8 sm:w-9 sm:h-9 rounded-full overflow-hidden shadow-sm group-hover:scale-105 transition-transform flex-shrink-0 bg-slate-950 border border-amber-400/50">
+              <Image
+                src="/sami-logo.jpg"
+                alt="Ecom With Sami"
+                width={36}
+                height={36}
+                className="w-full h-full object-cover"
+                priority
+              />
             </div>
             <div className="flex flex-col min-w-0">
               <span className="text-[12px] xs:text-[13px] sm:text-base font-black text-slate-900 tracking-tight leading-none truncate">
