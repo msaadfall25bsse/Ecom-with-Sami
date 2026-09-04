@@ -140,13 +140,13 @@ export default function BlogsPage() {
               Get Lifetime Access to 11 HD Video Modules + Supplier Directory
             </h3>
             <p className="text-slate-300 text-xs sm:text-base max-w-xl mx-auto mb-8">
-              Join 9,700+ students and get everything you need from product hunting to live campaign scaling for just PKR 3,900.
+              Join 9,700+ students and get everything you need from product hunting to live campaign scaling for just PKR 3,799.
             </p>
             <Link
               href="/enrollment"
               className="inline-flex items-center justify-center gap-2 px-8 py-4 text-base font-black uppercase rounded-xl text-white bg-[#00A0DF] hover:bg-[#008ec7] shadow-lg shadow-[#00A0DF]/30 transition-all"
             >
-              <span>Enroll Now &bull; PKR 3,900</span>
+              <span>Enroll Now &bull; PKR 3,799</span>
               <ArrowRight size={18} />
             </Link>
           </div>

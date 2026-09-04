@@ -83,10 +83,10 @@ export default function AdminDashboardPage() {
   const [authChecking, setAuthChecking] = useState(true);
   const [activeTab, setActiveTab] = useState<'overview' | 'enrollments' | 'students'>('overview');
   const [stats, setStats] = useState({
-    totalStudents: 9742,
-    pendingApprovals: 1,
-    approvedEnrollments: 9741,
-    totalRevenueFormatted: 'PKR 37.9M'
+    totalStudents: 0,
+    pendingApprovals: 0,
+    approvedEnrollments: 0,
+    totalRevenueFormatted: 'PKR 0'
   });
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
@@ -873,7 +873,7 @@ export default function AdminDashboardPage() {
                 <TrendingUp size={15} className="text-indigo-400" />
               </div>
               <div className="text-base sm:text-2xl font-black text-white">{stats.totalRevenueFormatted}</div>
-              <span className="text-[9px] sm:text-[10px] text-indigo-400 font-bold mt-1 block">Fee: PKR 3,900</span>
+              <span className="text-[9px] sm:text-[10px] text-indigo-400 font-bold mt-1 block">Fee: PKR 3,799</span>
             </div>
           </div>
 

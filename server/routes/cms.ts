@@ -417,10 +417,10 @@ cmsRouter.get('/payment-methods', requireAdmin, (_req: Request, res: Response) =
           method_key, title, category, badge, account_title, account_number, iban_or_wallet, checkout_url, instructions, price_display, is_active, display_order
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `);
-      insertPM.run('easypaisa', 'Easypaisa Mobile Wallet', 'wallet', 'RECOMMENDED & FASTEST', 'SARDAR SAMIULLAH', '03481095933', '', '', 'Send course fee via Easypaisa Mobile App or USSD code and upload transaction screenshot.', 'PKR 3,900', 1, 1);
-      insertPM.run('jazzcash', 'JazzCash Account', 'wallet', 'INSTANT MOBILE TRANSFER', 'SARDAR SAMIULLAH', '03481095933', '', '', 'Send course fee to JazzCash account and attach proof below.', 'PKR 3,900', 1, 2);
-      insertPM.run('upaisa', 'UPaisa Mobile Wallet', 'wallet', 'MOBILE TRANSFER', 'SARDAR SAMIULLAH', '03481095933', '', '', 'Send course fee via UPaisa app/agent and upload transaction proof.', 'PKR 3,900', 1, 3);
-      insertPM.run('meezan_bank', 'Meezan Bank Transfer', 'bank', 'DIRECT IBFT / RAASM', 'SARDAR SAMIULLAH', '0015010112560119', 'PK94MEZN0015010112560119', '', 'Transfer to Meezan Bank via Raast ID / IBFT and upload confirmation screenshot.', 'PKR 3,900', 1, 4);
+      insertPM.run('easypaisa', 'Easypaisa Mobile Wallet', 'wallet', 'RECOMMENDED & FASTEST', 'SARDAR SAMIULLAH', '03481095933', '', '', 'Send course fee via Easypaisa Mobile App or USSD code and upload transaction screenshot.', 'PKR 3,799', 1, 1);
+      insertPM.run('jazzcash', 'JazzCash Account', 'wallet', 'INSTANT MOBILE TRANSFER', 'SARDAR SAMIULLAH', '03481095933', '', '', 'Send course fee to JazzCash account and attach proof below.', 'PKR 3,799', 1, 2);
+      insertPM.run('upaisa', 'UPaisa Mobile Wallet', 'wallet', 'MOBILE TRANSFER', 'SARDAR SAMIULLAH', '03481095933', '', '', 'Send course fee via UPaisa app/agent and upload transaction proof.', 'PKR 3,799', 1, 3);
+      insertPM.run('meezan_bank', 'Meezan Bank Transfer', 'bank', 'DIRECT IBFT / RAASM', 'SARDAR SAMIULLAH', '0015010112560119', 'PK94MEZN0015010112560119', '', 'Transfer to Meezan Bank via Raast ID / IBFT and upload confirmation screenshot.', 'PKR 3,799', 1, 4);
       insertPM.run('binance_crypto', 'Binance Pay & USDT (Crypto)', 'crypto', 'CRYPTO / ZERO FEE', 'Sami2026', '243182889', '0xae8da71c3ad92406e69edc24219918ea58c00dac', '', 'Send $15 USDT via Binance Pay ID or BEP20 Wallet network and attach payment proof.', '$15 USDT', 1, 5);
       insertPM.run('international_card', 'Visa / Mastercard Card Checkout', 'card', 'OVERSEAS & INTERNATIONAL', 'Online Card Checkout', '', '', 'https://whop.com/checkout/plan_0vX2Q4Zz9kK1Z?d2c=true', 'Overseas & International students can pay directly using any Visa, Mastercard, Apple Pay, or Google Pay.', '$15 USD', 1, 6);
       
@@ -447,7 +447,7 @@ cmsRouter.post('/payment-methods', requireAdmin, (req: Request, res: Response) =
       iban_or_wallet = '',
       checkout_url = '',
       instructions = '',
-      price_display = 'PKR 3,900',
+      price_display = 'PKR 3,799',
       is_active = 1,
       display_order = 0
     } = req.body;
@@ -475,7 +475,7 @@ cmsRouter.post('/payment-methods', requireAdmin, (req: Request, res: Response) =
       iban_or_wallet.trim(),
       checkout_url.trim(),
       instructions.trim(),
-      price_display.trim() || 'PKR 3,900',
+      price_display.trim() || 'PKR 3,799',
       is_active ? 1 : 0,
       Number(display_order) || 0
     );
@@ -503,7 +503,7 @@ cmsRouter.put('/payment-methods/:id', requireAdmin, (req: Request, res: Response
       iban_or_wallet = '',
       checkout_url = '',
       instructions = '',
-      price_display = 'PKR 3,900',
+      price_display = 'PKR 3,799',
       is_active = 1,
       display_order = 0
     } = req.body;
@@ -547,7 +547,7 @@ cmsRouter.put('/payment-methods/:id', requireAdmin, (req: Request, res: Response
         iban_or_wallet.trim(),
         checkout_url.trim(),
         instructions.trim(),
-        price_display.trim() || 'PKR 3,900',
+        price_display.trim() || 'PKR 3,799',
         is_active ? 1 : 0,
         Number(display_order) || 0,
         exists.id
@@ -576,7 +576,7 @@ cmsRouter.put('/payment-methods/:id', requireAdmin, (req: Request, res: Response
         iban_or_wallet.trim(),
         checkout_url.trim(),
         instructions.trim(),
-        price_display.trim() || 'PKR 3,900',
+        price_display.trim() || 'PKR 3,799',
         is_active ? 1 : 0,
         Number(display_order) || 0
       );
@@ -654,7 +654,7 @@ cmsRouter.post('/payment-methods/reset-defaults', requireAdmin, (_req: Request, 
       '',
       '',
       'Send course fee via Easypaisa Mobile App or USSD code and upload the transaction screenshot.',
-      'PKR 3,900',
+      'PKR 3,799',
       1,
       1
     );
@@ -669,7 +669,7 @@ cmsRouter.post('/payment-methods/reset-defaults', requireAdmin, (_req: Request, 
       '',
       '',
       'Send course fee to JazzCash account and attach proof below.',
-      'PKR 3,900',
+      'PKR 3,799',
       1,
       2
     );
@@ -684,7 +684,7 @@ cmsRouter.post('/payment-methods/reset-defaults', requireAdmin, (_req: Request, 
       '',
       '',
       'Send course fee via UPaisa app/agent and upload transaction proof.',
-      'PKR 3,900',
+      'PKR 3,799',
       1,
       3
     );
@@ -699,7 +699,7 @@ cmsRouter.post('/payment-methods/reset-defaults', requireAdmin, (_req: Request, 
       'PK94MEZN0015010112560119',
       '',
       'Transfer to Meezan Bank via Raast ID / IBFT and upload confirmation screenshot.',
-      'PKR 3,900',
+      'PKR 3,799',
       1,
       4
     );

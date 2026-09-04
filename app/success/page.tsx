@@ -88,7 +88,7 @@ export default function SuccessPage() {
               <div className="text-xs text-slate-400 mt-1 font-semibold">Student Rating</div>
             </div>
             <div>
-              <div className="text-2xl sm:text-3xl font-black text-indigo-400">PKR 3,900</div>
+              <div className="text-2xl sm:text-3xl font-black text-indigo-400">PKR 3,799</div>
               <div className="text-xs text-slate-400 mt-1 font-semibold">One-Time Fee</div>
             </div>
           </div>
@@ -168,7 +168,7 @@ export default function SuccessPage() {
               href="/enrollment"
               className="inline-flex items-center justify-center gap-2 px-10 py-4 text-base sm:text-lg font-black uppercase rounded-2xl text-white bg-[#00A0DF] hover:bg-[#008ec7] shadow-xl shadow-[#00A0DF]/30 transition-all"
             >
-              <span>Join Them &bull; Enroll Now for PKR 3,900</span>
+              <span>Join Them &bull; Enroll Now for PKR 3,799</span>
               <ArrowRight size={20} />
             </Link>
           </div>

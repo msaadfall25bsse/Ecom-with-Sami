@@ -6,7 +6,7 @@ export function TopMarquee() {
   const [items, setItems] = useState<string[]>([
     '🔥 Shopify Dropshipping Course',
     '88% OFF',
-    'PKR 3,900',
+    'PKR 3,799',
     'Lifetime Access',
     'WhatsApp Mentorship',
     'UAE & KSA Training',

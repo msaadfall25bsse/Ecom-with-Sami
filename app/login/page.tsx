@@ -138,7 +138,7 @@ export default function LoginPage() {
             <div className="mt-6 pt-6 border-t border-slate-100 text-center text-xs text-slate-600">
               Not enrolled yet?{' '}
               <Link href="/enrollment" className="text-[#00A0DF] font-bold hover:underline">
-                Enroll Today for PKR 3,900
+                Enroll Today for PKR 3,799
               </Link>
             </div>
           </div>

@@ -204,7 +204,7 @@ export function initDatabase() {
       title TEXT NOT NULL,
       slug TEXT UNIQUE NOT NULL,
       description TEXT,
-      price REAL NOT NULL DEFAULT 3900,
+      price REAL NOT NULL DEFAULT 3799,
       original_price REAL DEFAULT 32500,
       discount_percentage INTEGER DEFAULT 88,
       duration_hours INTEGER DEFAULT 8,
@@ -279,7 +279,7 @@ export function initDatabase() {
       hear_source TEXT,
       course_id INTEGER DEFAULT 1,
       payment_method TEXT NOT NULL,
-      amount REAL NOT NULL DEFAULT 3900,
+      amount REAL NOT NULL DEFAULT 3799,
       currency TEXT DEFAULT 'PKR',
       screenshot_path TEXT,
       transaction_id TEXT,
@@ -444,7 +444,7 @@ export function initDatabase() {
       iban_or_wallet TEXT DEFAULT '',
       checkout_url TEXT DEFAULT '',
       instructions TEXT DEFAULT '',
-      price_display TEXT DEFAULT 'PKR 3,900',
+      price_display TEXT DEFAULT 'PKR 3,799',
       is_active INTEGER DEFAULT 1,
       display_order INTEGER DEFAULT 0,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -493,17 +493,17 @@ function seedDefaultData() {
       whatsapp_number: '923330093269',
       admin_whatsapp: '+92 333 0093269',
       whatsapp_group_link: 'https://chat.whatsapp.com/sami-mentorship-mastermind',
-      whatsapp_default_message: 'Hi Sami! I want to enroll in the UAE & KSA Dropshipping Course (PKR 3,900). Can you help me?',
+      whatsapp_default_message: 'Hi Sami! I want to enroll in the UAE & KSA Dropshipping Course (PKR 3,799). Can you help me?',
       support_hours: 'Mon–Sat, 9:00 AM – 5:00 PM PKT',
       head_office: 'Mehdi Tower, Shahrah-e-Faisal, Karachi, Pakistan',
       regional_office: 'Business Bay, Dubai (UAE) & Olaya District, Riyadh (KSA)',
       base_currency: 'PKR',
       timezone: 'Asia/Karachi',
-      course_fee_pkr: '3900',
+      course_fee_pkr: '3799',
       course_fee_usd: '15',
       original_fee_pkr: '32500',
       seats_left: '12',
-      announcement_text: '🔥 Ramadan Special: UAE & KSA Dropshipping Course 88% OFF - Enroll for PKR 3,900 Today!'
+      announcement_text: '🔥 Ramadan Special: UAE & KSA Dropshipping Course 88% OFF - Enroll for PKR 3,799 Today!'
     };
 
     const insertSetting = db.prepare('INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)');

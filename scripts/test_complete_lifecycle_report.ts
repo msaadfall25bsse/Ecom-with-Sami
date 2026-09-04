@@ -56,7 +56,7 @@ async function runCompleteLifecycleReport() {
           phone: '03481095933',
           city: 'Karachi',
           paymentMethod: 'easypaisa',
-          amount: 3900
+          amount: 3799
         })
       });
       const enrData = await enrRes.json();

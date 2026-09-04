@@ -64,7 +64,7 @@ enrollmentRouter.post('/', uploadReceipt.single('screenshot'), (req, res) => {
 
     // Get course fee
     const course = db.prepare('SELECT id, price FROM courses WHERE id = ?').get(courseId || 1) as any;
-    const amount = course ? course.price : 3900;
+    const amount = course ? course.price : 3799;
 
     const screenshotPath = req.file ? `/uploads/receipts/${req.file.filename}` : null;
 

@@ -22,7 +22,7 @@ insertPM.run(
   '',
   '',
   'Send course fee via Easypaisa Mobile App or USSD code and upload the transaction screenshot.',
-  'PKR 3,900',
+  'PKR 3,799',
   1,
   1
 );
@@ -37,7 +37,7 @@ insertPM.run(
   '',
   '',
   'Send course fee to JazzCash account and attach proof below.',
-  'PKR 3,900',
+  'PKR 3,799',
   1,
   2
 );
@@ -52,7 +52,7 @@ insertPM.run(
   '',
   '',
   'Send course fee via UPaisa app/agent and upload transaction proof.',
-  'PKR 3,900',
+  'PKR 3,799',
   1,
   3
 );
@@ -67,7 +67,7 @@ insertPM.run(
   'PK94MEZN0015010112560119',
   '',
   'Transfer to Meezan Bank via Raast or IBFT using IBAN PK94MEZN0015010112560119 and upload confirmation screenshot.',
-  'PKR 3,900',
+  'PKR 3,799',
   1,
   4
 );
@@ -122,7 +122,7 @@ const updateSection = db.prepare(`
 `);
 
 updateSection.run(JSON.stringify({
-  deposit_fee: '3,900',
+  deposit_fee: '3,799',
   easypaisa: {
     account_title: 'SARDAR SAMIULLAH',
     account_number: '03481095933',

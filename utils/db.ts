@@ -124,7 +124,7 @@ export const initialEnrollments: Enrollment[] = [
     paymentMethod: 'Easypaisa',
     transactionId: 'TXN-984210984',
     whereHeard: 'TikTok',
-    amount: 'PKR 3,900',
+    amount: 'PKR 3,799',
     status: 'approved',
     createdAt: new Date(Date.now() - 86400000).toISOString()
   },
@@ -139,7 +139,7 @@ export const initialEnrollments: Enrollment[] = [
     paymentMethod: 'Meezan Bank Ltd',
     transactionId: 'FT-20260902-8812',
     whereHeard: 'Instagram',
-    amount: 'PKR 3,900',
+    amount: 'PKR 3,799',
     status: 'approved',
     createdAt: new Date(Date.now() - 43200000).toISOString()
   },
@@ -154,7 +154,7 @@ export const initialEnrollments: Enrollment[] = [
     paymentMethod: 'JazzCash',
     transactionId: 'JC-876234190',
     whereHeard: 'YouTube',
-    amount: 'PKR 3,900',
+    amount: 'PKR 3,799',
     status: 'pending',
     createdAt: new Date(Date.now() - 3600000).toISOString()
   }

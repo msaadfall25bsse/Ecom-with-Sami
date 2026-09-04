@@ -10,7 +10,7 @@ export const fetchCache = 'force-no-store';
 
 export const metadata: Metadata = {
   title: 'Master UAE & KSA Dropshipping | Ecom With Sami',
-  description: 'Learn UAE & KSA Shopify dropshipping step-by-step in Urdu. 9,700+ students trained, lifetime mentorship, verified supplier directory, and ads training. Start today for PKR 3,900.',
+  description: 'Learn UAE & KSA Shopify dropshipping step-by-step in Urdu. 9,700+ students trained, lifetime mentorship, verified supplier directory, and ads training. Start today for PKR 3,799.',
   keywords: ['Shopify dropshipping Pakistan', 'UAE dropshipping', 'KSA dropshipping', 'Ecom With Sami', 'Shopify Course in Urdu'],
   openGraph: {
     title: 'Master UAE & KSA Dropshipping | Ecom With Sami',

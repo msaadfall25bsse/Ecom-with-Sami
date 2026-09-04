@@ -51,7 +51,7 @@ async function verifyTikTokTracking() {
   console.log('📊 TIKTOK STANDARD EVENTS VERIFICATION MATRIX:');
   console.log('========================================');
   console.log('• PageView            → Active on route changes in pages/+Layout.tsx');
-  console.log('• ViewContent         → Active on course view in pages/index/+Page.tsx (ID: COURSE-UAE-01, PKR 3900)');
+  console.log('• ViewContent         → Active on course view in pages/index/+Page.tsx (ID: COURSE-UAE-01, PKR 3799)');
   console.log('• InitiateCheckout    → Active on checkout enter in pages/enrollment/+Page.tsx');
   console.log('• AddPaymentInfo      → Active on payment method tab selection in pages/enrollment/+Page.tsx');
   console.log('• CompletePayment     → Active on confirmed order submission with order_id deduplication');

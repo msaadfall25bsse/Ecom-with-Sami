@@ -16,10 +16,17 @@ export async function GET() {
     const students = await dbGetStudents();
     const enrollments = await dbGetEnrollments();
 
-    const totalStudentsCount = 9700 + students.length;
     const pendingEnrollments = enrollments.filter(e => e.status === 'pending');
     const approvedEnrollments = enrollments.filter(e => e.status === 'approved');
-    const totalRevenuePKR = (totalStudentsCount * 3900);
+    const totalStudentsCount = students.length;
+
+    // Calculate 100% REAL and ORIGINAL revenue from actual approved enrollments
+    const totalRevenuePKR = approvedEnrollments.reduce((sum, e) => {
+      const cleanAmt = parseInt((e.amount || '').replace(/[^0-9]/g, ''), 10);
+      return sum + (isNaN(cleanAmt) ? 3799 : cleanAmt);
+    }, 0);
+
+    const totalRevenueFormatted = `PKR ${totalRevenuePKR.toLocaleString()}`;
 
     return NextResponse.json({
       success: true,
@@ -27,7 +34,10 @@ export async function GET() {
         totalStudents: totalStudentsCount,
         pendingApprovals: pendingEnrollments.length,
         approvedEnrollments: approvedEnrollments.length,
-        totalRevenueFormatted: `PKR ${(totalRevenuePKR / 1000000).toFixed(1)}M`,
+        totalRevenue: totalRevenuePKR,
+        totalRevenueFormatted,
+        courseFee: 3799,
+        courseFeeFormatted: 'PKR 3,799',
         recentEnrollments: enrollments.slice(0, 8)
       }
     }, { headers: NO_CACHE_HEADERS });

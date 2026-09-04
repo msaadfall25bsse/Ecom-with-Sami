@@ -66,7 +66,7 @@ export default function RefundPolicyPage() {
                 Our 100% Risk-Free Satisfaction Guarantee
               </h2>
               <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-medium">
-                Enroll today for just <strong>3,900 PKR</strong>. Watch the curriculum, review our supplier sourcing blueprints, and interact with the team. If within <strong>10 calendar days</strong> you decide it is not for you, request your refund and we will return your payment.
+                Enroll today for just <strong>3,799 PKR</strong>. Watch the curriculum, review our supplier sourcing blueprints, and interact with the team. If within <strong>10 calendar days</strong> you decide it is not for you, request your refund and we will return your payment.
               </p>
             </div>
           </div>
@@ -160,7 +160,7 @@ export default function RefundPolicyPage() {
                 </div>
                 <div>
                   <strong className="text-slate-900 block font-bold mb-0.5">Direct Payout Transfer</strong>
-                  <span className="text-slate-600">Your 3,900 PKR payment is directly refunded to your nominated JazzCash, EasyPaisa, Raast, or Bank account within 2-3 business days.</span>
+                  <span className="text-slate-600">Your 3,799 PKR payment is directly refunded to your nominated JazzCash, EasyPaisa, Raast, or Bank account within 2-3 business days.</span>
                 </div>
               </div>
             </div>

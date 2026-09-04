@@ -286,7 +286,7 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
                   </span>{' '}
                   — Get Instant Access Today for Just{' '}
                   <span className="font-extrabold text-[#00A0DF] block xs:inline">
-                    {hero.current_price || '3,900 PKR'}
+                    {hero.current_price || '3,799 PKR'}
                   </span>
                 </p>
               </div>

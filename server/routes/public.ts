@@ -28,7 +28,7 @@ publicRouter.get('/home', (_req, res) => {
       success: true,
       course: course || {
         title: 'Master UAE & KSA Dropshipping (From Scratch to Scaling)',
-        price: 3900,
+        price: 3799,
         original_price: 32500,
         discount_percentage: 88,
         total_lectures: 36,
@@ -52,7 +52,7 @@ publicRouter.get('/checkout-config', (_req, res) => {
 
     return res.json({
       success: true,
-      pricePKR: parseInt(settings.course_fee_pkr || '3900', 10),
+      pricePKR: parseInt(settings.course_fee_pkr || '3799', 10),
       priceUSD: parseInt(settings.course_fee_usd || '15', 10),
       originalPKR: parseInt(settings.original_fee_pkr || '32500', 10),
       discountPct: 88,
@@ -103,10 +103,10 @@ publicRouter.get('/payment-methods', (_req, res) => {
           method_key, title, category, badge, account_title, account_number, iban_or_wallet, checkout_url, instructions, price_display, is_active, display_order
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `);
-      insertPM.run('easypaisa', 'Easypaisa Mobile Wallet', 'wallet', 'RECOMMENDED & FASTEST', 'SARDAR SAMIULLAH', '03481095933', '', '', 'Send course fee via Easypaisa Mobile App or USSD code and upload transaction screenshot.', 'PKR 3,900', 1, 1);
-      insertPM.run('jazzcash', 'JazzCash Account', 'wallet', 'INSTANT MOBILE TRANSFER', 'SARDAR SAMIULLAH', '03481095933', '', '', 'Send course fee to JazzCash account and attach proof below.', 'PKR 3,900', 1, 2);
-      insertPM.run('upaisa', 'UPaisa Mobile Wallet', 'wallet', 'MOBILE TRANSFER', 'SARDAR SAMIULLAH', '03481095933', '', '', 'Send course fee via UPaisa app/agent and upload transaction proof.', 'PKR 3,900', 1, 3);
-      insertPM.run('meezan_bank', 'Meezan Bank Transfer', 'bank', 'DIRECT IBFT / RAASM', 'SARDAR SAMIULLAH', '0015010112560119', 'PK94MEZN0015010112560119', '', 'Transfer to Meezan Bank via Raast ID / IBFT and upload confirmation screenshot.', 'PKR 3,900', 1, 4);
+      insertPM.run('easypaisa', 'Easypaisa Mobile Wallet', 'wallet', 'RECOMMENDED & FASTEST', 'SARDAR SAMIULLAH', '03481095933', '', '', 'Send course fee via Easypaisa Mobile App or USSD code and upload transaction screenshot.', 'PKR 3,799', 1, 1);
+      insertPM.run('jazzcash', 'JazzCash Account', 'wallet', 'INSTANT MOBILE TRANSFER', 'SARDAR SAMIULLAH', '03481095933', '', '', 'Send course fee to JazzCash account and attach proof below.', 'PKR 3,799', 1, 2);
+      insertPM.run('upaisa', 'UPaisa Mobile Wallet', 'wallet', 'MOBILE TRANSFER', 'SARDAR SAMIULLAH', '03481095933', '', '', 'Send course fee via UPaisa app/agent and upload transaction proof.', 'PKR 3,799', 1, 3);
+      insertPM.run('meezan_bank', 'Meezan Bank Transfer', 'bank', 'DIRECT IBFT / RAASM', 'SARDAR SAMIULLAH', '0015010112560119', 'PK94MEZN0015010112560119', '', 'Transfer to Meezan Bank via Raast ID / IBFT and upload confirmation screenshot.', 'PKR 3,799', 1, 4);
       insertPM.run('binance_crypto', 'Binance Pay & USDT (Crypto)', 'crypto', 'CRYPTO / ZERO FEE', 'Sami2026', '243182889', '0xae8da71c3ad92406e69edc24219918ea58c00dac', '', 'Send $15 USDT via Binance Pay ID or BEP20 Wallet network and attach payment proof.', '$15 USDT', 1, 5);
       insertPM.run('international_card', 'Visa / Mastercard Card Checkout', 'card', 'OVERSEAS & INTERNATIONAL', 'Online Card Checkout', '', '', 'https://whop.com/checkout/plan_0vX2Q4Zz9kK1Z?d2c=true', 'Overseas & International students can pay directly using any Visa, Mastercard, Apple Pay, or Google Pay.', '$15 USD', 1, 6);
       
@@ -145,7 +145,7 @@ publicRouter.get('/contact-config', (_req, res) => {
       supportHours: settings.support_hours || 'Mon–Sat, 9:00 AM – 5:00 PM PKT',
       headOffice: settings.head_office || 'Mehdi Tower, Shahrah-e-Faisal, Karachi, Pakistan',
       regionalOffice: settings.regional_office || 'Business Bay, Dubai (UAE) & Olaya District, Riyadh (KSA)',
-      whatsappDefaultMessage: settings.whatsapp_default_message || 'Hi Sami! I want to enroll in the UAE & KSA Dropshipping Course (PKR 3,900). Can you help me?'
+      whatsappDefaultMessage: settings.whatsapp_default_message || 'Hi Sami! I want to enroll in the UAE & KSA Dropshipping Course (PKR 3,799). Can you help me?'
     });
   } catch (err: any) {
     return res.status(500).json({ success: false, message: err.message });

@@ -55,14 +55,14 @@ class EventsApiService {
         },
         properties: {
           currency: payload.currency || 'PKR',
-          value: payload.value || 3900,
+          value: payload.value || 3799,
           contents: payload.content_id ? [
             {
               content_id: payload.content_id,
               content_name: payload.content_name || 'Dropshipping Mastery',
               content_type: payload.content_type || 'product',
               quantity: 1,
-              price: payload.value || 3900
+              price: payload.value || 3799
             }
           ] : []
         }

@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
       transactionId: transactionId || 'Pending Verification',
       whereHeard: whereHeard || 'TikTok',
       receiptUrl: receiptUrl || '',
-      amount: 'PKR 3,900',
+      amount: 'PKR 3,799',
       status: 'pending',
       createdAt: new Date().toISOString(),
       password: uniquePassword

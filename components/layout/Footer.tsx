@@ -7,7 +7,7 @@ import { useContactConfig } from '@/utils/contactConfig';
 
 export function Footer() {
   const { email, displayPhone, headOffice, regionalOffice, getWhatsAppUrl } = useContactConfig();
-  const whatsappUrl = getWhatsAppUrl('Hi Sami! I want to enroll in the UAE & KSA Dropshipping Course (PKR 3,900). Can you help me?');
+  const whatsappUrl = getWhatsAppUrl('Hi Sami! I want to enroll in the UAE & KSA Dropshipping Course (PKR 3,799). Can you help me?');
 
   const scrollToTop = () => {
     if (typeof window !== 'undefined') {

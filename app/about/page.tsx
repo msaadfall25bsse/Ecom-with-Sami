@@ -124,7 +124,7 @@ export default function AboutPage() {
                   href="/enrollment"
                   className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5 text-sm sm:text-base font-black text-white bg-[#00A0DF] hover:bg-[#008ec7] rounded-xl shadow-lg shadow-[#00A0DF]/30 transition-all"
                 >
-                  <span>Enroll in Mentorship (PKR 3,900)</span>
+                  <span>Enroll in Mentorship (PKR 3,799)</span>
                   <ArrowRight size={18} />
                 </Link>
                 <a

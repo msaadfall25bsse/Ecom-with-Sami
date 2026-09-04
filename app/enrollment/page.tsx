@@ -128,7 +128,7 @@ export default function EnrollmentPage() {
           name: formData.fullName,
           trackingCode: data.trackingCode,
           status: 'pending',
-          amount: 'PKR 3,900',
+          amount: 'PKR 3,799',
           whatsappUrl: `https://wa.me/923330093269?text=${encodeURIComponent(
             `Hello Admin Sami! I submitted enrollment receipt for ${formData.fullName} (Tracking: ${data.trackingCode}). Please verify and send my LMS password.`
           )}`
@@ -236,7 +236,7 @@ export default function EnrollmentPage() {
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-slate-400">Course Fee:</span>
-                <span className="font-black text-emerald-400">{successData.amount || 'PKR 3,900'}</span>
+                <span className="font-black text-emerald-400">{successData.amount || 'PKR 3,799'}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-slate-400">Admin Support WhatsApp:</span>
@@ -287,7 +287,7 @@ export default function EnrollmentPage() {
                   <div>
                     <strong className="text-xs sm:text-sm font-bold text-white block mb-1">Deposit the Fees</strong>
                     <p className="text-[11px] sm:text-xs text-slate-400 leading-relaxed">
-                      Transfer <strong>PKR 3,900</strong> via Easypaisa, JazzCash, Meezan Bank or SadaPay.
+                      Transfer <strong>PKR 3,799</strong> via Easypaisa, JazzCash, Meezan Bank or SadaPay.
                     </p>
                   </div>
                 </div>
@@ -326,12 +326,12 @@ export default function EnrollmentPage() {
                 <div>
                   <h3 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
                     <CreditCard size={18} className="text-[#00A0DF]" />
-                    <span>Choose Payment Account (PKR 3,900)</span>
+                    <span>Choose Payment Account (PKR 3,799)</span>
                   </h3>
                   <p className="text-xs text-slate-400">Select your preferred app to view account details and copy number</p>
                 </div>
                 <span className="text-[11px] font-black text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
-                  Fee: PKR 3,900
+                  Fee: PKR 3,799
                 </span>
               </div>
 

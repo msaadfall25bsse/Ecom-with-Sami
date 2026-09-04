@@ -49,7 +49,7 @@ app.get(['/uploads/receipts/:filename', '/api/uploads/receipts/:filename'], (req
     <circle cx="300" cy="70" r="32" fill="#10B981" fill-opacity="0.15"/>
     <path d="M290 70 L297 77 L312 62" stroke="#10B981" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
     <text x="300" y="130" fill="#F8FAFC" font-family="system-ui, -apple-system, sans-serif" font-size="19" font-weight="bold" text-anchor="middle">Payment Proof Submitted</text>
-    <text x="300" y="160" fill="#38BDF8" font-family="system-ui, -apple-system, sans-serif" font-size="15" font-weight="bold" text-anchor="middle">Course Fee: PKR 3,900 (Verified Application)</text>
+    <text x="300" y="160" fill="#38BDF8" font-family="system-ui, -apple-system, sans-serif" font-size="15" font-weight="bold" text-anchor="middle">Course Fee: PKR 3,799 (Verified Application)</text>
     <text x="300" y="195" fill="#94A3B8" font-family="system-ui, -apple-system, sans-serif" font-size="13" text-anchor="middle">Account: SARDAR SAMIULLAH (Easypaisa / JazzCash / Meezan)</text>
     <rect x="150" y="225" width="300" height="44" fill="#1E293B" rx="8" stroke="#334155" stroke-width="1"/>
     <text x="300" y="252" fill="#10B981" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="bold" text-anchor="middle">✓ Ready for Admin 1-Click Approval</text>

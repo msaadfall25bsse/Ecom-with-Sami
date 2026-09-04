@@ -107,7 +107,7 @@ export const defaultCmsContent: CmsContentSchema = {
   marquee: {
     is_active: true,
     items: [
-      '🔥 RAMADAN SPECIAL 88% DISCOUNT &bull; PKR 3,900 ONLY FOR LIFETIME ACCESS',
+      '🔥 RAMADAN SPECIAL 88% DISCOUNT &bull; PKR 3,799 ONLY FOR LIFETIME ACCESS',
       '⚡ 9,742+ SUCCESSFUL STUDENTS TRAINED ACROSS PAKISTAN, UAE & SAUDI ARABIA',
       '🚀 2026 UPDATED GCC SCALING BLUEPRINT WITH DIRECT DUBAI SUPPLIERS',
       '💬 DIRECT 1-ON-1 WHATSAPP MENTORSHIP WITH MENTOR SAMI INCLUDED'
@@ -121,7 +121,7 @@ export const defaultCmsContent: CmsContentSchema = {
     video_url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
     video_title: 'Watch Sami Explain the Entire UAE & KSA Dropshipping Model (10 Mins Overview)',
     original_price: 'PKR 32,500',
-    current_price: 'PKR 3,900',
+    current_price: 'PKR 3,799',
     seats_left: 12,
     cta_text: 'YES! I WANT TO LEARN THIS'
   },
@@ -143,7 +143,7 @@ export const defaultCmsContent: CmsContentSchema = {
     tag: 'EXCLUSIVE POWER BONUSES',
     title: 'Get 6 Game-Changing Bonuses Worth Over',
     highlight_value: 'Rs 30,000 Free',
-    subtitle: 'When you enroll today for PKR 3,900, you get all software tools, supplier contacts, and ad blueprints completely free of charge.',
+    subtitle: 'When you enroll today for PKR 3,799, you get all software tools, supplier contacts, and ad blueprints completely free of charge.',
     items: [
       {
         title: 'Verified UAE & Saudi Arabia Suppliers Directory',
@@ -228,7 +228,7 @@ export const defaultCmsContent: CmsContentSchema = {
       {
         label: 'Price Increase',
         title: 'Paying Rs 32,500 Full Price Later',
-        desc: 'This special 88% discounted fee (PKR 3,900) is strictly for this limited batch.'
+        desc: 'This special 88% discounted fee (PKR 3,799) is strictly for this limited batch.'
       },
       {
         label: 'Market Opportunity',
@@ -283,7 +283,7 @@ export const defaultCmsContent: CmsContentSchema = {
       city: 'Islamabad',
       sales: 'AED 4,850 First Week',
       orders: '24 Orders',
-      quote: 'Rs 3,900 mein itna practical aur updated content koi nahi deta Pakistan mein. Highly recommended!',
+      quote: 'Rs 3,799 mein itna practical aur updated content koi nahi deta Pakistan mein. Highly recommended!',
       market: 'UAE Market',
       initials: 'UG'
     }
