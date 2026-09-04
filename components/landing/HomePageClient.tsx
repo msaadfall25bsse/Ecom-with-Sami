@@ -247,24 +247,6 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
               {hero.subtitle || 'Beginner Friendly Training from Basics — Zero Experience Required'}
             </p>
 
-            {/* Quick CTA & Social Proof */}
-            <div className="flex flex-col items-center gap-3 mb-6 sm:mb-8 w-full xs:w-auto px-2">
-              <Link
-                href="/enrollment"
-                className="lwa-btn w-full xs:w-auto px-8 sm:px-10 py-3.5 sm:py-4 text-xs xs:text-sm sm:text-base font-black rounded-xl hover:bg-[#008ac2] transition-all shadow-xl"
-              >
-                {hero.cta_text || 'YES! I WANT TO LEARN THIS'}
-              </Link>
-              <div className="flex items-center gap-2 text-[11px] sm:text-xs font-bold text-slate-500">
-                <div className="flex text-amber-400">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} size={13} className="fill-amber-400 text-amber-400 animate-star-twinkle" />
-                  ))}
-                </div>
-                <span>Trusted by 9,700+ Students</span>
-              </div>
-            </div>
-
             {/* Video Preview Card Container */}
             <div className="w-full max-w-3xl relative">
               {/* Mini Pill Tag over Video */}
@@ -307,6 +289,24 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
                     {hero.current_price || '3,900 PKR'}
                   </span>
                 </p>
+              </div>
+
+              {/* Quick CTA & Social Proof (Placed Under Demo Video) */}
+              <div className="flex flex-col items-center gap-3 mt-5 sm:mt-6 w-full xs:w-auto px-2">
+                <Link
+                  href="/enrollment"
+                  className="lwa-btn w-full xs:w-auto px-8 sm:px-10 py-3.5 sm:py-4 text-xs xs:text-sm sm:text-base font-black rounded-xl hover:bg-[#008ac2] transition-all shadow-xl"
+                >
+                  {hero.cta_text || 'YES! I WANT TO LEARN THIS'}
+                </Link>
+                <div className="flex items-center gap-2 text-[11px] sm:text-xs font-bold text-slate-500">
+                  <div className="flex text-amber-400">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} size={13} className="fill-amber-400 text-amber-400 animate-star-twinkle" />
+                    ))}
+                  </div>
+                  <span>Trusted by 350+ Students</span>
+                </div>
               </div>
 
             </div>
