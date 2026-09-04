@@ -23,9 +23,47 @@ import {
   KeyRound,
   Filter,
   Image as ImageIcon,
-  Menu
+  Menu,
+  MessageSquare,
+  Copy,
+  ExternalLink,
+  Send,
+  Lock,
+  RefreshCw
 } from 'lucide-react';
 import { Enrollment, Student } from '@/utils/db';
+
+function formatWhatsAppPhone(phone: string): string {
+  let clean = (phone || '').replace(/[^0-9]/g, '');
+  if (clean.startsWith('0')) {
+    clean = '92' + clean.slice(1);
+  } else if (!clean.startsWith('92') && clean.length === 10) {
+    clean = '92' + clean;
+  }
+  return clean;
+}
+
+function generateWhatsAppUrl(student: { name: string; email: string; phone: string }, password: string): string {
+  const cleanPhone = formatWhatsAppPhone(student.phone);
+  const text = encodeURIComponent(
+    `🎉 *Assalam-o-Alaikum ${student.name}! Welcome to Ecom With Sami Mentorship!*\n\n` +
+    `Your enrollment payment proof has been verified and your Student LMS Portal Account is now *ACTIVE*.\n\n` +
+    `━━━━━━━━━━━━━━━━━━━━\n` +
+    `🔐 *YOUR LMS LOGIN CREDENTIALS:*\n` +
+    `🌐 *Login Portal:* https://ecomwithsami.com/login\n` +
+    `📧 *Email:* ${student.email}\n` +
+    `🔑 *Password:* ${password}\n` +
+    `━━━━━━━━━━━━━━━━━━━━\n\n` +
+    `✅ *Next Steps:*\n` +
+    `1. Open the portal link above\n` +
+    `2. Enter your Email and Password\n` +
+    `3. Start watching the 11 Course Modules and access the Supplier Directory!\n\n` +
+    `If you face any issues, feel free to reply directly to this message.\n\n` +
+    `Best Regards,\n` +
+    `*Mentor Sardar Samiullah & Support Team*`
+  );
+  return `https://wa.me/${cleanPhone}?text=${text}`;
+}
 
 export default function AdminDashboardPage() {
   const router = useRouter();
@@ -47,6 +85,17 @@ export default function AdminDashboardPage() {
 
   // Selected Receipt Preview modal state
   const [previewReceipt, setPreviewReceipt] = useState<Enrollment | null>(null);
+
+  // Get Access & WhatsApp Modal state
+  const [accessModalData, setAccessModalData] = useState<{
+    enrollment: Enrollment;
+    password: string;
+    whatsappUrl: string;
+    isApproved: boolean;
+    granting: boolean;
+    statusMsg?: string;
+  } | null>(null);
+  const [copiedAccessId, setCopiedAccessId] = useState<string | null>(null);
 
   // New Student Modal state
   const [showAddStudent, setShowAddStudent] = useState(false);
@@ -156,6 +205,82 @@ export default function AdminDashboardPage() {
     } catch (e) {
       console.error(e);
     }
+  };
+
+  const handleOpenAccessModal = (enrollment: Enrollment) => {
+    const matchingStudent = students.find(s => s.email.toLowerCase() === enrollment.email.toLowerCase());
+    const initialPassword = matchingStudent?.password || `Sami@${Math.floor(1000 + Math.random() * 9000)}`;
+    const waUrl = generateWhatsAppUrl(enrollment, initialPassword);
+
+    setAccessModalData({
+      enrollment,
+      password: initialPassword,
+      whatsappUrl: waUrl,
+      isApproved: enrollment.status === 'approved',
+      granting: false,
+      statusMsg: enrollment.status === 'approved' ? 'Account is already verified in LMS. You can view password or resend credentials to WhatsApp.' : ''
+    });
+  };
+
+  const handleRegeneratePassword = () => {
+    if (!accessModalData) return;
+    const newPass = `Sami@${Math.floor(1000 + Math.random() * 9000)}`;
+    const newWaUrl = generateWhatsAppUrl(accessModalData.enrollment, newPass);
+    setAccessModalData({
+      ...accessModalData,
+      password: newPass,
+      whatsappUrl: newWaUrl,
+      statusMsg: 'New password generated! Click "Grant LMS Access & Send WhatsApp" to save and send.'
+    });
+  };
+
+  const handleGrantAccessAndSendWhatsApp = async () => {
+    if (!accessModalData) return;
+    const { enrollment, password } = accessModalData;
+    setAccessModalData(prev => prev ? { ...prev, granting: true, statusMsg: 'Saving to Database & Activating LMS Account...' } : null);
+
+    try {
+      const res = await fetch('/api/admin/enrollments', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: enrollment.id,
+          status: 'approved',
+          password
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        const finalPass = data.password || password;
+        const waUrl = data.whatsappUrl || generateWhatsAppUrl(enrollment, finalPass);
+
+        setAccessModalData({
+          enrollment: { ...enrollment, status: 'approved' },
+          password: finalPass,
+          whatsappUrl: waUrl,
+          isApproved: true,
+          granting: false,
+          statusMsg: '✅ LMS Access Granted! Password saved in database. Opening WhatsApp...'
+        });
+
+        fetchDashboardData();
+
+        // Open WhatsApp directly for Admin
+        if (typeof window !== 'undefined') {
+          window.open(waUrl, '_blank');
+        }
+      } else {
+        setAccessModalData(prev => prev ? { ...prev, granting: false, statusMsg: `❌ ${data.message || 'Failed to update'}` } : null);
+      }
+    } catch (err: any) {
+      setAccessModalData(prev => prev ? { ...prev, granting: false, statusMsg: `❌ Error: ${err.message}` } : null);
+    }
+  };
+
+  const handleCopyAccessText = (text: string, id: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedAccessId(id);
+    setTimeout(() => setCopiedAccessId(null), 2500);
   };
 
   const handleCreateStudent = async (e: React.FormEvent) => {
@@ -479,24 +604,24 @@ export default function AdminDashboardPage() {
                           </span>
                         </td>
                         <td className="py-3 text-right">
-                          {r.status === 'pending' ? (
-                            <div className="inline-flex gap-1.5">
-                              <button
-                                onClick={() => handleUpdateStatus(r.id, 'approved')}
-                                className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-[11px] flex items-center gap-1 shadow-sm active:scale-95"
-                              >
-                                <Check size={12} /> Approve
-                              </button>
+                          <div className="inline-flex items-center gap-1.5 justify-end">
+                            <button
+                              onClick={() => handleOpenAccessModal(r)}
+                              className="px-2.5 py-1 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-lg font-bold text-[11px] flex items-center gap-1 shadow-sm active:scale-95 transition-all"
+                              title="Grant LMS Access & Send WhatsApp"
+                            >
+                              <KeyRound size={12} className="text-amber-300" />
+                              <span>Get Access</span>
+                            </button>
+                            {r.status === 'pending' && (
                               <button
                                 onClick={() => handleUpdateStatus(r.id, 'rejected')}
                                 className="px-2 py-1 bg-red-600/20 hover:bg-red-600/40 text-red-400 rounded-lg font-bold text-[11px]"
                               >
                                 Reject
                               </button>
-                            </div>
-                          ) : (
-                            <span className="text-[11px] text-slate-500">Processed</span>
-                          )}
+                            )}
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -596,15 +721,15 @@ export default function AdminDashboardPage() {
                           </span>
                         </td>
                         <td className="py-3 text-right">
-                          <div className="inline-flex gap-1.5">
-                            {r.status !== 'approved' && (
-                              <button
-                                onClick={() => handleUpdateStatus(r.id, 'approved')}
-                                className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-[11px] active:scale-95"
-                              >
-                                Activate
-                              </button>
-                            )}
+                          <div className="inline-flex items-center gap-1.5 justify-end">
+                            <button
+                              onClick={() => handleOpenAccessModal(r)}
+                              className="px-2.5 py-1 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-lg font-bold text-[11px] flex items-center gap-1 shadow-sm active:scale-95 transition-all"
+                              title="Grant LMS Access & Send WhatsApp"
+                            >
+                              <KeyRound size={12} className="text-amber-300" />
+                              <span>Get Access</span>
+                            </button>
                             {r.status !== 'rejected' && (
                               <button
                                 onClick={() => handleUpdateStatus(r.id, 'rejected')}
@@ -715,18 +840,24 @@ export default function AdminDashboardPage() {
               <div><span className="text-slate-400">City:</span> <strong>{previewReceipt.city}</strong></div>
             </div>
 
-            <div className="flex items-center gap-2 justify-end pt-2">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 justify-between pt-2 border-t border-white/5">
               <button
                 onClick={() => handleUpdateStatus(previewReceipt.id, 'rejected')}
-                className="px-3.5 py-2 rounded-xl bg-red-600/20 hover:bg-red-600/40 text-red-400 text-xs font-bold"
+                className="px-3.5 py-2.5 rounded-xl bg-red-600/20 hover:bg-red-600/40 text-red-400 text-xs font-bold transition-colors"
               >
                 Reject Proof
               </button>
               <button
-                onClick={() => handleUpdateStatus(previewReceipt.id, 'approved')}
-                className="px-4 sm:px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black"
+                onClick={() => {
+                  const r = previewReceipt;
+                  setPreviewReceipt(null);
+                  handleOpenAccessModal(r);
+                }}
+                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-black flex items-center justify-center gap-2 shadow-xl shadow-emerald-600/30 transition-all active:scale-95"
               >
-                Approve &amp; Activate LMS
+                <KeyRound size={15} className="text-amber-300" />
+                <span>Get Access &amp; Send WhatsApp</span>
+                <MessageSquare size={14} className="text-emerald-200" />
               </button>
             </div>
           </div>
@@ -799,6 +930,162 @@ export default function AdminDashboardPage() {
                 Grant Instant LMS Access
               </button>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* STUDENT LMS CREDENTIALS & WHATSAPP ACCESS MODAL */}
+      {/* ========================================================================= */}
+      {accessModalData && (
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 overflow-y-auto animate-in fade-in">
+          <div className="w-full max-w-lg bg-[#111827] border-2 border-emerald-500/40 rounded-3xl p-5 sm:p-7 shadow-2xl space-y-4 my-auto relative animate-in zoom-in-95 duration-200">
+            
+            {/* Header */}
+            <div className="flex items-center justify-between pb-3 border-b border-white/10">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center border border-emerald-500/30">
+                  <KeyRound size={18} className="text-amber-300" />
+                </div>
+                <div>
+                  <h3 className="text-sm sm:text-base font-black text-white">Student LMS Access &amp; WhatsApp</h3>
+                  <p className="text-[11px] text-slate-400">Generate &amp; Dispatch Student Password</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setAccessModalData(null)}
+                className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition-colors"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            {/* Student Info Card */}
+            <div className="bg-[#0B0F19] rounded-2xl p-4 border border-white/10 space-y-2 text-xs text-slate-300">
+              <div className="flex justify-between items-center pb-2 border-b border-white/5">
+                <span className="text-slate-400">Student Name:</span>
+                <strong className="text-white text-sm font-bold">{accessModalData.enrollment.name}</strong>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400">Login Email:</span>
+                <span className="text-[#00A0DF] font-mono font-bold">{accessModalData.enrollment.email}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400">WhatsApp / Phone:</span>
+                <span className="text-emerald-400 font-mono font-bold">{accessModalData.enrollment.phone}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400">City / Origin:</span>
+                <span className="text-slate-200">{accessModalData.enrollment.city || 'Pakistan'}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400">Payment &amp; TID:</span>
+                <span className="text-slate-300">{accessModalData.enrollment.paymentMethod} &bull; <code className="font-mono text-slate-400">{accessModalData.enrollment.transactionId}</code></span>
+              </div>
+              <div className="flex justify-between items-center pt-1 border-t border-white/5">
+                <span className="text-slate-400">Current Status:</span>
+                <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase ${
+                  accessModalData.isApproved
+                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                    : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                }`}>
+                  {accessModalData.isApproved ? 'Active LMS Account' : 'Pending Verification'}
+                </span>
+              </div>
+            </div>
+
+            {/* Password Configuration & Display Box */}
+            <div className="bg-gradient-to-r from-slate-900 via-[#111827] to-slate-900 border border-[#00A0DF]/30 rounded-2xl p-4 space-y-3 shadow-inner">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-black text-[#00A0DF] uppercase flex items-center gap-1.5">
+                  <Lock size={13} />
+                  <span>Student LMS Password</span>
+                </label>
+                <button
+                  type="button"
+                  onClick={handleRegeneratePassword}
+                  className="text-[11px] text-amber-400 hover:text-amber-300 font-bold flex items-center gap-1 hover:underline"
+                  title="Generate New Random Password"
+                >
+                  <RefreshCw size={11} />
+                  <span>Regenerate Password</span>
+                </button>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <div className="relative flex-1">
+                  <input
+                    type="text"
+                    value={accessModalData.password}
+                    onChange={(e) => {
+                      const newPass = e.target.value;
+                      const newWaUrl = generateWhatsAppUrl(accessModalData.enrollment, newPass);
+                      setAccessModalData({ ...accessModalData, password: newPass, whatsappUrl: newWaUrl });
+                    }}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#0B0F19] border border-white/15 text-sm sm:text-base font-mono font-black text-emerald-400 tracking-wider focus:outline-none focus:border-[#00A0DF]"
+                    placeholder="Enter student password"
+                  />
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => handleCopyAccessText(accessModalData.password, 'modal-pass')}
+                  className="px-3 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold flex items-center gap-1.5 transition-colors border border-white/10 flex-shrink-0"
+                >
+                  <Copy size={13} className="text-[#00A0DF]" />
+                  <span>{copiedAccessId === 'modal-pass' ? 'Copied!' : 'Copy'}</span>
+                </button>
+              </div>
+
+              <p className="text-[11px] text-slate-400 leading-relaxed">
+                Student will use their email <code className="text-white font-mono">{accessModalData.enrollment.email}</code> and this password to log in at <code className="text-[#00A0DF]">/login</code>.
+              </p>
+            </div>
+
+            {/* Status / Feedback message */}
+            {accessModalData.statusMsg && (
+              <div className="bg-slate-800/80 border border-white/10 rounded-xl p-3 text-xs text-slate-200 font-bold flex items-center gap-2">
+                <Sparkles size={14} className="text-[#00A0DF] flex-shrink-0" />
+                <span>{accessModalData.statusMsg}</span>
+              </div>
+            )}
+
+            {/* WhatsApp Actions */}
+            <div className="space-y-2.5 pt-1">
+              <button
+                type="button"
+                disabled={accessModalData.granting}
+                onClick={handleGrantAccessAndSendWhatsApp}
+                className="w-full py-3.5 px-4 rounded-2xl bg-[#25D366] hover:bg-[#1faa53] disabled:opacity-50 text-white text-xs sm:text-sm font-black flex items-center justify-center gap-2 shadow-xl shadow-emerald-500/30 transition-all active:scale-98"
+              >
+                <MessageSquare size={17} />
+                <span>{accessModalData.granting ? 'Granting LMS Access...' : 'Grant Access & Send Password on WhatsApp'}</span>
+                <Send size={15} />
+              </button>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const rawMsg = `🎉 Assalam-o-Alaikum ${accessModalData.enrollment.name}! Welcome to Ecom With Sami Mentorship!\n\nYour enrollment payment proof has been verified and your Student LMS Portal Account is now ACTIVE.\n\n━━━━━━━━━━━━━━━━━━━━\n🔐 YOUR LMS LOGIN CREDENTIALS:\n🌐 Login Portal: https://ecomwithsami.com/login\n📧 Email: ${accessModalData.enrollment.email}\n🔑 Password: ${accessModalData.password}\n━━━━━━━━━━━━━━━━━━━━\n\n✅ Next Steps:\n1. Open the portal link above\n2. Enter your Email and Password\n3. Start watching the 11 Course Modules and access the Supplier Directory!\n\nBest Regards,\nMentor Sardar Samiullah & Support Team`;
+                    handleCopyAccessText(rawMsg, 'modal-full-msg');
+                  }}
+                  className="flex-1 py-2.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors border border-white/10"
+                >
+                  <Copy size={13} className="text-[#00A0DF]" />
+                  <span>{copiedAccessId === 'modal-full-msg' ? 'Full Message Copied!' : 'Copy Credentials Message'}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setAccessModalData(null)}
+                  className="py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white text-xs font-bold transition-colors border border-white/10"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+
           </div>
         </div>
       )}

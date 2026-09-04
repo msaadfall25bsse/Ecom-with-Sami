@@ -19,7 +19,9 @@ import {
   MessageSquare,
   Sparkles,
   Zap,
-  Image as ImageIcon
+  Image as ImageIcon,
+  X,
+  PhoneCall
 } from 'lucide-react';
 import { useContactConfig } from '@/utils/contactConfig';
 
@@ -81,6 +83,8 @@ export default function EnrollmentPage() {
 
   const currentPayment = paymentMethods.find(p => p.id === selectedMethod) || paymentMethods[0];
 
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+
   const handleCopy = (text: string, id: string) => {
     navigator.clipboard.writeText(text);
     setCopiedId(id);
@@ -118,8 +122,19 @@ export default function EnrollmentPage() {
       });
       const data = await res.json();
 
-      if (data.success && data.enrollment) {
-        setSuccessData(data.enrollment);
+      if (data.success && (data.enrollment || data.trackingCode)) {
+        const studentInfo = data.enrollment || {
+          ...payload,
+          name: formData.fullName,
+          trackingCode: data.trackingCode,
+          status: 'pending',
+          amount: 'PKR 3,900',
+          whatsappUrl: `https://wa.me/923330093269?text=${encodeURIComponent(
+            `Hello Admin Sami! I submitted enrollment receipt for ${formData.fullName} (Tracking: ${data.trackingCode}). Please verify and send my LMS password.`
+          )}`
+        };
+        setSuccessData(studentInfo);
+        setShowSuccessModal(true);
         window.scrollTo({ top: 0, behavior: 'smooth' });
       } else {
         setErrorMsg(data.message || 'Failed to submit enrollment.');
@@ -160,7 +175,7 @@ export default function EnrollmentPage() {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         
         {/* ========================================================================= */}
-        {/* SUCCESS STATE */}
+        {/* SUCCESS STATE ON PAGE */}
         {/* ========================================================================= */}
         {successData ? (
           <div className="bg-[#111827] border-2 border-emerald-500/50 rounded-3xl p-6 sm:p-10 shadow-2xl text-center animate-in fade-in">
@@ -168,17 +183,44 @@ export default function EnrollmentPage() {
               <CheckCircle2 size={42} />
             </div>
             
+            <span className="inline-block bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[11px] font-black uppercase tracking-wider px-3.5 py-1 rounded-full mb-3">
+              Application Received &bull; Under Admin Verification
+            </span>
+
             <h2 className="text-2xl sm:text-3xl font-black text-white mb-2">
               Application Submitted Successfully!
             </h2>
-            <p className="text-xs sm:text-sm text-slate-300 max-w-md mx-auto mb-6 leading-relaxed">
-              Thank you, <strong className="text-white">{successData.name}</strong>. Your payment proof has been sent to mentor Sami&rsquo;s team for instant LMS activation.
+            <p className="text-xs sm:text-sm text-slate-300 max-w-lg mx-auto mb-6 leading-relaxed">
+              Thank you, <strong className="text-white">{successData.name}</strong>. Your enrollment form and payment receipt have been forwarded to mentor Sami&rsquo;s Admin Team for manual verification.
             </p>
 
-            <div className="bg-[#0B0F19] border border-white/10 rounded-2xl p-5 max-w-md mx-auto text-left text-xs text-slate-300 mb-8 space-y-2.5">
+            {/* English Instruction Box */}
+            <div className="bg-gradient-to-r from-[#00A0DF]/15 to-emerald-500/15 border border-[#00A0DF]/30 rounded-2xl p-5 max-w-lg mx-auto text-left mb-6 space-y-2 shadow-inner">
+              <div className="flex items-center gap-2 text-xs font-black text-[#00A0DF] uppercase">
+                <Sparkles size={16} />
+                <span>How will you get your LMS Password?</span>
+              </div>
+              <p className="text-xs text-slate-300 leading-relaxed">
+                As soon as the Admin team approves your payment proof, your <strong>Official LMS Login Password will be sent directly to your WhatsApp number ({successData.phone})</strong>.
+              </p>
+              <p className="text-xs text-slate-300 leading-relaxed">
+                You will then log in with your email <strong className="text-white font-mono">({successData.email})</strong> and WhatsApp password to access all 11 Video Modules &amp; Suppliers Directory.
+              </p>
+            </div>
+
+            <div className="bg-[#0B0F19] border border-white/10 rounded-2xl p-5 max-w-lg mx-auto text-left text-xs text-slate-300 mb-8 space-y-2.5">
               <div className="flex justify-between items-center pb-2 border-b border-white/10">
                 <span className="text-slate-400">Tracking Code:</span>
-                <strong className="font-mono text-sm text-[#00A0DF] font-black">{successData.trackingCode}</strong>
+                <div className="flex items-center gap-2">
+                  <strong className="font-mono text-sm text-[#00A0DF] font-black">{successData.trackingCode}</strong>
+                  <button
+                    onClick={() => handleCopy(successData.trackingCode, 'track-code')}
+                    className="p-1 rounded hover:bg-slate-800 text-slate-400 hover:text-white transition-colors"
+                    title="Copy Code"
+                  >
+                    <Copy size={13} />
+                  </button>
+                </div>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-slate-400">Student Name:</span>
@@ -189,33 +231,35 @@ export default function EnrollmentPage() {
                 <span className="text-[#00A0DF]">{successData.email}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-slate-400">Course Fee:</span>
-                <span className="font-black text-emerald-400">{successData.amount}</span>
+                <span className="text-slate-400">WhatsApp Phone:</span>
+                <span className="font-bold text-white">{successData.phone}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-slate-400">Portal Status:</span>
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-amber-500/20 text-amber-400 border border-amber-500/30">
-                  {successData.status}
-                </span>
+                <span className="text-slate-400">Course Fee:</span>
+                <span className="font-black text-emerald-400">{successData.amount || 'PKR 3,900'}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400">Admin Support WhatsApp:</span>
+                <span className="font-mono font-bold text-emerald-400">{displayPhone}</span>
               </div>
             </div>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
               <a
-                href={successData.whatsappUrl}
+                href={successData.whatsappUrl || `https://wa.me/923330093269`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 rounded-2xl text-sm sm:text-base font-black text-white bg-[#25D366] hover:bg-[#1faa53] shadow-xl shadow-emerald-500/30 transition-all"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 rounded-2xl text-sm sm:text-base font-black text-white bg-[#25D366] hover:bg-[#1faa53] shadow-xl shadow-emerald-500/30 transition-all active:scale-95"
               >
                 <MessageSquare size={18} />
-                <span>Notify Sami on WhatsApp for Fast Track</span>
+                <span>Message Admin on WhatsApp (Fast-Track)</span>
                 <ArrowRight size={18} />
               </a>
               <Link
                 href="/login"
                 className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-4 rounded-2xl text-xs sm:text-sm font-bold text-slate-300 bg-slate-800 hover:bg-slate-700 transition-colors"
               >
-                <span>Go to Student Login</span>
+                <span>Go to Student Login Portal</span>
               </Link>
             </div>
           </div>
@@ -477,6 +521,120 @@ export default function EnrollmentPage() {
         )}
 
       </div>
+
+      {/* ========================================================================= */}
+      {/* POPUP CONFIRMATION MODAL WINDOW */}
+      {/* ========================================================================= */}
+      {showSuccessModal && successData && (
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 overflow-y-auto animate-in fade-in">
+          <div className="w-full max-w-lg bg-[#111827] border-2 border-emerald-500/40 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-5 my-auto relative animate-in zoom-in-95 duration-200">
+            
+            {/* Close Button */}
+            <button
+              onClick={() => setShowSuccessModal(false)}
+              className="absolute top-4 right-4 p-2 rounded-xl bg-[#0B0F19] text-slate-400 hover:text-white border border-white/10 hover:border-white/20 transition-all"
+              title="Close Popup Window"
+            >
+              <X size={18} />
+            </button>
+
+            {/* Top Success Badge & Icon */}
+            <div className="text-center pt-2">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-tr from-emerald-500/20 to-teal-500/20 text-emerald-400 flex items-center justify-center mx-auto mb-3.5 border border-emerald-500/40 shadow-xl shadow-emerald-500/20">
+                <CheckCircle2 size={38} className="animate-bounce" />
+              </div>
+
+              <span className="inline-block bg-amber-500/15 text-amber-400 border border-amber-500/30 text-[10px] sm:text-xs font-black uppercase tracking-wider px-3.5 py-1 rounded-full mb-2">
+                Application Received &bull; Awaiting Admin Approval
+              </span>
+
+              <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+                Enrollment Submitted Successfully!
+              </h3>
+              <p className="text-xs sm:text-sm text-slate-300 max-w-md mx-auto mt-1 leading-relaxed">
+                Thank you, <strong className="text-white">{successData.name}</strong>. Your payment proof slip has been delivered directly to Mentor Sardar Samiullah&rsquo;s Admin Team.
+              </p>
+            </div>
+
+            {/* Official English Notice Box */}
+            <div className="bg-gradient-to-br from-[#00A0DF]/15 via-[#0B0F19] to-emerald-500/10 border border-[#00A0DF]/30 rounded-2xl p-4 sm:p-5 space-y-2.5 shadow-inner">
+              <div className="flex items-center gap-2 text-xs font-black text-[#00A0DF] uppercase">
+                <Sparkles size={16} className="text-[#00A0DF]" />
+                <span>Important LMS Login Credentials Notice:</span>
+              </div>
+              <p className="text-xs sm:text-sm text-slate-200 leading-relaxed font-medium">
+                Our Admin team is currently verifying your payment receipt. Once approved, your <strong>Official LMS Login Password will be sent directly to your WhatsApp ({successData.phone})</strong>.
+              </p>
+              <p className="text-[11px] sm:text-xs text-slate-300 leading-relaxed">
+                You will then log in to the Student Portal (<span className="text-[#00A0DF] underline font-bold">ecomwithsami.com/login</span>) using your registered email (<strong className="text-white font-mono">{successData.email}</strong>) and the password dispatched to your WhatsApp.
+              </p>
+            </div>
+
+            {/* Details Summary Card */}
+            <div className="bg-[#0B0F19] border border-white/10 rounded-2xl p-4 text-xs space-y-2 text-slate-300">
+              <div className="flex justify-between items-center pb-2 border-b border-white/5">
+                <span className="text-slate-400">Tracking Code:</span>
+                <div className="flex items-center gap-2">
+                  <strong className="font-mono text-sm text-[#00A0DF] font-black">{successData.trackingCode}</strong>
+                  <button
+                    onClick={() => handleCopy(successData.trackingCode, 'modal-track')}
+                    className="p-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] font-bold flex items-center gap-1 transition-colors"
+                  >
+                    <Copy size={11} />
+                    <span>{copiedId === 'modal-track' ? 'Copied' : 'Copy'}</span>
+                  </button>
+                </div>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400">Student Name:</span>
+                <span className="font-bold text-white">{successData.name}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400">Registered Email:</span>
+                <span className="text-[#00A0DF] font-mono">{successData.email}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400">Student WhatsApp:</span>
+                <span className="font-bold text-white">{successData.phone}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400">Official Admin WhatsApp:</span>
+                <span className="font-mono font-black text-emerald-400">{displayPhone}</span>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="space-y-2.5 pt-1">
+              <a
+                href={successData.whatsappUrl || `https://wa.me/923330093269`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full inline-flex items-center justify-center gap-2 py-3.5 px-5 rounded-2xl text-xs sm:text-sm font-black text-white bg-[#25D366] hover:bg-[#1faa53] shadow-xl shadow-emerald-500/25 transition-all active:scale-98"
+              >
+                <MessageSquare size={17} />
+                <span>Message Admin on WhatsApp for Fast-Track Activation</span>
+                <ArrowRight size={16} />
+              </a>
+
+              <div className="flex items-center gap-2">
+                <Link
+                  href="/login"
+                  className="flex-1 inline-flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-xs font-bold text-white bg-slate-800 hover:bg-slate-700 border border-white/10 transition-colors text-center"
+                >
+                  <span>Go to LMS Login Portal</span>
+                </Link>
+                <button
+                  onClick={() => setShowSuccessModal(false)}
+                  className="py-3 px-4 rounded-xl text-xs font-bold text-slate-400 hover:text-white bg-slate-900 hover:bg-slate-800 border border-white/10 transition-colors"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      )}
 
       <Footer />
     </div>

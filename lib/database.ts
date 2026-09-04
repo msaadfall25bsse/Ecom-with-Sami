@@ -448,7 +448,11 @@ export async function dbAddEnrollment(enr: Enrollment): Promise<Enrollment> {
   return enr;
 }
 
-export async function dbUpdateEnrollmentStatus(id: string, status: 'approved' | 'rejected'): Promise<Enrollment | null> {
+export async function dbUpdateEnrollmentStatus(
+  id: string, 
+  status: 'approved' | 'rejected', 
+  customPassword?: string
+): Promise<{ enrollment: Enrollment; password?: string } | null> {
   const enrollments = await dbGetEnrollments();
   const enr = enrollments.find(e => e.id === id || e.trackingCode === id);
   if (!enr) return null;
@@ -463,10 +467,21 @@ export async function dbUpdateEnrollmentStatus(id: string, status: 'approved' | 
     }
   }
 
+  let finalPassword = customPassword;
+
   if (status === 'approved') {
+    if (!finalPassword) {
+      finalPassword = `Sami@${Math.floor(1000 + Math.random() * 9000)}`;
+    }
+
     const existing = await dbGetStudentByEmail(enr.email);
     if (existing) {
-      await dbUpdateStudent(existing.id, { isActive: true });
+      await dbUpdateStudent(existing.id, { 
+        isActive: true,
+        password: finalPassword,
+        phone: enr.phone || existing.phone,
+        city: enr.city || existing.city
+      });
     } else {
       await dbAddStudent({
         id: enr.studentId || `std_${Date.now()}`,
@@ -474,7 +489,7 @@ export async function dbUpdateEnrollmentStatus(id: string, status: 'approved' | 
         email: enr.email,
         phone: enr.phone,
         city: enr.city,
-        password: 'studentpass2026',
+        password: finalPassword,
         isActive: true,
         enrolledAt: new Date().toISOString().split('T')[0],
         completedLessons: []
@@ -482,7 +497,7 @@ export async function dbUpdateEnrollmentStatus(id: string, status: 'approved' | 
     }
   }
 
-  return enr;
+  return { enrollment: enr, password: finalPassword };
 }
 
 // -----------------------------------------------------------------------------

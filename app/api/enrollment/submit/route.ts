@@ -61,13 +61,30 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    const adminPhone = '923330093269';
+    const whatsappNotifyText = encodeURIComponent(
+      `Hello Mentor Sami / Admin,\n\nI have submitted my enrollment application for UAE & KSA Shopify Dropshipping Mentorship.\n\n` +
+      `📋 Tracking Code: ${trackingCode}\n` +
+      `👤 Name: ${fullName}\n` +
+      `📧 Email: ${email}\n` +
+      `📱 Phone: ${phone}\n` +
+      `💳 Payment Method: ${paymentMethod || 'Easypaisa'}\n` +
+      `🔢 TID: ${transactionId || 'Attached in form'}\n\n` +
+      `Please verify my payment proof slip and share my LMS Login password on WhatsApp.`
+    );
+    const whatsappUrl = `https://wa.me/${adminPhone}?text=${whatsappNotifyText}`;
+
     return NextResponse.json({
       success: true,
-      message: 'Enrollment submitted successfully to database! Login access will be activated upon receipt verification.',
+      message: 'Enrollment application received! Admin will verify your payment slip and send your LMS password on WhatsApp.',
       trackingCode,
       enrollmentId: enrollment.id,
       loginUrl: '/login',
-      studentEmail: email
+      studentEmail: email,
+      enrollment: {
+        ...enrollment,
+        whatsappUrl
+      }
     });
   } catch (error: any) {
     return NextResponse.json(
