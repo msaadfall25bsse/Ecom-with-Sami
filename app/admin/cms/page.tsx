@@ -27,7 +27,11 @@ import {
   ChevronRight,
   ShoppingBag,
   ExternalLink,
-  Laptop
+  Laptop,
+  UploadCloud,
+  FileVideo,
+  Loader2,
+  Link2
 } from 'lucide-react';
 import { defaultCmsContent, CmsContentSchema } from '@/utils/cmsStore';
 import { Module, Supplier } from '@/utils/db';
@@ -55,7 +59,15 @@ export default function AdminCmsPage() {
   const [addingLessonForModuleId, setAddingLessonForModuleId] = useState<number | null>(null);
   const [newLessonTitle, setNewLessonTitle] = useState('');
   const [newLessonDuration, setNewLessonDuration] = useState('15:00');
-  const [newLessonUrl, setNewLessonUrl] = useState('https://www.youtube.com/embed/dQw4w9WgXcQ');
+  const [newLessonUrl, setNewLessonUrl] = useState('');
+  const [lessonVideoMode, setLessonVideoMode] = useState<'upload' | 'url'>('upload');
+  const [uploadingVideo, setUploadingVideo] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadStatusText, setUploadStatusText] = useState('');
+  const [selectedVideoName, setSelectedVideoName] = useState('');
+  const [selectedVideoSize, setSelectedVideoSize] = useState('');
+  const [videoUploadSuccess, setVideoUploadSuccess] = useState(false);
+  const [uploadError, setUploadError] = useState('');
 
   // New Supplier form state
   const [showAddSupplierModal, setShowAddSupplierModal] = useState(false);
@@ -250,9 +262,122 @@ export default function AdminCmsPage() {
     }
   };
 
+  const openAddLesson = (moduleId: number) => {
+    setAddingLessonForModuleId(moduleId);
+    setOpenModuleId(moduleId);
+    setNewLessonTitle('');
+    setNewLessonDuration('15:00');
+    setNewLessonUrl('');
+    setLessonVideoMode('upload');
+    setUploadingVideo(false);
+    setUploadProgress(0);
+    setUploadStatusText('');
+    setSelectedVideoName('');
+    setSelectedVideoSize('');
+    setVideoUploadSuccess(false);
+    setUploadError('');
+  };
+
+  const handleVideoFileSelect = (e: React.ChangeEvent<HTMLInputElement>, moduleId: number) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('video/') && !file.name.match(/\.(mp4|webm|mov|m4v|mkv)$/i)) {
+      setUploadError('Please select a valid video file (.mp4, .webm, .mov, .m4v).');
+      return;
+    }
+
+    setUploadError('');
+    setSelectedVideoName(file.name);
+    const sizeInMB = (file.size / (1024 * 1024)).toFixed(1);
+    setSelectedVideoSize(`${sizeInMB} MB`);
+
+    try {
+      const tempVideo = document.createElement('video');
+      tempVideo.preload = 'metadata';
+      tempVideo.onloadedmetadata = () => {
+        window.URL.revokeObjectURL(tempVideo.src);
+        const mins = Math.floor(tempVideo.duration / 60);
+        const secs = Math.floor(tempVideo.duration % 60);
+        const formatted = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+        if (!newLessonDuration || newLessonDuration === '15:00') {
+          setNewLessonDuration(formatted);
+        }
+      };
+      tempVideo.src = URL.createObjectURL(file);
+    } catch {}
+
+    if (!newLessonTitle) {
+      const cleanBase = file.name.replace(/\.[^/.]+$/, '').replace(/[_-]/g, ' ');
+      setNewLessonTitle(cleanBase);
+    }
+
+    uploadVideoFile(file, moduleId);
+  };
+
+  const uploadVideoFile = (file: File, moduleId: number) => {
+    setUploadingVideo(true);
+    setUploadProgress(0);
+    setVideoUploadSuccess(false);
+    setUploadError('');
+    setUploadStatusText('Starting upload...');
+
+    const formData = new FormData();
+    formData.append('video', file);
+    formData.append('moduleId', String(moduleId));
+
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', '/api/admin/cms/upload-video', true);
+
+    xhr.upload.onprogress = (event) => {
+      if (event.lengthComputable) {
+        const percent = Math.round((event.loaded / event.total) * 100);
+        setUploadProgress(percent);
+        const loadedMB = (event.loaded / (1024 * 1024)).toFixed(1);
+        const totalMB = (event.total / (1024 * 1024)).toFixed(1);
+        setUploadStatusText(`${loadedMB} MB / ${totalMB} MB (${percent}%)`);
+      }
+    };
+
+    xhr.onload = () => {
+      setUploadingVideo(false);
+      if (xhr.status >= 200 && xhr.status < 300) {
+        try {
+          const res = JSON.parse(xhr.responseText);
+          if (res.success && res.url) {
+            setNewLessonUrl(res.url);
+            setUploadProgress(100);
+            setVideoUploadSuccess(true);
+            setUploadStatusText('Upload complete!');
+          } else {
+            setUploadError(res.message || 'Upload failed');
+          }
+        } catch {
+          setUploadError('Invalid server response');
+        }
+      } else {
+        setUploadError(`Upload failed with server status ${xhr.status}`);
+      }
+    };
+
+    xhr.onerror = () => {
+      setUploadingVideo(false);
+      setUploadError('Network error during video upload. Please check connection and try again.');
+    };
+
+    xhr.send(formData);
+  };
+
   // --- LMS LESSON ACTIONS ---
   const handleAddLesson = async (moduleId: number) => {
-    if (!newLessonTitle) return;
+    if (!newLessonTitle) {
+      setUploadError('Please enter a lecture title');
+      return;
+    }
+    if (!newLessonUrl) {
+      setUploadError('Please upload a video file or paste a video URL');
+      return;
+    }
 
     try {
       const res = await fetch('/api/lms/modules', {
@@ -263,7 +388,7 @@ export default function AdminCmsPage() {
           moduleId,
           lesson: {
             title: newLessonTitle,
-            duration: newLessonDuration,
+            duration: newLessonDuration || '15:00',
             videoUrl: newLessonUrl
           }
         })
@@ -273,9 +398,16 @@ export default function AdminCmsPage() {
         setModules(data.modules);
         setAddingLessonForModuleId(null);
         setNewLessonTitle('');
+        setNewLessonUrl('');
+        setVideoUploadSuccess(false);
+        setUploadProgress(0);
+        setSelectedVideoName('');
+      } else {
+        setUploadError(data.message || 'Failed to save lecture');
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
+      setUploadError(e.message || 'Error saving lecture');
     }
   };
 
@@ -498,7 +630,7 @@ export default function AdminCmsPage() {
 
                       <div className="flex items-center gap-1.5 sm:gap-2 self-end sm:self-center">
                         <button
-                          onClick={() => setAddingLessonForModuleId(m.id)}
+                          onClick={() => openAddLesson(m.id)}
                           className="px-2.5 sm:px-3 py-1.5 rounded-xl bg-[#1E293B] hover:bg-[#00A0DF] text-slate-200 hover:text-white text-xs font-bold transition-colors flex items-center gap-1 border border-white/5 active:scale-95"
                         >
                           <Plus size={12} />
@@ -524,45 +656,199 @@ export default function AdminCmsPage() {
                     {isOpen && (
                       <div className="p-3.5 sm:p-6 bg-[#0B0F19] border-t border-white/10 space-y-3 sm:space-y-4">
                         
-                        {/* Add Lecture Sub-Form */}
+                        {/* Add Lecture Sub-Form with Laptop File Upload & Live Progress Percentage */}
                         {addingLessonForModuleId === m.id && (
-                          <div className="bg-[#111827] border border-[#00A0DF]/40 rounded-2xl p-3.5 sm:p-4 space-y-2.5">
-                            <h4 className="text-xs font-bold text-[#00A0DF] uppercase">Add New Lecture to {m.title}</h4>
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                              <input
-                                type="text"
-                                placeholder="Lecture Title (e.g. 1.4 Setting Up Business Manager)"
-                                value={newLessonTitle}
-                                onChange={(e) => setNewLessonTitle(e.target.value)}
-                                className="sm:col-span-2 px-3 py-2 rounded-xl bg-[#0B0F19] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF]"
-                              />
-                              <input
-                                type="text"
-                                placeholder="Duration (e.g. 18:30)"
-                                value={newLessonDuration}
-                                onChange={(e) => setNewLessonDuration(e.target.value)}
-                                className="px-3 py-2 rounded-xl bg-[#0B0F19] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF]"
-                              />
+                          <div className="bg-[#111827] border border-[#00A0DF]/40 rounded-2xl p-4 sm:p-5 space-y-4 shadow-2xl">
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 pb-2 border-b border-white/5">
+                              <h4 className="text-xs sm:text-sm font-bold text-[#00A0DF] uppercase flex items-center gap-1.5">
+                                <Video size={16} />
+                                <span>Add New Lecture to {m.title}</span>
+                              </h4>
+                              <div className="flex items-center gap-1 bg-[#0B0F19] p-1 rounded-xl border border-white/10 text-[11px] self-stretch sm:self-auto justify-center">
+                                <button
+                                  type="button"
+                                  onClick={() => setLessonVideoMode('upload')}
+                                  className={`px-3 py-1 rounded-lg font-bold transition-colors flex items-center gap-1.5 ${
+                                    lessonVideoMode === 'upload' ? 'bg-[#00A0DF] text-white shadow-sm' : 'text-slate-400 hover:text-white'
+                                  }`}
+                                >
+                                  <UploadCloud size={13} />
+                                  <span>Upload from Laptop</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setLessonVideoMode('url')}
+                                  className={`px-3 py-1 rounded-lg font-bold transition-colors flex items-center gap-1.5 ${
+                                    lessonVideoMode === 'url' ? 'bg-[#00A0DF] text-white shadow-sm' : 'text-slate-400 hover:text-white'
+                                  }`}
+                                >
+                                  <Link2 size={13} />
+                                  <span>Paste Video URL</span>
+                                </button>
+                              </div>
                             </div>
-                            <input
-                              type="text"
-                              placeholder="Video Embed URL (YouTube embed or direct MP4 URL)"
-                              value={newLessonUrl}
-                              onChange={(e) => setNewLessonUrl(e.target.value)}
-                              className="w-full px-3 py-2 rounded-xl bg-[#0B0F19] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF]"
-                            />
-                            <div className="flex items-center gap-2 justify-end">
+
+                            {/* Lecture Title & Duration Inputs */}
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                              <div className="sm:col-span-2">
+                                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                                  Lecture Title
+                                </label>
+                                <input
+                                  type="text"
+                                  placeholder="e.g. 1.4 Setting Up Business Manager & Pixel"
+                                  value={newLessonTitle}
+                                  onChange={(e) => setNewLessonTitle(e.target.value)}
+                                  className="w-full px-3 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF]"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                                  Duration (MM:SS)
+                                </label>
+                                <input
+                                  type="text"
+                                  placeholder="e.g. 18:30"
+                                  value={newLessonDuration}
+                                  onChange={(e) => setNewLessonDuration(e.target.value)}
+                                  className="w-full px-3 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF]"
+                                />
+                              </div>
+                            </div>
+
+                            {/* SOURCE 1: UPLOAD FROM LAPTOP / COMPUTER */}
+                            {lessonVideoMode === 'upload' ? (
+                              <div className="space-y-3">
+                                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                  Select Video File from Computer
+                                </label>
+
+                                <div className="relative border-2 border-dashed border-[#00A0DF]/30 hover:border-[#00A0DF] bg-[#0B0F19]/90 rounded-2xl p-5 sm:p-7 text-center transition-all group cursor-pointer">
+                                  <input
+                                    type="file"
+                                    id={`video-upload-input-${m.id}`}
+                                    accept="video/mp4,video/webm,video/quicktime,video/x-m4v,video/*,.mp4,.webm,.mov,.m4v"
+                                    onChange={(e) => handleVideoFileSelect(e, m.id)}
+                                    disabled={uploadingVideo}
+                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed z-10"
+                                  />
+                                  <div className="flex flex-col items-center gap-2.5 pointer-events-none">
+                                    <div className="w-12 h-12 rounded-2xl bg-[#00A0DF]/15 text-[#00A0DF] flex items-center justify-center group-hover:scale-110 transition-transform">
+                                      {uploadingVideo ? (
+                                        <Loader2 size={24} className="animate-spin text-[#00A0DF]" />
+                                      ) : videoUploadSuccess ? (
+                                        <CheckCircle2 size={24} className="text-emerald-400" />
+                                      ) : (
+                                        <UploadCloud size={24} />
+                                      )}
+                                    </div>
+
+                                    {/* Uploading with LIVE PERCENTAGE DISPLAY */}
+                                    {uploadingVideo ? (
+                                      <div className="w-full max-w-md space-y-2">
+                                        <div className="flex items-center justify-between text-xs">
+                                          <span className="font-bold text-white flex items-center gap-2">
+                                            <span className="w-2 h-2 rounded-full bg-[#00A0DF] animate-ping" />
+                                            Uploading Video from Laptop...
+                                          </span>
+                                          <span className="font-black text-base text-[#00A0DF]">{uploadProgress}%</span>
+                                        </div>
+                                        
+                                        {/* Animated Progress Bar */}
+                                        <div className="w-full h-3 bg-slate-800 rounded-full overflow-hidden border border-white/10 p-0.5">
+                                          <div
+                                            className="h-full bg-gradient-to-r from-[#00A0DF] via-emerald-400 to-[#00A0DF] rounded-full transition-all duration-150 shadow-[0_0_12px_#00A0DF]"
+                                            style={{ width: `${uploadProgress}%` }}
+                                          />
+                                        </div>
+                                        <div className="text-[11px] text-slate-300 font-mono">
+                                          {uploadStatusText}
+                                        </div>
+                                      </div>
+                                    ) : videoUploadSuccess ? (
+                                      <div className="space-y-1">
+                                        <div className="text-xs sm:text-sm font-black text-emerald-400 flex items-center justify-center gap-1.5">
+                                          <CheckCircle2 size={16} />
+                                          <span>Video Uploaded 100%! ({selectedVideoName})</span>
+                                        </div>
+                                        <div className="text-[11px] text-slate-400">
+                                          File Size: {selectedVideoSize} &bull; Click to choose another video
+                                        </div>
+                                      </div>
+                                    ) : (
+                                      <div>
+                                        <div className="text-xs sm:text-sm font-bold text-white mb-0.5">
+                                          Click to choose lecture video from your laptop, or drag &amp; drop
+                                        </div>
+                                        <div className="text-[11px] text-slate-400">
+                                          Supports MP4, WebM, MOV, M4V (Auto-detects duration and starts upload)
+                                        </div>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+
+                                {uploadError && (
+                                  <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs font-bold">
+                                    ⚠️ {uploadError}
+                                  </div>
+                                )}
+
+                                {/* Attached Video Link Indicator */}
+                                {newLessonUrl && (
+                                  <div className="p-3 rounded-xl bg-[#0B0F19] border border-white/10 flex items-center justify-between gap-2 text-xs">
+                                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                                      <FileVideo size={15} className="text-emerald-400 flex-shrink-0" />
+                                      <span className="text-[11px] text-slate-300 font-mono truncate">
+                                        {newLessonUrl}
+                                      </span>
+                                    </div>
+                                    <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider flex-shrink-0 bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 rounded-full">
+                                      ✓ Ready to Save
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              /* SOURCE 2: PASTE EMBED / YOUTUBE URL */
+                              <div className="space-y-1.5">
+                                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                  Video Embed URL or Direct Link
+                                </label>
+                                <input
+                                  type="text"
+                                  placeholder="https://www.youtube.com/embed/... or direct MP4 URL"
+                                  value={newLessonUrl}
+                                  onChange={(e) => setNewLessonUrl(e.target.value)}
+                                  className="w-full px-3 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF]"
+                                />
+                              </div>
+                            )}
+
+                            {/* Action Buttons */}
+                            <div className="flex items-center gap-2 justify-end pt-2 border-t border-white/5">
                               <button
+                                type="button"
                                 onClick={() => setAddingLessonForModuleId(null)}
-                                className="px-3 py-1.5 rounded-xl bg-slate-800 text-xs text-slate-400"
+                                disabled={uploadingVideo}
+                                className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-300 disabled:opacity-50 transition-colors"
                               >
                                 Cancel
                               </button>
                               <button
+                                type="button"
                                 onClick={() => handleAddLesson(m.id)}
-                                className="px-4 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-xs font-black text-white active:scale-95"
+                                disabled={uploadingVideo || !newLessonTitle || !newLessonUrl}
+                                className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 disabled:hover:bg-emerald-600 text-xs font-black text-white active:scale-95 transition-all shadow-md shadow-emerald-600/30 flex items-center gap-1.5"
                               >
-                                Save Lecture Video
+                                {uploadingVideo ? (
+                                  <>
+                                    <Loader2 size={14} className="animate-spin" />
+                                    <span>Uploading ({uploadProgress}%)</span>
+                                  </>
+                                ) : (
+                                  <span>Save Lecture Video</span>
+                                )}
                               </button>
                             </div>
                           </div>

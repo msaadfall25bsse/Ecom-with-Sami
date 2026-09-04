@@ -450,14 +450,30 @@ export default function LmsClassroomPage() {
               <div className="max-w-5xl mx-auto space-y-4 sm:space-y-6">
                 
                 {/* Widescreen Responsive Video Player */}
-                <div className="relative bg-black rounded-xl sm:rounded-3xl overflow-hidden border-2 border-white/10 shadow-2xl aspect-video w-full">
-                  <iframe
-                    src={activeLesson?.videoUrl || 'https://www.youtube.com/embed/dQw4w9WgXcQ'}
-                    title={activeLesson?.title || 'Lesson Video'}
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                    className="w-full h-full border-0"
-                  />
+                <div className="relative bg-black rounded-xl sm:rounded-3xl overflow-hidden border-2 border-white/10 shadow-2xl aspect-video w-full flex items-center justify-center">
+                  {activeLesson?.videoUrl && (
+                    activeLesson.videoUrl.match(/\.(mp4|webm|mov|m4v|ogg)(\?.*)?$/i) ||
+                    activeLesson.videoUrl.includes('supabase.co/storage') ||
+                    activeLesson.videoUrl.startsWith('/uploads/') ||
+                    activeLesson.videoUrl.startsWith('/api/videos/')
+                  ) ? (
+                    <video
+                      key={activeLesson.id + activeLesson.videoUrl}
+                      src={activeLesson.videoUrl}
+                      controls
+                      controlsList="nodownload"
+                      playsInline
+                      className="w-full h-full object-contain bg-black"
+                    />
+                  ) : (
+                    <iframe
+                      src={activeLesson?.videoUrl || 'https://www.youtube.com/embed/dQw4w9WgXcQ'}
+                      title={activeLesson?.title || 'Lesson Video'}
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                      className="w-full h-full border-0"
+                    />
+                  )}
                 </div>
 
                 {/* Mobile Next / Prev Control Buttons */}
