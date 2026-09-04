@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { dbAddEnrollment, dbGetStudentByEmail, dbAddStudent } from '@/lib/database';
+import { dbAddEnrollment, dbGetStudentByEmail, dbAddStudent, generateRandomNumericPassword } from '@/lib/database';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,6 +26,7 @@ export async function POST(request: NextRequest) {
 
     const trackingCode = `SAMI-ENR-${Math.floor(10000 + Math.random() * 90000)}`;
     const studentId = `std_${Date.now()}`;
+    const uniquePassword = generateRandomNumericPassword();
 
     // Add enrollment record to persistent database (Supabase + SQLite)
     const enrollment = await dbAddEnrollment({
@@ -42,7 +43,8 @@ export async function POST(request: NextRequest) {
       receiptUrl: receiptUrl || '',
       amount: 'PKR 3,900',
       status: 'pending',
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      password: uniquePassword
     });
 
     // Check if student exists or create provisional student
@@ -54,7 +56,7 @@ export async function POST(request: NextRequest) {
         email,
         phone,
         city: city || 'Pakistan',
-        password: 'studentpass2026',
+        password: uniquePassword,
         isActive: false, // becomes active upon admin approval
         enrolledAt: new Date().toISOString().split('T')[0],
         completedLessons: []

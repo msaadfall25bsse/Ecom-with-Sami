@@ -34,10 +34,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check password (matches student registered password or demo pass)
+    // Check password (matches student registered password or emergency admin bypass)
     const isPasswordValid = 
       student.password === cleanPassword || 
-      cleanPassword === 'studentpass2026' ||
       cleanPassword === 'sami2026';
 
     if (!isPasswordValid) {

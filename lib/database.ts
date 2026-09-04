@@ -285,30 +285,54 @@ export async function dbDeleteSupplier(id: string): Promise<boolean> {
 // -----------------------------------------------------------------------------
 // 4. STUDENTS (100% DIRECT SUPABASE REAL-TIME READ/WRITE)
 // -----------------------------------------------------------------------------
+export function generateRandomNumericPassword(length = 8): string {
+  return Math.floor(10000000 + Math.random() * 90000000).toString();
+}
+
+export function generateStableNumericPassword(seed: string): string {
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) {
+    hash = ((hash << 5) - hash) + seed.charCodeAt(i);
+    hash |= 0;
+  }
+  const positive = Math.abs(hash);
+  const num = 10000000 + (positive % 90000000);
+  return num.toString();
+}
+
 export async function dbGetStudents(): Promise<Student[]> {
   if (supabase) {
     try {
       const { data, error } = await supabase.from('students').select('*').order('enrolled_at', { ascending: false });
       if (!error && data && data.length > 0) {
-        return data.map((r: any) => ({
-          id: r.id,
-          name: r.name,
-          email: r.email,
-          phone: r.phone,
-          city: r.city,
-          password: r.password,
-          isActive: Boolean(r.is_active),
-          enrolledAt: r.enrolled_at,
-          completedLessons: typeof r.completed_lessons_json === 'string' ? JSON.parse(r.completed_lessons_json || '[]') : (r.completed_lessons_json || []),
-          lastLogin: r.last_login
-        }));
+        return data.map((r: any) => {
+          let pass = r.password;
+          if (!pass || pass === 'studentpass2026') {
+            pass = generateStableNumericPassword(r.id || r.email);
+          }
+          return {
+            id: r.id,
+            name: r.name,
+            email: r.email,
+            phone: r.phone,
+            city: r.city,
+            password: pass,
+            isActive: Boolean(r.is_active),
+            enrolledAt: r.enrolled_at,
+            completedLessons: typeof r.completed_lessons_json === 'string' ? JSON.parse(r.completed_lessons_json || '[]') : (r.completed_lessons_json || []),
+            lastLogin: r.last_login
+          };
+        });
       }
     } catch (e) {
       console.error('Supabase get students error:', e);
     }
   }
 
-  return initialStudents;
+  return initialStudents.map(s => ({
+    ...s,
+    password: (!s.password || s.password === 'studentpass2026') ? generateStableNumericPassword(s.id || s.email) : s.password
+  }));
 }
 
 export async function dbGetStudentByEmail(email: string): Promise<Student | null> {
@@ -316,13 +340,17 @@ export async function dbGetStudentByEmail(email: string): Promise<Student | null
     try {
       const { data, error } = await supabase.from('students').select('*').ilike('email', email).maybeSingle();
       if (!error && data) {
+        let pass = data.password;
+        if (!pass || pass === 'studentpass2026') {
+          pass = generateStableNumericPassword(data.id || data.email);
+        }
         return {
           id: data.id,
           name: data.name,
           email: data.email,
           phone: data.phone,
           city: data.city,
-          password: data.password,
+          password: pass,
           isActive: Boolean(data.is_active),
           enrolledAt: data.enrolled_at,
           completedLessons: typeof data.completed_lessons_json === 'string' ? JSON.parse(data.completed_lessons_json || '[]') : (data.completed_lessons_json || []),
@@ -392,11 +420,20 @@ export async function dbUpdateStudent(id: string, patch: Partial<Student>): Prom
 // 5. ENROLLMENTS (100% DIRECT SUPABASE REAL-TIME READ/WRITE)
 // -----------------------------------------------------------------------------
 export async function dbGetEnrollments(): Promise<Enrollment[]> {
+  const students = await dbGetStudents();
+  const studentMap = new Map<string, Student>();
+  students.forEach(s => {
+    if (s.email) studentMap.set(s.email.toLowerCase(), s);
+    if (s.id) studentMap.set(s.id, s);
+  });
+
+  let list: Enrollment[] = [];
+
   if (supabase) {
     try {
       const { data, error } = await supabase.from('enrollments').select('*').order('created_at', { ascending: false });
       if (!error && data && data.length > 0) {
-        return data.map((r: any) => ({
+        list = data.map((r: any) => ({
           id: r.id,
           trackingCode: r.tracking_code,
           studentId: r.student_id,
@@ -418,7 +455,22 @@ export async function dbGetEnrollments(): Promise<Enrollment[]> {
     }
   }
 
-  return initialEnrollments;
+  if (list.length === 0) {
+    list = initialEnrollments;
+  }
+
+  // Attach accurate student password to each enrollment
+  return list.map(enr => {
+    const std = studentMap.get(enr.email?.toLowerCase() || '') || (enr.studentId ? studentMap.get(enr.studentId) : null);
+    let pass = std?.password;
+    if (!pass || pass === 'studentpass2026') {
+      pass = generateStableNumericPassword(enr.trackingCode || enr.id || enr.email);
+    }
+    return {
+      ...enr,
+      password: pass
+    };
+  });
 }
 
 export async function dbAddEnrollment(enr: Enrollment): Promise<Enrollment> {
@@ -470,15 +522,17 @@ export async function dbUpdateEnrollmentStatus(
   let finalPassword = customPassword;
 
   if (status === 'approved') {
+    const existing = await dbGetStudentByEmail(enr.email);
     if (!finalPassword) {
-      finalPassword = `Sami@${Math.floor(1000 + Math.random() * 9000)}`;
+      finalPassword = (existing?.password && existing.password !== 'studentpass2026')
+        ? existing.password
+        : (enr.password || generateRandomNumericPassword());
     }
 
-    const existing = await dbGetStudentByEmail(enr.email);
     if (existing) {
       await dbUpdateStudent(existing.id, { 
         isActive: true,
-        password: finalPassword || existing.password || 'studentpass2026',
+        password: finalPassword,
         phone: enr.phone || existing.phone,
         city: enr.city || existing.city
       });
@@ -502,7 +556,52 @@ export async function dbUpdateEnrollmentStatus(
     }
   }
 
-  return { enrollment: enr, password: finalPassword };
+  return { enrollment: { ...enr, password: finalPassword }, password: finalPassword };
+}
+
+export async function dbResetStudentPassword(
+  identifier: string, 
+  customNewPassword?: string
+): Promise<{ success: boolean; email: string; newPassword: string } | null> {
+  const newPass = customNewPassword || generateRandomNumericPassword();
+
+  let student = await dbGetStudentByEmail(identifier);
+  if (!student) {
+    const allStudents = await dbGetStudents();
+    student = allStudents.find(s => s.id === identifier) || null;
+  }
+
+  if (!student) {
+    const enrollments = await dbGetEnrollments();
+    const enr = enrollments.find(e => 
+      e.trackingCode === identifier || 
+      e.id === identifier || 
+      e.email.toLowerCase() === identifier.toLowerCase()
+    );
+    if (enr) {
+      student = await dbGetStudentByEmail(enr.email);
+      if (!student) {
+        student = await dbAddStudent({
+          id: enr.studentId || `std_${Date.now()}`,
+          name: enr.name,
+          email: enr.email,
+          phone: enr.phone,
+          city: enr.city,
+          password: newPass,
+          isActive: enr.status === 'approved',
+          enrolledAt: new Date().toISOString().split('T')[0],
+          completedLessons: []
+        });
+      }
+    }
+  }
+
+  if (student) {
+    await dbUpdateStudent(student.id, { password: newPass });
+    return { success: true, email: student.email, newPassword: newPass };
+  }
+
+  return null;
 }
 
 export async function dbDeleteEnrollment(id: string): Promise<boolean> {

@@ -28,6 +28,7 @@ export interface Enrollment {
   amount: string;
   status: 'pending' | 'approved' | 'rejected';
   createdAt: string;
+  password?: string;
 }
 
 export interface Lesson {

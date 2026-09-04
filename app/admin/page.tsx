@@ -67,6 +67,17 @@ function generateWhatsAppUrl(student: { name: string; email: string; phone: stri
   return `https://wa.me/${cleanPhone}?text=${text}`;
 }
 
+function generateFallbackPassword(seed: string): string {
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) {
+    hash = ((hash << 5) - hash) + seed.charCodeAt(i);
+    hash |= 0;
+  }
+  const positive = Math.abs(hash);
+  const num = 10000000 + (positive % 90000000);
+  return num.toString();
+}
+
 export default function AdminDashboardPage() {
   const router = useRouter();
   const [authChecking, setAuthChecking] = useState(true);
@@ -85,7 +96,20 @@ export default function AdminDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
+  const [resetLoadingId, setResetLoadingId] = useState<string | null>(null);
+  const [copiedPassId, setCopiedPassId] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  // Quick Password Reset Finder state
+  const [quickResetInput, setQuickResetInput] = useState('');
+  const [quickResetLoading, setQuickResetLoading] = useState(false);
+  const [quickResetResult, setQuickResetResult] = useState<{
+    email: string;
+    newPassword: string;
+    name?: string;
+    phone?: string;
+  } | null>(null);
+  const [showQuickResetModal, setShowQuickResetModal] = useState(false);
 
   // Selected Receipt Preview modal state
   const [previewReceipt, setPreviewReceipt] = useState<Enrollment | null>(null);
@@ -196,7 +220,7 @@ export default function AdminDashboardPage() {
     setActionLoadingId(`approve-${enrollment.id}`);
     try {
       const matchingStudent = students.find(s => s.email.toLowerCase() === enrollment.email.toLowerCase());
-      const passToUse = matchingStudent?.password || `Sami@${Math.floor(1000 + Math.random() * 9000)}`;
+      const passToUse = enrollment.password || matchingStudent?.password || generateFallbackPassword(enrollment.trackingCode || enrollment.id);
 
       const res = await fetch('/api/admin/enrollments', {
         method: 'PUT',
@@ -209,9 +233,31 @@ export default function AdminDashboardPage() {
       });
       const data = await res.json();
       if (data.success) {
-        setEnrollments(prev => prev.map(e => (e.id === enrollment.id || e.trackingCode === enrollment.id) ? { ...e, status: 'approved' } : e));
-        setToastMessage(`✅ ${enrollment.name} Approved! LMS Portal Account is now ACTIVE.`);
-        setTimeout(() => setToastMessage(null), 5000);
+        const finalPass = data.password || passToUse;
+        setEnrollments(prev => prev.map(e => (e.id === enrollment.id || e.trackingCode === enrollment.id) ? { ...e, status: 'approved', password: finalPass } : e));
+        setStudents(prev => {
+          const exists = prev.some(s => s.email.toLowerCase() === enrollment.email.toLowerCase());
+          if (exists) {
+            return prev.map(s => s.email.toLowerCase() === enrollment.email.toLowerCase() ? { ...s, isActive: true, password: finalPass } : s);
+          } else {
+            return [
+              {
+                id: enrollment.studentId || `std_${Date.now()}`,
+                name: enrollment.name,
+                email: enrollment.email,
+                phone: enrollment.phone,
+                city: enrollment.city,
+                password: finalPass,
+                isActive: true,
+                enrolledAt: new Date().toISOString().split('T')[0],
+                completedLessons: []
+              },
+              ...prev
+            ];
+          }
+        });
+        setToastMessage(`✅ ${enrollment.name} Approved! Password: ${finalPass} (LMS Account ACTIVE)`);
+        setTimeout(() => setToastMessage(null), 6000);
         fetchDashboardData();
       } else {
         alert(data.message || 'Failed to approve enrollment');
@@ -281,6 +327,153 @@ export default function AdminDashboardPage() {
     }
   };
 
+  const handleCopyPass = (text: string, id: string) => {
+    try {
+      navigator.clipboard.writeText(text);
+      setCopiedPassId(id);
+      setTimeout(() => setCopiedPassId(null), 2500);
+    } catch (e) {}
+  };
+
+  const handleCopyFullCredentials = (studentName: string, email: string, pass: string, id: string) => {
+    const message = 
+      `🎉 *Assalam-o-Alaikum ${studentName}! Welcome to Ecom With Sami Mentorship!*\n\n` +
+      `Your Student LMS Portal Account is *ACTIVE*.\n\n` +
+      `━━━━━━━━━━━━━━━━━━━━\n` +
+      `🔐 *YOUR LMS LOGIN CREDENTIALS:*\n` +
+      `🌐 *Login Portal:* https://ecomwithsami.com/login\n` +
+      `📧 *Email:* ${email}\n` +
+      `🔑 *Password:* ${pass}\n` +
+      `━━━━━━━━━━━━━━━━━━━━\n\n` +
+      `✅ *How to Login:*\n` +
+      `1. Go to: https://ecomwithsami.com/login\n` +
+      `2. Enter your Email and Password above\n` +
+      `3. Start watching course lectures!\n\n` +
+      `Best Regards,\n` +
+      `*Mentor Sardar Samiullah*`;
+
+    try {
+      navigator.clipboard.writeText(message);
+      setCopiedPassId(id);
+      setToastMessage(`📋 Full Credentials copied for ${studentName}! Ready to paste in WhatsApp/SMS.`);
+      setTimeout(() => setCopiedPassId(null), 2500);
+      setTimeout(() => setToastMessage(null), 5000);
+    } catch (e) {}
+  };
+
+  const handleResetPassword = async (identifier: string, name?: string) => {
+    const confirmReset = confirm(
+      `🔑 RESET PASSWORD:\nAre you sure you want to reset the LMS password for "${name || identifier}"?\n\nA new unique 8-digit numeric password will be generated, saved to database, and copied to your clipboard immediately.`
+    );
+    if (!confirmReset) return null;
+
+    setResetLoadingId(identifier);
+    try {
+      const res = await fetch('/api/admin/enrollments', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: identifier })
+      });
+      const data = await res.json();
+      if (data.success && data.newPassword) {
+        const newPass = data.newPassword;
+        setEnrollments(prev => prev.map(e => 
+          (e.id === identifier || e.trackingCode === identifier || e.email.toLowerCase() === identifier.toLowerCase() || (data.email && e.email.toLowerCase() === data.email.toLowerCase()))
+            ? { ...e, password: newPass }
+            : e
+        ));
+        setStudents(prev => prev.map(s => 
+          (s.id === identifier || s.email.toLowerCase() === identifier.toLowerCase() || (data.email && s.email.toLowerCase() === data.email.toLowerCase()))
+            ? { ...s, password: newPass }
+            : s
+        ));
+
+        try {
+          await navigator.clipboard.writeText(newPass);
+        } catch (e) {}
+
+        setToastMessage(`🔑 New Password for ${name || data.email || 'Student'}: ${newPass} (Saved & Copied!)`);
+        setTimeout(() => setToastMessage(null), 6000);
+        return newPass;
+      } else {
+        alert(data.message || 'Failed to reset password');
+        return null;
+      }
+    } catch (e: any) {
+      console.error(e);
+      alert('Network error while resetting password');
+      return null;
+    } finally {
+      setResetLoadingId(null);
+    }
+  };
+
+  const handlePerformQuickReset = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const query = quickResetInput.trim();
+    if (!query) return;
+
+    setQuickResetLoading(true);
+    setQuickResetResult(null);
+
+    try {
+      const res = await fetch('/api/admin/enrollments', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: query })
+      });
+      const data = await res.json();
+      if (data.success && data.newPassword) {
+        const matchedEnr = enrollments.find(enr => 
+          enr.trackingCode.toLowerCase() === query.toLowerCase() || 
+          enr.id === query || 
+          enr.email.toLowerCase() === data.email.toLowerCase()
+        );
+        const matchedStd = students.find(s => 
+          s.email.toLowerCase() === data.email.toLowerCase() || 
+          s.id === query
+        );
+
+        const studentName = matchedEnr?.name || matchedStd?.name || data.email.split('@')[0];
+        const studentPhone = matchedEnr?.phone || matchedStd?.phone || '';
+
+        setQuickResetResult({
+          email: data.email,
+          newPassword: data.newPassword,
+          name: studentName,
+          phone: studentPhone
+        });
+
+        // Update local states
+        setEnrollments(prev => prev.map(enr => 
+          (enr.email.toLowerCase() === data.email.toLowerCase() || enr.trackingCode.toLowerCase() === query.toLowerCase() || enr.id === query)
+            ? { ...enr, password: data.newPassword }
+            : enr
+        ));
+        setStudents(prev => prev.map(s => 
+          (s.email.toLowerCase() === data.email.toLowerCase() || s.id === query)
+            ? { ...s, password: data.newPassword }
+            : s
+        ));
+
+        // Copy new password to clipboard
+        try {
+          await navigator.clipboard.writeText(data.newPassword);
+        } catch (e) {}
+
+        setToastMessage(`🔑 New Password: ${data.newPassword} for ${studentName} (Saved in Supabase & Copied!)`);
+        setTimeout(() => setToastMessage(null), 6000);
+      } else {
+        alert(data.message || 'No student or enrollment record found for: ' + query);
+      }
+    } catch (err: any) {
+      console.error(err);
+      alert('Error during password reset: ' + err.message);
+    } finally {
+      setQuickResetLoading(false);
+    }
+  };
+
   const handleUpdateStatus = async (id: string, status: 'approved' | 'rejected') => {
     const enr = enrollments.find(e => e.id === id || e.trackingCode === id);
     if (enr) {
@@ -291,7 +484,7 @@ export default function AdminDashboardPage() {
 
   const handleOpenAccessModal = (enrollment: Enrollment) => {
     const matchingStudent = students.find(s => s.email.toLowerCase() === enrollment.email.toLowerCase());
-    const initialPassword = matchingStudent?.password || `Sami@${Math.floor(1000 + Math.random() * 9000)}`;
+    const initialPassword = enrollment.password || matchingStudent?.password || generateFallbackPassword(enrollment.trackingCode || enrollment.id);
     const waUrl = generateWhatsAppUrl(enrollment, initialPassword);
 
     setAccessModalData({
@@ -306,13 +499,13 @@ export default function AdminDashboardPage() {
 
   const handleRegeneratePassword = () => {
     if (!accessModalData) return;
-    const newPass = `Sami@${Math.floor(1000 + Math.random() * 9000)}`;
+    const newPass = Math.floor(10000000 + Math.random() * 90000000).toString();
     const newWaUrl = generateWhatsAppUrl(accessModalData.enrollment, newPass);
     setAccessModalData({
       ...accessModalData,
       password: newPass,
       whatsappUrl: newWaUrl,
-      statusMsg: 'New password generated! Click "Grant LMS Access & Send WhatsApp" to save and send.'
+      statusMsg: 'New 8-digit numeric password generated! Click "Grant Access & Send Password on WhatsApp" to save and send.'
     });
   };
 
@@ -577,6 +770,18 @@ export default function AdminDashboardPage() {
                 <RotateCcw size={15} />
               </button>
               <button
+                onClick={() => {
+                  setQuickResetInput('');
+                  setQuickResetResult(null);
+                  setShowQuickResetModal(true);
+                }}
+                className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-3.5 py-2 sm:py-2.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 text-xs font-black shadow-md shadow-amber-500/10 transition-all active:scale-95"
+                title="Find & Reset Student Password by Enrollment ID"
+              >
+                <KeyRound size={14} className="text-amber-400" />
+                <span>Reset Password Tool</span>
+              </button>
+              <button
                 onClick={() => setShowAddStudent(true)}
                 className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 sm:gap-2 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-xs font-black text-white shadow-lg shadow-emerald-500/20 transition-all active:scale-95"
               >
@@ -695,6 +900,7 @@ export default function AdminDashboardPage() {
                       <th className="pb-3">Payment</th>
                       <th className="pb-3">Source</th>
                       <th className="pb-3">Proof Slip</th>
+                      <th className="pb-3">LMS Password</th>
                       <th className="pb-3">Status</th>
                       <th className="pb-3 text-right">Quick Action</th>
                     </tr>
@@ -722,6 +928,28 @@ export default function AdminDashboardPage() {
                           ) : (
                             <span className="text-[11px] text-slate-500">No Slip</span>
                           )}
+                        </td>
+                        <td className="py-3">
+                          <div className="flex items-center gap-1">
+                            <span className="font-mono text-emerald-400 font-bold bg-[#0B0F19] px-2 py-0.5 rounded border border-emerald-500/20 text-[11px] tracking-wider select-all">
+                              {r.password || generateFallbackPassword(r.trackingCode || r.id)}
+                            </span>
+                            <button
+                              onClick={() => handleCopyPass(r.password || generateFallbackPassword(r.trackingCode || r.id), `ov-${r.id}`)}
+                              className="p-1 text-slate-400 hover:text-white bg-slate-800 rounded hover:bg-slate-700 transition-colors"
+                              title="Copy Password"
+                            >
+                              {copiedPassId === `ov-${r.id}` ? <Check size={11} className="text-emerald-400" /> : <Copy size={11} />}
+                            </button>
+                            <button
+                              onClick={() => handleResetPassword(r.trackingCode || r.id, r.name)}
+                              disabled={resetLoadingId === (r.trackingCode || r.id)}
+                              className="p-1 text-amber-400 hover:text-amber-300 bg-amber-500/10 rounded hover:bg-amber-500/20 transition-colors"
+                              title="Reset / Generate New 8-digit Password"
+                            >
+                              {resetLoadingId === (r.trackingCode || r.id) ? <Loader2 size={11} className="animate-spin text-amber-400" /> : <RotateCcw size={11} />}
+                            </button>
+                          </div>
                         </td>
                         <td className="py-3">
                           <span
@@ -799,7 +1027,42 @@ export default function AdminDashboardPage() {
           {/* TAB 2: ENROLLMENTS */}
           {activeTab === 'enrollments' && (
             <div className="bg-[#111827] border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-2xl space-y-4">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              
+              {/* Quick Password Reset / Forget Finder Box */}
+              <div className="bg-[#0B0F19] border border-amber-500/30 rounded-2xl p-3.5 sm:p-4 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center border border-amber-500/30 flex-shrink-0">
+                    <KeyRound size={16} />
+                  </div>
+                  <div>
+                    <div className="text-xs font-black text-white flex items-center gap-1.5">
+                      <span>Student Password Finder / Reset</span>
+                      <span className="bg-amber-500/20 text-amber-400 text-[10px] px-1.5 py-0.2 rounded font-mono">Live</span>
+                    </div>
+                    <p className="text-[11px] text-slate-400">Enter Enrollment Tracking Code (e.g. SAMI-ENR-XXXXX) or Email to regenerate a new unique numeric PIN.</p>
+                  </div>
+                </div>
+
+                <form onSubmit={handlePerformQuickReset} className="flex items-center gap-2 flex-1 md:max-w-md">
+                  <input
+                    type="text"
+                    placeholder="Paste Tracking Code or Email..."
+                    value={quickResetInput}
+                    onChange={(e) => setQuickResetInput(e.target.value)}
+                    className="flex-1 px-3 py-1.5 rounded-xl bg-[#111827] border border-white/15 text-xs text-white placeholder-slate-500 font-mono focus:outline-none focus:border-amber-400"
+                  />
+                  <button
+                    type="submit"
+                    disabled={quickResetLoading || !quickResetInput.trim()}
+                    className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-slate-950 text-xs font-black flex items-center gap-1.5 whitespace-nowrap shadow-md shadow-amber-500/20 transition-all active:scale-95"
+                  >
+                    {quickResetLoading ? <Loader2 size={13} className="animate-spin" /> : <RotateCcw size={13} />}
+                    <span>Reset Password</span>
+                  </button>
+                </form>
+              </div>
+
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-1">
                 <h3 className="text-sm sm:text-base font-bold text-white">Enrollments &amp; Receipt Records</h3>
                 
                 <div className="flex items-center gap-2 w-full sm:w-auto">
@@ -827,7 +1090,7 @@ export default function AdminDashboardPage() {
               </div>
 
               <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
-                <table className="w-full text-left text-xs min-w-[700px]">
+                <table className="w-full text-left text-xs min-w-[750px]">
                   <thead>
                     <tr className="border-b border-white/10 text-slate-400">
                       <th className="pb-3">Tracking Code</th>
@@ -837,6 +1100,7 @@ export default function AdminDashboardPage() {
                       <th className="pb-3">Source</th>
                       <th className="pb-3">Method &amp; TID</th>
                       <th className="pb-3">Slip Proof</th>
+                      <th className="pb-3">LMS Password</th>
                       <th className="pb-3">Status</th>
                       <th className="pb-3 text-right">Action</th>
                     </tr>
@@ -871,6 +1135,50 @@ export default function AdminDashboardPage() {
                           ) : (
                             <span className="text-[11px] text-slate-500">No Slip</span>
                           )}
+                        </td>
+                        <td className="py-3">
+                          <div className="flex flex-col gap-1">
+                            <div className="flex items-center gap-1">
+                              <span className="font-mono text-emerald-400 font-bold bg-[#0B0F19] px-2 py-0.5 rounded border border-emerald-500/20 text-[11px] tracking-wider select-all">
+                                {r.password || generateFallbackPassword(r.trackingCode || r.id)}
+                              </span>
+                              <button
+                                onClick={() => handleCopyPass(r.password || generateFallbackPassword(r.trackingCode || r.id), `enr-${r.id}`)}
+                                className="p-1 text-slate-400 hover:text-white bg-slate-800 rounded hover:bg-slate-700 transition-colors"
+                                title="Copy Password"
+                              >
+                                {copiedPassId === `enr-${r.id}` ? <Check size={11} className="text-emerald-400" /> : <Copy size={11} />}
+                              </button>
+                              <button
+                                onClick={() => handleResetPassword(r.trackingCode || r.id, r.name)}
+                                disabled={resetLoadingId === (r.trackingCode || r.id)}
+                                className="p-1 text-amber-400 hover:text-amber-300 bg-amber-500/10 rounded hover:bg-amber-500/20 transition-colors"
+                                title="Regenerate New 8-digit Password"
+                              >
+                                {resetLoadingId === (r.trackingCode || r.id) ? <Loader2 size={11} className="animate-spin text-amber-400" /> : <RotateCcw size={11} />}
+                              </button>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => handleCopyFullCredentials(r.name, r.email, r.password || generateFallbackPassword(r.trackingCode || r.id), `full-${r.id}`)}
+                                className="text-[10px] text-[#00A0DF] hover:underline flex items-center gap-0.5"
+                                title="Copy full credentials message"
+                              >
+                                <Copy size={10} />
+                                <span>{copiedPassId === `full-${r.id}` ? 'Copied!' : 'Copy Card'}</span>
+                              </button>
+                              <a
+                                href={generateWhatsAppUrl(r, r.password || generateFallbackPassword(r.trackingCode || r.id))}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-[10px] text-emerald-400 hover:underline flex items-center gap-0.5"
+                                title="Open WhatsApp chat with pre-written login info"
+                              >
+                                <MessageSquare size={10} />
+                                <span>WhatsApp</span>
+                              </a>
+                            </div>
+                          </div>
                         </td>
                         <td className="py-3">
                           <span
@@ -963,7 +1271,7 @@ export default function AdminDashboardPage() {
               </div>
 
               <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
-                <table className="w-full text-left text-xs min-w-[650px]">
+                <table className="w-full text-left text-xs min-w-[750px]">
                   <thead>
                     <tr className="border-b border-white/10 text-slate-400">
                       <th className="pb-3">Student Name</th>
@@ -971,7 +1279,9 @@ export default function AdminDashboardPage() {
                       <th className="pb-3">WhatsApp</th>
                       <th className="pb-3">City</th>
                       <th className="pb-3">LMS Access</th>
-                      <th className="pb-3">Lectures Completed</th>
+                      <th className="pb-3">LMS Password</th>
+                      <th className="pb-3">Lectures</th>
+                      <th className="pb-3 text-right">Credentials Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/5 text-slate-300">
@@ -990,8 +1300,54 @@ export default function AdminDashboardPage() {
                             {s.isActive ? 'Active' : 'Suspended'}
                           </span>
                         </td>
+                        <td className="py-3">
+                          <div className="flex items-center gap-1">
+                            <span className="font-mono text-emerald-400 font-bold bg-[#0B0F19] px-2 py-0.5 rounded border border-emerald-500/20 text-[11px] tracking-wider select-all">
+                              {s.password || generateFallbackPassword(s.id || s.email)}
+                            </span>
+                            <button
+                              onClick={() => handleCopyPass(s.password || generateFallbackPassword(s.id || s.email), `std-p-${s.id}`)}
+                              className="p-1 text-slate-400 hover:text-white bg-slate-800 rounded hover:bg-slate-700 transition-colors"
+                              title="Copy Password"
+                            >
+                              {copiedPassId === `std-p-${s.id}` ? <Check size={11} className="text-emerald-400" /> : <Copy size={11} />}
+                            </button>
+                          </div>
+                        </td>
                         <td className="py-3 text-slate-400">
-                          {s.completedLessons?.length || 0} / 36 Lectures
+                          {s.completedLessons?.length || 0}/36
+                        </td>
+                        <td className="py-3 text-right">
+                          <div className="inline-flex items-center gap-1.5 justify-end">
+                            <button
+                              onClick={() => handleResetPassword(s.id, s.name)}
+                              disabled={resetLoadingId === s.id}
+                              className="px-2 py-1 bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 rounded-lg text-[11px] font-bold flex items-center gap-1 border border-amber-500/30 transition-all active:scale-95"
+                              title="Generate & Save New 8-digit Password"
+                            >
+                              {resetLoadingId === s.id ? <Loader2 size={11} className="animate-spin text-amber-400" /> : <RotateCcw size={11} />}
+                              <span>Reset PIN</span>
+                            </button>
+                            <button
+                              onClick={() => handleCopyFullCredentials(s.name, s.email, s.password || generateFallbackPassword(s.id || s.email), `std-full-${s.id}`)}
+                              className="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-[11px] font-bold flex items-center gap-1 border border-white/5 transition-all"
+                              title="Copy Full Login Card"
+                            >
+                              <Copy size={11} className="text-[#00A0DF]" />
+                              <span>{copiedPassId === `std-full-${s.id}` ? 'Copied!' : 'Login Card'}</span>
+                            </button>
+                            {s.phone && (
+                              <a
+                                href={generateWhatsAppUrl(s, s.password || generateFallbackPassword(s.id || s.email))}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="p-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 rounded-lg text-[11px] flex items-center justify-center border border-emerald-500/20 transition-all"
+                                title="Send Credentials via WhatsApp"
+                              >
+                                <MessageSquare size={12} />
+                              </a>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -1145,6 +1501,110 @@ export default function AdminDashboardPage() {
                 Grant Instant LMS Access
               </button>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Quick Password Reset & Credential Generator Modal */}
+      {showQuickResetModal && (
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
+          <div className="w-full max-w-lg bg-[#111827] border-2 border-amber-500/40 rounded-2xl sm:rounded-3xl p-5 sm:p-7 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-3 border-b border-white/10">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center border border-amber-500/30">
+                  <KeyRound size={18} />
+                </div>
+                <div>
+                  <h3 className="text-sm sm:text-base font-black text-white">Student Password Reset Tool</h3>
+                  <p className="text-[11px] text-slate-400">Generate a unique numeric password &amp; save to Supabase</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => {
+                  setShowQuickResetModal(false);
+                  setQuickResetResult(null);
+                }} 
+                className="text-slate-400 hover:text-white p-1"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handlePerformQuickReset} className="space-y-3">
+              <div>
+                <label className="block text-xs font-bold text-slate-300 mb-1.5">
+                  Student Enrollment ID (Tracking Code) or Login Email
+                </label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. SAMI-ENR-12345 or student@gmail.com"
+                    value={quickResetInput}
+                    onChange={(e) => setQuickResetInput(e.target.value)}
+                    className="flex-1 px-3.5 py-2.5 rounded-xl bg-[#0B0F19] border border-white/15 text-xs sm:text-sm font-mono text-white placeholder-slate-500 focus:outline-none focus:border-amber-400"
+                  />
+                  <button
+                    type="submit"
+                    disabled={quickResetLoading || !quickResetInput.trim()}
+                    className="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-slate-950 text-xs font-black flex items-center gap-1.5 shadow-lg shadow-amber-500/20 transition-all active:scale-95 whitespace-nowrap"
+                  >
+                    {quickResetLoading ? <Loader2 size={14} className="animate-spin" /> : <RotateCcw size={14} />}
+                    <span>Reset &amp; Generate</span>
+                  </button>
+                </div>
+              </div>
+            </form>
+
+            {quickResetResult && (
+              <div className="bg-[#0B0F19] rounded-2xl p-4 border border-emerald-500/30 space-y-3 animate-in fade-in">
+                <div className="flex items-center justify-between pb-2 border-b border-white/5">
+                  <span className="text-xs text-slate-400">Student Name:</span>
+                  <strong className="text-white text-xs font-bold">{quickResetResult.name}</strong>
+                </div>
+                <div className="flex items-center justify-between pb-2 border-b border-white/5">
+                  <span className="text-xs text-slate-400">Login Email:</span>
+                  <span className="text-[#00A0DF] font-mono text-xs font-bold">{quickResetResult.email}</span>
+                </div>
+                <div>
+                  <div className="text-[11px] font-bold text-slate-400 mb-1">New 8-digit Numeric Password:</div>
+                  <div className="flex items-center gap-2 bg-[#111827] p-2.5 rounded-xl border border-white/10">
+                    <span className="font-mono text-emerald-400 font-black text-lg tracking-widest flex-1">
+                      {quickResetResult.newPassword}
+                    </span>
+                    <button
+                      onClick={() => handleCopyPass(quickResetResult.newPassword, 'modal-quick-pass')}
+                      className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold rounded-lg flex items-center gap-1.5 transition-colors"
+                    >
+                      <Copy size={13} className="text-[#00A0DF]" />
+                      <span>{copiedPassId === 'modal-quick-pass' ? 'Copied!' : 'Copy'}</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                  <button
+                    onClick={() => handleCopyFullCredentials(quickResetResult.name || 'Student', quickResetResult.email, quickResetResult.newPassword, 'modal-quick-full')}
+                    className="flex-1 py-2.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors border border-white/10"
+                  >
+                    <Copy size={13} className="text-[#00A0DF]" />
+                    <span>{copiedPassId === 'modal-quick-full' ? 'Credentials Copied!' : 'Copy Full Message'}</span>
+                  </button>
+
+                  {quickResetResult.phone && (
+                    <a
+                      href={generateWhatsAppUrl({ name: quickResetResult.name || 'Student', email: quickResetResult.email, phone: quickResetResult.phone }, quickResetResult.newPassword)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="py-2.5 px-4 rounded-xl bg-[#25D366] hover:bg-[#1faa53] text-white text-xs font-black flex items-center justify-center gap-1.5 shadow-md shadow-emerald-500/20"
+                    >
+                      <MessageSquare size={14} />
+                      <span>Send on WhatsApp</span>
+                    </a>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
-import { dbGetEnrollments, dbUpdateEnrollmentStatus, dbDeleteEnrollment } from '@/lib/database';
+import { dbGetEnrollments, dbUpdateEnrollmentStatus, dbDeleteEnrollment, dbResetStudentPassword } from '@/lib/database';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -78,6 +78,34 @@ export async function PUT(request: NextRequest) {
       password: generatedPassword,
       whatsappUrl,
       studentPhoneClean
+    }, { headers: NO_CACHE_HEADERS });
+  } catch (error: any) {
+    return NextResponse.json({ success: false, message: error.message }, { status: 500, headers: NO_CACHE_HEADERS });
+  }
+}
+
+export async function PATCH(request: NextRequest) {
+  try {
+    const { id, password } = await request.json();
+    if (!id) {
+      return NextResponse.json({ success: false, message: 'Missing student or enrollment identifier' }, { status: 400, headers: NO_CACHE_HEADERS });
+    }
+
+    const result = await dbResetStudentPassword(id, password);
+    if (!result) {
+      return NextResponse.json({ success: false, message: 'Student / enrollment record not found' }, { status: 404, headers: NO_CACHE_HEADERS });
+    }
+
+    try {
+      revalidatePath('/admin', 'page');
+      revalidatePath('/lms', 'page');
+    } catch (e) {}
+
+    return NextResponse.json({
+      success: true,
+      message: `Password reset successfully for ${result.email}`,
+      email: result.email,
+      newPassword: result.newPassword
     }, { headers: NO_CACHE_HEADERS });
   } catch (error: any) {
     return NextResponse.json({ success: false, message: error.message }, { status: 500, headers: NO_CACHE_HEADERS });
