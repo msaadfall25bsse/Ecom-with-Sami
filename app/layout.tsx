@@ -4,6 +4,7 @@ import { DynamicPixels } from '@/components/tracking';
 import { WhatsAppWidget } from '@/components/common';
 import { StickyMobileCta } from '@/components/layout';
 import { dbGetCmsSettings } from '@/lib/database';
+import { generateThemeCss, DEFAULT_THEME_COLORS } from '@/utils/cmsStore';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -27,20 +28,38 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   let activeTheme = 'default';
+  let customColors = { ...DEFAULT_THEME_COLORS };
+
   try {
     const cms = await dbGetCmsSettings();
-    if (cms?.theme?.active_theme) {
-      activeTheme = cms.theme.active_theme;
+    if (cms?.theme) {
+      if (cms.theme.active_preset) activeTheme = cms.theme.active_preset;
+      else if (cms.theme.active_theme) activeTheme = cms.theme.active_theme;
+
+      if (cms.theme.custom_colors) {
+        customColors = { ...DEFAULT_THEME_COLORS, ...cms.theme.custom_colors };
+      }
     }
   } catch (e) {}
+
+  const dynamicCss = generateThemeCss(customColors);
 
   return (
     <html lang="en" data-theme={activeTheme} className="scroll-smooth">
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+        <style id="sami-dynamic-theme" dangerouslySetInnerHTML={{ __html: dynamicCss }} />
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem('sami_active_theme')||(document.cookie.match(/sami_active_theme=([^;]+)/)||[])[1];if(t){document.documentElement.setAttribute('data-theme',t);}}catch(e){}})();`
+            __html: `(function(){try{
+              var t=localStorage.getItem('sami_active_theme')||(document.cookie.match(/sami_active_theme=([^;]+)/)||[])[1];
+              if(t){document.documentElement.setAttribute('data-theme',t);}
+              var raw=localStorage.getItem('sami_theme_css');
+              if(raw){
+                var el=document.getElementById('sami-dynamic-theme');
+                if(el){el.innerHTML=raw;}
+              }
+            }catch(e){}})();`
           }}
         />
       </head>

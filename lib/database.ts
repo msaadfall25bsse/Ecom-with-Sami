@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import { defaultCmsContent, CmsContentSchema } from '@/utils/cmsStore';
+import { defaultCmsContent, CmsContentSchema, ThemeCustomColors, DEFAULT_THEME_COLORS } from '@/utils/cmsStore';
 import { 
   initialStudents, 
   initialEnrollments, 
@@ -49,8 +49,16 @@ export async function dbGetCmsSettings(): Promise<CmsContentSchema> {
             testimonials: Array.isArray(parsed.testimonials) ? parsed.testimonials : defaultCmsContent.testimonials,
             faqs: Array.isArray(parsed.faqs) ? parsed.faqs : defaultCmsContent.faqs,
             payment_methods: Array.isArray(parsed.payment_methods) ? parsed.payment_methods : defaultCmsContent.payment_methods,
-            pixels: Array.isArray(parsed.pixels) ? parsed.pixels : defaultCmsContent.pixels,
-            theme: parsed.theme && typeof parsed.theme.active_theme === 'string' ? parsed.theme : defaultCmsContent.theme
+            theme: parsed.theme 
+              ? { 
+                  ...defaultCmsContent.theme, 
+                  ...parsed.theme, 
+                  custom_colors: { 
+                    ...defaultCmsContent.theme?.custom_colors, 
+                    ...(parsed.theme.custom_colors || {}) 
+                  } 
+                } 
+              : defaultCmsContent.theme
           };
         }
       }
@@ -80,7 +88,16 @@ export async function dbSaveCmsSettings(patch: Partial<CmsContentSchema>): Promi
     faqs: patch.faqs !== undefined ? patch.faqs : existing.faqs,
     payment_methods: patch.payment_methods !== undefined ? patch.payment_methods : existing.payment_methods,
     pixels: patch.pixels !== undefined ? patch.pixels : existing.pixels,
-    theme: patch.theme !== undefined ? { ...existing.theme, ...patch.theme } : (existing.theme || defaultCmsContent.theme)
+    theme: patch.theme !== undefined 
+      ? { 
+          ...(existing.theme || defaultCmsContent.theme), 
+          ...patch.theme, 
+          custom_colors: { 
+            ...((existing.theme && existing.theme.custom_colors) || defaultCmsContent.theme?.custom_colors || DEFAULT_THEME_COLORS), 
+            ...(patch.theme.custom_colors || {}) 
+          } as ThemeCustomColors
+        } 
+      : (existing.theme || defaultCmsContent.theme)
   };
 
   if (supabase) {

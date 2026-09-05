@@ -35,9 +35,18 @@ import {
   Code2,
   Palette,
   Check,
+  RotateCcw,
+  SlidersHorizontal,
   X
 } from 'lucide-react';
-import { defaultCmsContent, CmsContentSchema } from '@/utils/cmsStore';
+import { 
+  defaultCmsContent, 
+  CmsContentSchema, 
+  THEME_PRESETS, 
+  DEFAULT_THEME_COLORS, 
+  ThemeCustomColors, 
+  generateThemeCss 
+} from '@/utils/cmsStore';
 import { Module, Supplier, initialModules, initialSuppliers } from '@/utils/db';
 
 import { supabase } from '@/lib/supabase';
@@ -111,6 +120,72 @@ export default function AdminCmsPage() {
     initials: ''
   });
   const [newFaq, setNewFaq] = useState({ q: '', a: '' });
+  const currentThemeColors: ThemeCustomColors = {
+    ...DEFAULT_THEME_COLORS,
+    ...(cmsData.theme?.custom_colors || {})
+  };
+  const activePresetId = cmsData.theme?.active_preset || cmsData.theme?.active_theme || 'default';
+
+  const updateLiveCustomColor = (key: keyof ThemeCustomColors, value: string) => {
+    const updatedColors: ThemeCustomColors = {
+      ...currentThemeColors,
+      [key]: value
+    };
+
+    setCmsData(prev => ({
+      ...prev,
+      theme: {
+        active_preset: 'custom',
+        active_theme: 'custom',
+        custom_colors: updatedColors
+      }
+    }));
+
+    // Update dynamic style in DOM in 0ms
+    try {
+      const css = generateThemeCss(updatedColors);
+      let el = document.getElementById('sami-dynamic-theme');
+      if (!el) {
+        el = document.createElement('style');
+        el.id = 'sami-dynamic-theme';
+        document.head.appendChild(el);
+      }
+      el.innerHTML = css;
+      document.documentElement.setAttribute('data-theme', 'custom');
+      localStorage.setItem('sami_active_theme', 'custom');
+      localStorage.setItem('sami_theme_css', css);
+    } catch (e) {}
+  };
+
+  const applyPreset = (preset: (typeof THEME_PRESETS)[0]) => {
+    setCmsData(prev => ({
+      ...prev,
+      theme: {
+        active_preset: preset.id,
+        active_theme: preset.id,
+        custom_colors: { ...preset.colors }
+      }
+    }));
+
+    try {
+      const css = generateThemeCss(preset.colors);
+      let el = document.getElementById('sami-dynamic-theme');
+      if (!el) {
+        el = document.createElement('style');
+        el.id = 'sami-dynamic-theme';
+        document.head.appendChild(el);
+      }
+      el.innerHTML = css;
+      document.documentElement.setAttribute('data-theme', preset.id);
+      localStorage.setItem('sami_active_theme', preset.id);
+      localStorage.setItem('sami_theme_css', css);
+      document.cookie = `sami_active_theme=${preset.id}; path=/; max-age=31536000; SameSite=Lax`;
+    } catch (e) {}
+  };
+
+  const resetThemeToDefault = () => {
+    applyPreset(THEME_PRESETS[0]);
+  };
 
   const fetchAllData = async () => {
     try {
@@ -129,12 +204,22 @@ export default function AdminCmsPage() {
         const data = await res.json();
         if (data.success && data.content) {
           setCmsData(data.content);
-          if (data.content.theme?.active_theme) {
-            document.documentElement.setAttribute('data-theme', data.content.theme.active_theme);
-            try {
-              localStorage.setItem('sami_active_theme', data.content.theme.active_theme);
-            } catch (e) {}
-          }
+          const t = data.content.theme;
+          const p = t?.active_preset || t?.active_theme || 'default';
+          const c: ThemeCustomColors = { ...DEFAULT_THEME_COLORS, ...(t?.custom_colors || {}) };
+          document.documentElement.setAttribute('data-theme', p);
+          try {
+            const css = generateThemeCss(c);
+            let el = document.getElementById('sami-dynamic-theme');
+            if (!el) {
+              el = document.createElement('style');
+              el.id = 'sami-dynamic-theme';
+              document.head.appendChild(el);
+            }
+            el.innerHTML = css;
+            localStorage.setItem('sami_active_theme', p);
+            localStorage.setItem('sami_theme_css', css);
+          } catch (e) {}
         }
       }
     } catch (err) {}
@@ -175,12 +260,22 @@ export default function AdminCmsPage() {
           const parsed = typeof data.value_json === 'string' ? JSON.parse(data.value_json) : data.value_json;
           if (parsed && typeof parsed === 'object') {
             setCmsData({ ...defaultCmsContent, ...parsed });
-            if (parsed.theme?.active_theme) {
-              document.documentElement.setAttribute('data-theme', parsed.theme.active_theme);
-              try {
-                localStorage.setItem('sami_active_theme', parsed.theme.active_theme);
-              } catch (e) {}
-            }
+            const t = parsed.theme;
+            const p = t?.active_preset || t?.active_theme || 'default';
+            const c: ThemeCustomColors = { ...DEFAULT_THEME_COLORS, ...(t?.custom_colors || {}) };
+            document.documentElement.setAttribute('data-theme', p);
+            try {
+              const css = generateThemeCss(c);
+              let el = document.getElementById('sami-dynamic-theme');
+              if (!el) {
+                el = document.createElement('style');
+                el.id = 'sami-dynamic-theme';
+                document.head.appendChild(el);
+              }
+              el.innerHTML = css;
+              localStorage.setItem('sami_active_theme', p);
+              localStorage.setItem('sami_theme_css', css);
+            } catch (e) {}
           }
         }
       } catch (e) {}
@@ -240,11 +335,17 @@ export default function AdminCmsPage() {
     setSavedSuccess(false);
     let saved = false;
 
-    if (cmsData.theme?.active_theme) {
-      document.documentElement.setAttribute('data-theme', cmsData.theme.active_theme);
+    if (cmsData.theme) {
+      const p = cmsData.theme.active_preset || cmsData.theme.active_theme || 'default';
+      const c: ThemeCustomColors = { ...DEFAULT_THEME_COLORS, ...(cmsData.theme.custom_colors || {}) };
+      document.documentElement.setAttribute('data-theme', p);
       try {
-        localStorage.setItem('sami_active_theme', cmsData.theme.active_theme);
-        document.cookie = `sami_active_theme=${cmsData.theme.active_theme}; path=/; max-age=31536000; SameSite=Lax`;
+        const css = generateThemeCss(c);
+        let el = document.getElementById('sami-dynamic-theme');
+        if (el) el.innerHTML = css;
+        localStorage.setItem('sami_active_theme', p);
+        localStorage.setItem('sami_theme_css', css);
+        document.cookie = `sami_active_theme=${p}; path=/; max-age=31536000; SameSite=Lax`;
       } catch (e) {}
     }
 
@@ -1942,346 +2043,429 @@ export default function AdminCmsPage() {
         )}
 
         {/* ========================================================================= */}
-        {/* TAB 9: THEMES (MULTI-THEME VISUAL SYSTEM) */}
+        {/* TAB 9: THEMES (LIVE THEME STUDIO & FULL COLOR CUSTOMIZER)                 */}
         {/* ========================================================================= */}
         {activeTab === 'themes' && (
           <div className="space-y-6 sm:space-y-8">
-            {/* Top Themes Action Bar */}
+            {/* Studio Header Banner */}
             <div className="bg-[#111827] border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-7 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-xl">
               <div className="space-y-1">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-xl bg-[#00A0DF]/15 text-[#00A0DF] flex items-center justify-center border border-[#00A0DF]/30 shadow-md flex-shrink-0">
-                    <Palette size={20} />
+                  <div 
+                    className="w-10 h-10 rounded-2xl text-white flex items-center justify-center border border-white/20 shadow-lg flex-shrink-0 transition-colors"
+                    style={{ backgroundColor: currentThemeColors.primary }}
+                  >
+                    <Palette size={22} className="text-white" />
                   </div>
                   <div>
-                    <h2 className="text-base sm:text-2xl font-black text-white">
-                      Website Theme &amp; Color Palette Selector
+                    <h2 className="text-base sm:text-2xl font-black text-white flex items-center gap-2">
+                      <span>Live Theme Studio &amp; Color Customizer</span>
+                      <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold">
+                        Live 0ms Preview
+                      </span>
                     </h2>
                     <p className="text-xs text-slate-400 mt-0.5">
-                      Select and save from 3 curated themes. All styles are powered by frontend CSS variables and Tailwind — <strong>zero database schema impact</strong>.
+                      Pick from 6 curated presets or customize every single color channel below. Changes preview in real-time — <strong>zero database schema impact</strong>.
                     </p>
                   </div>
                 </div>
               </div>
 
-              <div className="flex items-center gap-3 self-stretch md:self-auto justify-between md:justify-end bg-[#0B0F19] p-2.5 sm:p-3 rounded-2xl border border-white/10">
-                <div>
-                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Live Website Theme:</span>
-                  <span className="text-xs sm:text-sm font-black text-white capitalize flex items-center gap-1.5 mt-0.5">
-                    <span className={`w-2.5 h-2.5 rounded-full ${
-                      (cmsData.theme?.active_theme || 'default') === 'sunset-orange'
-                        ? 'bg-[#FF6B00] shadow-sm shadow-[#FF6B00]'
-                        : (cmsData.theme?.active_theme || 'default') === 'emerald-luxury'
-                        ? 'bg-[#10B981] shadow-sm shadow-[#10B981]'
-                        : 'bg-[#00A0DF] shadow-sm shadow-[#00A0DF]'
-                    }`} />
-                    <span>
-                      {(cmsData.theme?.active_theme || 'default') === 'sunset-orange'
-                        ? 'Royal Sunset Orange'
-                        : (cmsData.theme?.active_theme || 'default') === 'emerald-luxury'
-                        ? 'Dubai Emerald & Gold'
-                        : 'Default Tech Cyan'}
-                    </span>
-                  </span>
-                </div>
+              <div className="flex items-center gap-2.5 self-stretch md:self-auto justify-end flex-wrap">
+                <button
+                  type="button"
+                  onClick={resetThemeToDefault}
+                  className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition-all active:scale-95 flex items-center gap-1.5 border border-white/5 cursor-pointer"
+                  title="Revert back to official signature blue"
+                >
+                  <RotateCcw size={13} />
+                  <span>Reset Default</span>
+                </button>
                 <button
                   onClick={handleSaveAll}
                   disabled={loading}
-                  className="px-4 py-2 rounded-xl bg-[#00A0DF] hover:bg-[#008ec7] text-white text-xs font-black shadow-lg shadow-[#00A0DF]/20 transition-all active:scale-95 flex items-center gap-1.5 cursor-pointer flex-shrink-0"
+                  className="px-4 py-2 sm:py-2.5 rounded-xl text-white text-xs font-black shadow-lg transition-all active:scale-95 flex items-center gap-1.5 cursor-pointer"
+                  style={{ 
+                    backgroundColor: currentThemeColors.primary,
+                    boxShadow: `0 8px 20px -4px ${currentThemeColors.primary}80`
+                  }}
                 >
                   <Save size={14} />
-                  <span>{loading ? 'Saving...' : 'Save Theme'}</span>
+                  <span>{loading ? 'Saving...' : 'Save Theme Colors'}</span>
                 </button>
               </div>
             </div>
 
-            {/* 3 Themes Responsive Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 sm:gap-6">
+            {/* 1. Quick Presets Bar */}
+            <div className="bg-[#111827] border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-xl space-y-3">
+              <div className="flex items-center justify-between pb-2 border-b border-white/5">
+                <div className="flex items-center gap-2">
+                  <Sparkles size={16} style={{ color: currentThemeColors.primary }} />
+                  <h3 className="text-xs sm:text-sm font-bold text-white uppercase tracking-wider">
+                    Quick Starting Presets (Click any to auto-fill)
+                  </h3>
+                </div>
+                <span className="text-[11px] text-slate-400">
+                  Active Preset: <strong className="text-white capitalize">{activePresetId}</strong>
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                {THEME_PRESETS.map((p) => {
+                  const isCur = activePresetId === p.id;
+                  return (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => applyPreset(p)}
+                      className={`p-3 rounded-2xl text-left border-2 transition-all cursor-pointer flex flex-col justify-between gap-2 relative ${
+                        isCur 
+                          ? 'bg-[#0B0F19] border-white/60 shadow-xl ring-2 ring-white/20' 
+                          : 'bg-[#0B0F19]/60 border-white/5 hover:border-white/20 hover:bg-[#0B0F19]'
+                      }`}
+                    >
+                      {isCur && (
+                        <span className="absolute -top-2 -right-1 bg-emerald-500 text-white rounded-full p-0.5 shadow-md">
+                          <Check size={10} />
+                        </span>
+                      )}
+                      <div>
+                        <div className="flex items-center gap-1 mb-1.5">
+                          <span className="w-3.5 h-3.5 rounded-full shadow-sm flex-shrink-0" style={{ backgroundColor: p.colors.primary }} />
+                          <span className="w-3 h-3 rounded-full shadow-sm flex-shrink-0" style={{ backgroundColor: p.colors.secondary }} />
+                          <span className="w-2.5 h-2.5 rounded-full shadow-sm flex-shrink-0 border border-white/20" style={{ backgroundColor: p.colors.dark_card }} />
+                        </div>
+                        <div className="text-xs font-black text-white leading-tight truncate">{p.name}</div>
+                        <div className="text-[10px] text-slate-400 truncate mt-0.5">{p.tag}</div>
+                      </div>
+                      <div className="text-[9.5px] font-mono text-slate-400 font-bold uppercase">
+                        {p.colors.primary}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* 2. Deep Color Customizer & Live UI Mockup */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6">
               
-              {/* THEME 1: Default Tech Cyan */}
-              {(() => {
-                const isSelected = (cmsData.theme?.active_theme || 'default') === 'default';
-                return (
-                  <div className={`bg-[#111827] rounded-2xl sm:rounded-3xl border-2 transition-all flex flex-col overflow-hidden shadow-2xl ${
-                    isSelected ? 'border-[#00A0DF] ring-4 ring-[#00A0DF]/15 shadow-[#00A0DF]/10' : 'border-white/10 hover:border-white/20'
-                  }`}>
-                    {/* Visual Theme Banner */}
-                    <div className="h-28 bg-gradient-to-r from-[#00A0DF] via-[#0074A6] to-[#0B0F19] p-4 flex items-start justify-between relative overflow-hidden">
-                      <div className="absolute -right-4 -bottom-6 w-24 h-24 rounded-full bg-white/10 blur-xl pointer-events-none" />
-                      <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-black/40 text-white backdrop-blur-sm border border-white/15">
-                        <Sparkles size={11} className="text-[#00A0DF]" />
-                        <span>Original Signature</span>
-                      </span>
-                      {isSelected && (
-                        <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-emerald-500 text-white shadow-md">
-                          <Check size={12} />
-                          <span>Active</span>
-                        </span>
-                      )}
-                    </div>
+              {/* Left Column (7 cols): The 5 Color Channel Controllers */}
+              <div className="lg:col-span-7 bg-[#111827] border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-xl space-y-4">
+                <div className="flex items-center justify-between pb-3 border-b border-white/5">
+                  <div className="flex items-center gap-2">
+                    <SlidersHorizontal size={17} style={{ color: currentThemeColors.primary }} />
+                    <h3 className="text-xs sm:text-sm font-bold text-white uppercase tracking-wider">
+                      Fine-Tune Color Codes (Custom Pickers)
+                    </h3>
+                  </div>
+                  <span className="text-[10px] font-mono text-slate-400 bg-black/40 px-2 py-0.5 rounded-md border border-white/5">
+                    Mode: {activePresetId === 'custom' ? '🎨 Custom' : `Preset (${activePresetId})`}
+                  </span>
+                </div>
 
-                    <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
-                      <div>
-                        <h3 className="text-base sm:text-lg font-black text-white flex items-center gap-2">
-                          <span>Default Tech Cyan</span>
-                        </h3>
-                        <p className="text-xs text-slate-400 mt-1 leading-relaxed">
-                          Signature high-tech dropshipping brand look with vibrant electric cyan blue, deep obsidian black, and high-visibility action elements.
-                        </p>
-
-                        {/* Color Chips Palette */}
-                        <div className="mt-3.5 pt-3 border-t border-white/5 space-y-2">
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Color Palette:</span>
-                          <div className="grid grid-cols-4 gap-2 text-center text-[10px] font-mono">
-                            <div className="p-2 rounded-xl bg-[#0B0F19] border border-white/10 flex flex-col items-center gap-1">
-                              <span className="w-5 h-5 rounded-lg bg-[#00A0DF] shadow-sm" />
-                              <span className="text-slate-300">#00A0DF</span>
-                            </div>
-                            <div className="p-2 rounded-xl bg-[#0B0F19] border border-white/10 flex flex-col items-center gap-1">
-                              <span className="w-5 h-5 rounded-lg bg-[#008AC2] shadow-sm" />
-                              <span className="text-slate-300">#008AC2</span>
-                            </div>
-                            <div className="p-2 rounded-xl bg-[#111827] border border-white/10 flex flex-col items-center gap-1">
-                              <span className="w-5 h-5 rounded-lg bg-[#111827] shadow-sm border border-white/20" />
-                              <span className="text-slate-300">#111827</span>
-                            </div>
-                            <div className="p-2 rounded-xl bg-[#0B0F19] border border-white/10 flex flex-col items-center gap-1">
-                              <span className="w-5 h-5 rounded-lg bg-white shadow-sm" />
-                              <span className="text-slate-300">#FFFFFF</span>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Live Mini Preview Box */}
-                        <div className="mt-4 p-3.5 rounded-2xl bg-[#0B0F19] border border-white/10 space-y-2">
-                          <div className="flex items-center justify-between">
-                            <span className="text-[9px] font-mono text-slate-400 uppercase tracking-wider">UI Preview</span>
-                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#00A0DF]/15 text-[#00A0DF] border border-[#00A0DF]/30 font-bold">
-                              88% Off Special
-                            </span>
-                          </div>
-                          <div className="text-xs font-bold text-white leading-tight">
-                            Shopify Dropshipping in <span className="text-[#00A0DF]">UAE &amp; KSA</span>
-                          </div>
-                          <div className="w-full py-1.5 rounded-lg bg-[#00A0DF] text-white text-[10px] font-black text-center uppercase tracking-wider shadow-sm">
-                            Enroll Now • PKR 3,799
-                          </div>
-                        </div>
+                <div className="space-y-3 sm:space-y-3.5">
+                  {/* Channel 1: Primary Accent */}
+                  <div className="p-3.5 rounded-2xl bg-[#0B0F19] border border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:border-white/15 transition-colors">
+                    <div className="flex items-center gap-3">
+                      <div className="relative flex-shrink-0">
+                        <input
+                          type="color"
+                          aria-label="Pick Primary Brand Accent Color"
+                          value={currentThemeColors.primary}
+                          onChange={(e) => updateLiveCustomColor('primary', e.target.value)}
+                          className="w-10 h-10 rounded-xl cursor-pointer bg-transparent border-0 opacity-0 absolute inset-0 z-10"
+                        />
+                        <div 
+                          className="w-10 h-10 rounded-xl border-2 border-white/20 shadow-md flex items-center justify-center cursor-pointer transition-transform hover:scale-105"
+                          style={{ backgroundColor: currentThemeColors.primary }}
+                        />
                       </div>
-
-                      {/* Action Button */}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setCmsData(prev => ({ ...prev, theme: { active_theme: 'default' } }));
-                          document.documentElement.setAttribute('data-theme', 'default');
-                          try {
-                            localStorage.setItem('sami_active_theme', 'default');
-                            document.cookie = 'sami_active_theme=default; path=/; max-age=31536000; SameSite=Lax';
-                          } catch (e) {}
-                        }}
-                        className={`w-full py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                          isSelected
-                            ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/30'
-                            : 'bg-[#1E293B] hover:bg-[#00A0DF] text-slate-200 hover:text-white border border-white/10'
-                        }`}
-                      >
-                        {isSelected ? <><Check size={14} /> Current Active Theme</> : 'Select & Apply Theme'}
-                      </button>
+                      <div>
+                        <span className="text-xs sm:text-sm font-bold text-white block">Primary Brand Accent</span>
+                        <span className="text-[11px] text-slate-400 leading-tight block">
+                          Buttons, video play button, badges, active tabs &amp; progress bar
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 self-end sm:self-center">
+                      <span className="text-xs text-slate-500 font-mono">HEX</span>
+                      <input
+                        type="text"
+                        value={currentThemeColors.primary}
+                        onChange={(e) => updateLiveCustomColor('primary', e.target.value)}
+                        className="w-24 px-2.5 py-1.5 rounded-xl bg-black/60 border border-white/10 text-xs font-mono font-bold text-white uppercase focus:outline-none focus:border-white/30 text-center"
+                        maxLength={7}
+                      />
                     </div>
                   </div>
-                );
-              })()}
 
-              {/* THEME 2: Royal Sunset Orange (Requested: Orange, White & Black) */}
-              {(() => {
-                const isSelected = cmsData.theme?.active_theme === 'sunset-orange';
-                return (
-                  <div className={`bg-[#111827] rounded-2xl sm:rounded-3xl border-2 transition-all flex flex-col overflow-hidden shadow-2xl ${
-                    isSelected ? 'border-[#FF6B00] ring-4 ring-[#FF6B00]/15 shadow-[#FF6B00]/10' : 'border-white/10 hover:border-white/20'
-                  }`}>
-                    {/* Visual Theme Banner */}
-                    <div className="h-28 bg-gradient-to-r from-[#FF6B00] via-[#FFA043] to-[#08090C] p-4 flex items-start justify-between relative overflow-hidden">
-                      <div className="absolute -right-4 -bottom-6 w-24 h-24 rounded-full bg-white/15 blur-xl pointer-events-none" />
-                      <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-black/40 text-white backdrop-blur-sm border border-white/15">
-                        <Sparkles size={11} className="text-[#FF6B00]" />
-                        <span>High-Conversion Ecom</span>
-                      </span>
-                      {isSelected && (
-                        <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-emerald-500 text-white shadow-md">
-                          <Check size={12} />
-                          <span>Active</span>
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
-                      <div>
-                        <h3 className="text-base sm:text-lg font-black text-white flex items-center gap-2">
-                          <span>Royal Sunset Orange</span>
-                        </h3>
-                        <p className="text-xs text-slate-400 mt-1 leading-relaxed">
-                          Vibrant electric sunset orange with crisp white text and deep obsidian black contrast. Super punchy, modern high-converting Shopify aesthetic.
-                        </p>
-
-                        {/* Color Chips Palette */}
-                        <div className="mt-3.5 pt-3 border-t border-white/5 space-y-2">
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Color Palette:</span>
-                          <div className="grid grid-cols-4 gap-2 text-center text-[10px] font-mono">
-                            <div className="p-2 rounded-xl bg-[#0B0F19] border border-white/10 flex flex-col items-center gap-1">
-                              <span className="w-5 h-5 rounded-lg bg-[#FF6B00] shadow-sm" />
-                              <span className="text-slate-300">#FF6B00</span>
-                            </div>
-                            <div className="p-2 rounded-xl bg-[#0B0F19] border border-white/10 flex flex-col items-center gap-1">
-                              <span className="w-5 h-5 rounded-lg bg-[#FFA043] shadow-sm" />
-                              <span className="text-slate-300">#FFA043</span>
-                            </div>
-                            <div className="p-2 rounded-xl bg-[#0B0F19] border border-white/10 flex flex-col items-center gap-1">
-                              <span className="w-5 h-5 rounded-lg bg-[#121318] shadow-sm border border-white/20" />
-                              <span className="text-slate-300">#121318</span>
-                            </div>
-                            <div className="p-2 rounded-xl bg-[#0B0F19] border border-white/10 flex flex-col items-center gap-1">
-                              <span className="w-5 h-5 rounded-lg bg-white shadow-sm" />
-                              <span className="text-slate-300">#FFFFFF</span>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Live Mini Preview Box */}
-                        <div className="mt-4 p-3.5 rounded-2xl bg-[#08090C] border border-[#FF6B00]/25 space-y-2">
-                          <div className="flex items-center justify-between">
-                            <span className="text-[9px] font-mono text-slate-400 uppercase tracking-wider">UI Preview</span>
-                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#FF6B00]/15 text-[#FF6B00] border border-[#FF6B00]/30 font-bold">
-                              88% Off Special
-                            </span>
-                          </div>
-                          <div className="text-xs font-bold text-white leading-tight">
-                            Shopify Dropshipping in <span className="text-[#FF6B00]">UAE &amp; KSA</span>
-                          </div>
-                          <div className="w-full py-1.5 rounded-lg bg-[#FF6B00] text-white text-[10px] font-black text-center uppercase tracking-wider shadow-sm shadow-[#FF6B00]/30">
-                            Enroll Now • PKR 3,799
-                          </div>
-                        </div>
+                  {/* Channel 2: Button Hover Shade */}
+                  <div className="p-3.5 rounded-2xl bg-[#0B0F19] border border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:border-white/15 transition-colors">
+                    <div className="flex items-center gap-3">
+                      <div className="relative flex-shrink-0">
+                        <input
+                          type="color"
+                          aria-label="Pick Button Hover Shade Color"
+                          value={currentThemeColors.primary_hover}
+                          onChange={(e) => updateLiveCustomColor('primary_hover', e.target.value)}
+                          className="w-10 h-10 rounded-xl cursor-pointer bg-transparent border-0 opacity-0 absolute inset-0 z-10"
+                        />
+                        <div 
+                          className="w-10 h-10 rounded-xl border-2 border-white/20 shadow-md flex items-center justify-center cursor-pointer transition-transform hover:scale-105"
+                          style={{ backgroundColor: currentThemeColors.primary_hover }}
+                        />
                       </div>
-
-                      {/* Action Button */}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setCmsData(prev => ({ ...prev, theme: { active_theme: 'sunset-orange' } }));
-                          document.documentElement.setAttribute('data-theme', 'sunset-orange');
-                          try {
-                            localStorage.setItem('sami_active_theme', 'sunset-orange');
-                            document.cookie = 'sami_active_theme=sunset-orange; path=/; max-age=31536000; SameSite=Lax';
-                          } catch (e) {}
-                        }}
-                        className={`w-full py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                          isSelected
-                            ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/30'
-                            : 'bg-[#1E293B] hover:bg-[#FF6B00] text-slate-200 hover:text-white border border-white/10'
-                        }`}
-                      >
-                        {isSelected ? <><Check size={14} /> Current Active Theme</> : 'Select & Apply Theme'}
-                      </button>
+                      <div>
+                        <span className="text-xs sm:text-sm font-bold text-white block">Button Hover Shade</span>
+                        <span className="text-[11px] text-slate-400 leading-tight block">
+                          Hover state for CTA buttons and interactive elements
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 self-end sm:self-center">
+                      <span className="text-xs text-slate-500 font-mono">HEX</span>
+                      <input
+                        type="text"
+                        value={currentThemeColors.primary_hover}
+                        onChange={(e) => updateLiveCustomColor('primary_hover', e.target.value)}
+                        className="w-24 px-2.5 py-1.5 rounded-xl bg-black/60 border border-white/10 text-xs font-mono font-bold text-white uppercase focus:outline-none focus:border-white/30 text-center"
+                        maxLength={7}
+                      />
                     </div>
                   </div>
-                );
-              })()}
 
-              {/* THEME 3: Dubai Emerald & Gold */}
-              {(() => {
-                const isSelected = cmsData.theme?.active_theme === 'emerald-luxury';
-                return (
-                  <div className={`bg-[#111827] rounded-2xl sm:rounded-3xl border-2 transition-all flex flex-col overflow-hidden shadow-2xl ${
-                    isSelected ? 'border-[#10B981] ring-4 ring-[#10B981]/15 shadow-[#10B981]/10' : 'border-white/10 hover:border-white/20'
-                  }`}>
-                    {/* Visual Theme Banner */}
-                    <div className="h-28 bg-gradient-to-r from-[#10B981] via-[#059669] to-[#F59E0B] p-4 flex items-start justify-between relative overflow-hidden">
-                      <div className="absolute -right-4 -bottom-6 w-24 h-24 rounded-full bg-white/15 blur-xl pointer-events-none" />
-                      <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-black/40 text-white backdrop-blur-sm border border-white/15">
-                        <Sparkles size={11} className="text-[#F59E0B]" />
-                        <span>GCC Wealth &amp; Luxury</span>
-                      </span>
-                      {isSelected && (
-                        <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-emerald-500 text-white shadow-md">
-                          <Check size={12} />
-                          <span>Active</span>
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
-                      <div>
-                        <h3 className="text-base sm:text-lg font-black text-white flex items-center gap-2">
-                          <span>Dubai Emerald &amp; Gold</span>
-                        </h3>
-                        <p className="text-xs text-slate-400 mt-1 leading-relaxed">
-                          Prestige GCC wealth aesthetic featuring vibrant mint emerald green, warm Dubai gold badges, and midnight charcoal background tones.
-                        </p>
-
-                        {/* Color Chips Palette */}
-                        <div className="mt-3.5 pt-3 border-t border-white/5 space-y-2">
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Color Palette:</span>
-                          <div className="grid grid-cols-4 gap-2 text-center text-[10px] font-mono">
-                            <div className="p-2 rounded-xl bg-[#0B0F19] border border-white/10 flex flex-col items-center gap-1">
-                              <span className="w-5 h-5 rounded-lg bg-[#10B981] shadow-sm" />
-                              <span className="text-slate-300">#10B981</span>
-                            </div>
-                            <div className="p-2 rounded-xl bg-[#0B0F19] border border-white/10 flex flex-col items-center gap-1">
-                              <span className="w-5 h-5 rounded-lg bg-[#F59E0B] shadow-sm" />
-                              <span className="text-slate-300">#F59E0B</span>
-                            </div>
-                            <div className="p-2 rounded-xl bg-[#0B0F19] border border-white/10 flex flex-col items-center gap-1">
-                              <span className="w-5 h-5 rounded-lg bg-[#0C1A14] shadow-sm border border-white/20" />
-                              <span className="text-slate-300">#0C1A14</span>
-                            </div>
-                            <div className="p-2 rounded-xl bg-[#0B0F19] border border-white/10 flex flex-col items-center gap-1">
-                              <span className="w-5 h-5 rounded-lg bg-white shadow-sm" />
-                              <span className="text-slate-300">#FFFFFF</span>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Live Mini Preview Box */}
-                        <div className="mt-4 p-3.5 rounded-2xl bg-[#06120E] border border-[#10B981]/25 space-y-2">
-                          <div className="flex items-center justify-between">
-                            <span className="text-[9px] font-mono text-slate-400 uppercase tracking-wider">UI Preview</span>
-                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#F59E0B]/15 text-[#F59E0B] border border-[#F59E0B]/30 font-bold">
-                              88% Off Special
-                            </span>
-                          </div>
-                          <div className="text-xs font-bold text-white leading-tight">
-                            Shopify Dropshipping in <span className="text-[#10B981]">UAE &amp; KSA</span>
-                          </div>
-                          <div className="w-full py-1.5 rounded-lg bg-[#10B981] text-white text-[10px] font-black text-center uppercase tracking-wider shadow-sm shadow-[#10B981]/30">
-                            Enroll Now • PKR 3,799
-                          </div>
-                        </div>
+                  {/* Channel 3: Secondary / Ambient Accent */}
+                  <div className="p-3.5 rounded-2xl bg-[#0B0F19] border border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:border-white/15 transition-colors">
+                    <div className="flex items-center gap-3">
+                      <div className="relative flex-shrink-0">
+                        <input
+                          type="color"
+                          aria-label="Pick Secondary Accent Color"
+                          value={currentThemeColors.secondary}
+                          onChange={(e) => updateLiveCustomColor('secondary', e.target.value)}
+                          className="w-10 h-10 rounded-xl cursor-pointer bg-transparent border-0 opacity-0 absolute inset-0 z-10"
+                        />
+                        <div 
+                          className="w-10 h-10 rounded-xl border-2 border-white/20 shadow-md flex items-center justify-center cursor-pointer transition-transform hover:scale-105"
+                          style={{ backgroundColor: currentThemeColors.secondary }}
+                        />
                       </div>
-
-                      {/* Action Button */}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setCmsData(prev => ({ ...prev, theme: { active_theme: 'emerald-luxury' } }));
-                          document.documentElement.setAttribute('data-theme', 'emerald-luxury');
-                          try {
-                            localStorage.setItem('sami_active_theme', 'emerald-luxury');
-                            document.cookie = 'sami_active_theme=emerald-luxury; path=/; max-age=31536000; SameSite=Lax';
-                          } catch (e) {}
-                        }}
-                        className={`w-full py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                          isSelected
-                            ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/30'
-                            : 'bg-[#1E293B] hover:bg-[#10B981] text-slate-200 hover:text-white border border-white/10'
-                        }`}
-                      >
-                        {isSelected ? <><Check size={14} /> Current Active Theme</> : 'Select & Apply Theme'}
-                      </button>
+                      <div>
+                        <span className="text-xs sm:text-sm font-bold text-white block">Secondary / Accent Shade</span>
+                        <span className="text-[11px] text-slate-400 leading-tight block">
+                          Ambient background blur orbs, rating stars &amp; gradient highlights
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 self-end sm:self-center">
+                      <span className="text-xs text-slate-500 font-mono">HEX</span>
+                      <input
+                        type="text"
+                        value={currentThemeColors.secondary}
+                        onChange={(e) => updateLiveCustomColor('secondary', e.target.value)}
+                        className="w-24 px-2.5 py-1.5 rounded-xl bg-black/60 border border-white/10 text-xs font-mono font-bold text-white uppercase focus:outline-none focus:border-white/30 text-center"
+                        maxLength={7}
+                      />
                     </div>
                   </div>
-                );
-              })()}
+
+                  {/* Channel 4: Dark Card Surface */}
+                  <div className="p-3.5 rounded-2xl bg-[#0B0F19] border border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:border-white/15 transition-colors">
+                    <div className="flex items-center gap-3">
+                      <div className="relative flex-shrink-0">
+                        <input
+                          type="color"
+                          aria-label="Pick Dark Card Surface Color"
+                          value={currentThemeColors.dark_card}
+                          onChange={(e) => updateLiveCustomColor('dark_card', e.target.value)}
+                          className="w-10 h-10 rounded-xl cursor-pointer bg-transparent border-0 opacity-0 absolute inset-0 z-10"
+                        />
+                        <div 
+                          className="w-10 h-10 rounded-xl border-2 border-white/20 shadow-md flex items-center justify-center cursor-pointer transition-transform hover:scale-105"
+                          style={{ backgroundColor: currentThemeColors.dark_card }}
+                        />
+                      </div>
+                      <div>
+                        <span className="text-xs sm:text-sm font-bold text-white block">Dark Card Surface</span>
+                        <span className="text-[11px] text-slate-400 leading-tight block">
+                          Testimonials boxes, pricing containers &amp; module items
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 self-end sm:self-center">
+                      <span className="text-xs text-slate-500 font-mono">HEX</span>
+                      <input
+                        type="text"
+                        value={currentThemeColors.dark_card}
+                        onChange={(e) => updateLiveCustomColor('dark_card', e.target.value)}
+                        className="w-24 px-2.5 py-1.5 rounded-xl bg-black/60 border border-white/10 text-xs font-mono font-bold text-white uppercase focus:outline-none focus:border-white/30 text-center"
+                        maxLength={7}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Channel 5: Base Dark Background */}
+                  <div className="p-3.5 rounded-2xl bg-[#0B0F19] border border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:border-white/15 transition-colors">
+                    <div className="flex items-center gap-3">
+                      <div className="relative flex-shrink-0">
+                        <input
+                          type="color"
+                          aria-label="Pick Base Dark Background Color"
+                          value={currentThemeColors.dark_bg}
+                          onChange={(e) => updateLiveCustomColor('dark_bg', e.target.value)}
+                          className="w-10 h-10 rounded-xl cursor-pointer bg-transparent border-0 opacity-0 absolute inset-0 z-10"
+                        />
+                        <div 
+                          className="w-10 h-10 rounded-xl border-2 border-white/20 shadow-md flex items-center justify-center cursor-pointer transition-transform hover:scale-105"
+                          style={{ backgroundColor: currentThemeColors.dark_bg }}
+                        />
+                      </div>
+                      <div>
+                        <span className="text-xs sm:text-sm font-bold text-white block">Base Dark Background</span>
+                        <span className="text-[11px] text-slate-400 leading-tight block">
+                          Video stage canvas, footer background &amp; dark section backdrop
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 self-end sm:self-center">
+                      <span className="text-xs text-slate-500 font-mono">HEX</span>
+                      <input
+                        type="text"
+                        value={currentThemeColors.dark_bg}
+                        onChange={(e) => updateLiveCustomColor('dark_bg', e.target.value)}
+                        className="w-24 px-2.5 py-1.5 rounded-xl bg-black/60 border border-white/10 text-xs font-mono font-bold text-white uppercase focus:outline-none focus:border-white/30 text-center"
+                        maxLength={7}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Column (5 cols): Live Interactive UI Mockup Card */}
+              <div className="lg:col-span-5 flex flex-col gap-4">
+                <div 
+                  className="rounded-2xl sm:rounded-3xl p-5 sm:p-6 border-2 shadow-2xl transition-all relative overflow-hidden flex-1 flex flex-col justify-between"
+                  style={{ 
+                    backgroundColor: currentThemeColors.dark_bg,
+                    borderColor: currentThemeColors.primary + '33'
+                  }}
+                >
+                  {/* Subtle Background Glow Orb */}
+                  <div 
+                    className="absolute -top-12 -right-12 w-44 h-44 rounded-full blur-3xl opacity-30 pointer-events-none"
+                    style={{ backgroundColor: currentThemeColors.secondary || currentThemeColors.primary }}
+                  />
+
+                  <div>
+                    {/* Top Label */}
+                    <div className="flex items-center justify-between pb-3 mb-4 border-b border-white/10">
+                      <span className="text-[10px] font-mono uppercase tracking-wider font-bold text-slate-400 flex items-center gap-1.5">
+                        <Eye size={12} style={{ color: currentThemeColors.primary }} />
+                        <span>Live Real-Time UI Preview</span>
+                      </span>
+                      <span 
+                        className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full"
+                        style={{ 
+                          backgroundColor: currentThemeColors.primary + '26', 
+                          color: currentThemeColors.primary,
+                          border: `1px solid ${currentThemeColors.primary}4d`
+                        }}
+                      >
+                        Active Colors
+                      </span>
+                    </div>
+
+                    {/* Simulated Badge */}
+                    <div className="mb-3">
+                      <span 
+                        className="inline-flex items-center gap-1.5 text-[10px] sm:text-xs font-black px-3 py-1 rounded-full uppercase tracking-wider shadow-sm"
+                        style={{ 
+                          backgroundColor: currentThemeColors.primary + '26', 
+                          color: currentThemeColors.primary,
+                          border: `1px solid ${currentThemeColors.primary}4d`
+                        }}
+                      >
+                        <Sparkles size={12} />
+                        <span>PAKISTAN'S #1 DROPSHIPPING TRAINING</span>
+                      </span>
+                    </div>
+
+                    {/* Simulated Headline with Highlight Word */}
+                    <h4 className="text-base sm:text-xl font-black text-white leading-snug mb-2">
+                      Learn How to Start Online Shopify Store in{' '}
+                      <span style={{ color: currentThemeColors.primary }}>
+                        UAE &amp; KSA
+                      </span>
+                    </h4>
+
+                    <p className="text-xs text-slate-400 mb-4 leading-relaxed">
+                      A proven step-by-step masterclass with verified GCC local wholesale suppliers.
+                    </p>
+
+                    {/* Simulated Card Box */}
+                    <div 
+                      className="p-3.5 rounded-2xl border mb-4 space-y-2"
+                      style={{ 
+                        backgroundColor: currentThemeColors.dark_card,
+                        borderColor: currentThemeColors.primary + '33'
+                      }}
+                    >
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-bold text-white">Ramadan Masterclass Access</span>
+                        <span 
+                          className="font-black"
+                          style={{ color: currentThemeColors.primary }}
+                        >
+                          PKR 3,799
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1 text-[11px] text-slate-400">
+                        <span style={{ color: currentThemeColors.secondary }}>★★★★★</span>
+                        <span>• 9,742+ Students Enrolled</span>
+                      </div>
+                    </div>
+
+                    {/* Simulated CTA Button */}
+                    <button
+                      type="button"
+                      className="w-full py-3 rounded-xl text-white text-xs sm:text-sm font-black uppercase tracking-wider shadow-xl transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+                      style={{ 
+                        backgroundColor: currentThemeColors.primary,
+                        boxShadow: `0 10px 25px -5px ${currentThemeColors.primary}66`
+                      }}
+                    >
+                      <Sparkles size={15} />
+                      <span>YES! I WANT TO LEARN THIS &bull; PKR 3,799</span>
+                    </button>
+                  </div>
+
+                  <div className="pt-4 mt-4 border-t border-white/10 flex items-center justify-between text-[10px] text-slate-400 font-mono">
+                    <span>Preview updates in real-time</span>
+                    <span className="text-emerald-400 font-bold">✓ 0ms Delay</span>
+                  </div>
+                </div>
+
+                {/* Quick Save Card */}
+                <div className="p-4 rounded-2xl bg-[#111827] border border-white/10 flex items-center justify-between gap-3 shadow-lg">
+                  <div>
+                    <div className="text-xs font-bold text-white">Ready to publish these colors?</div>
+                    <div className="text-[11px] text-slate-400">Click below to commit changes to the live site.</div>
+                  </div>
+                  <button
+                    onClick={handleSaveAll}
+                    disabled={loading}
+                    className="px-4 py-2.5 rounded-xl text-white text-xs font-black shadow-lg transition-all active:scale-95 flex items-center gap-1.5 cursor-pointer flex-shrink-0"
+                    style={{ 
+                      backgroundColor: currentThemeColors.primary,
+                      boxShadow: `0 6px 18px -3px ${currentThemeColors.primary}66`
+                    }}
+                  >
+                    <Save size={14} />
+                    <span>{loading ? 'Saving...' : 'Save Theme Colors'}</span>
+                  </button>
+                </div>
+              </div>
 
             </div>
           </div>

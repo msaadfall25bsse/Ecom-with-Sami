@@ -102,8 +102,161 @@ export interface CmsContentSchema {
     custom_head_code: string;
   };
   theme?: {
-    active_theme: 'default' | 'sunset-orange' | 'emerald-luxury';
+    active_preset?: string;
+    active_theme?: string; // backward compatibility
+    custom_colors?: ThemeCustomColors;
   };
+}
+
+export interface ThemeCustomColors {
+  primary: string;
+  primary_hover: string;
+  secondary: string;
+  dark_card: string;
+  dark_bg: string;
+}
+
+export interface ThemePreset {
+  id: string;
+  name: string;
+  tag: string;
+  colors: ThemeCustomColors;
+}
+
+export const DEFAULT_THEME_COLORS: ThemeCustomColors = {
+  primary: '#00A0DF',
+  primary_hover: '#008AC2',
+  secondary: '#0074A6',
+  dark_card: '#111827',
+  dark_bg: '#0B0F19'
+};
+
+export const THEME_PRESETS: ThemePreset[] = [
+  {
+    id: 'default',
+    name: 'Default Tech Cyan',
+    tag: 'Signature Brand',
+    colors: {
+      primary: '#00A0DF',
+      primary_hover: '#008AC2',
+      secondary: '#0074A6',
+      dark_card: '#111827',
+      dark_bg: '#0B0F19'
+    }
+  },
+  {
+    id: 'sunset-orange',
+    name: 'Royal Sunset Orange',
+    tag: 'High-Conversion Ecom',
+    colors: {
+      primary: '#FF6B00',
+      primary_hover: '#E05E00',
+      secondary: '#FFA043',
+      dark_card: '#121318',
+      dark_bg: '#08090C'
+    }
+  },
+  {
+    id: 'emerald-luxury',
+    name: 'Dubai Emerald & Gold',
+    tag: 'GCC Wealth & Prestige',
+    colors: {
+      primary: '#10B981',
+      primary_hover: '#059669',
+      secondary: '#F59E0B',
+      dark_card: '#0C1A14',
+      dark_bg: '#06120E'
+    }
+  },
+  {
+    id: 'cyber-violet',
+    name: 'Neon Cyber Violet',
+    tag: 'Cyberpunk Purple',
+    colors: {
+      primary: '#8B5CF6',
+      primary_hover: '#7C3AED',
+      secondary: '#EC4899',
+      dark_card: '#140E26',
+      dark_bg: '#0B0716'
+    }
+  },
+  {
+    id: 'crimson-ruby',
+    name: 'Crimson Ruby & Black',
+    tag: 'Bold Luxury Red',
+    colors: {
+      primary: '#EF4444',
+      primary_hover: '#DC2626',
+      secondary: '#F87171',
+      dark_card: '#180C0E',
+      dark_bg: '#0F0608'
+    }
+  },
+  {
+    id: 'luxury-gold',
+    name: 'Luxury Gold & Charcoal',
+    tag: 'VIP Elite Gold',
+    colors: {
+      primary: '#EAB308',
+      primary_hover: '#CA8A04',
+      secondary: '#F59E0B',
+      dark_card: '#16140D',
+      dark_bg: '#0D0C07'
+    }
+  }
+];
+
+export function generateThemeCss(colors?: Partial<ThemeCustomColors>): string {
+  const c = { ...DEFAULT_THEME_COLORS, ...(colors || {}) };
+
+  const hexToRgb = (hex: string) => {
+    if (!hex || typeof hex !== 'string') return '0, 160, 223';
+    const clean = hex.replace('#', '').trim();
+    if (clean.length === 3) {
+      const r = parseInt(clean[0] + clean[0], 16);
+      const g = parseInt(clean[1] + clean[1], 16);
+      const b = parseInt(clean[2] + clean[2], 16);
+      return `${r}, ${g}, ${b}`;
+    }
+    if (clean.length >= 6) {
+      const r = parseInt(clean.substring(0, 2), 16);
+      const g = parseInt(clean.substring(2, 4), 16);
+      const b = parseInt(clean.substring(4, 6), 16);
+      return isNaN(r) ? '0, 160, 223' : `${r}, ${g}, ${b}`;
+    }
+    return '0, 160, 223';
+  };
+
+  const primaryRgb = hexToRgb(c.primary);
+  const secRgb = hexToRgb(c.secondary || c.primary_hover);
+
+  return `
+    :root, [data-theme] {
+      --primary: ${c.primary} !important;
+      --primary-hover: ${c.primary_hover} !important;
+      --primary-dark: ${c.primary_hover} !important;
+      --primary-glow: rgba(${primaryRgb}, 0.45) !important;
+      --primary-rgb: ${primaryRgb} !important;
+      --theme-accent: ${c.primary} !important;
+      --theme-secondary: ${c.secondary} !important;
+      --dark-bg: ${c.dark_bg} !important;
+      --dark-card: ${c.dark_card} !important;
+    }
+    .text-\\[\\#00A0DF\\], .text-\\[\\#00a0df\\] { color: var(--primary) !important; }
+    .bg-\\[\\#00A0DF\\], .bg-\\[\\#00a0df\\] { background-color: var(--primary) !important; }
+    .border-\\[\\#00A0DF\\], .border-\\[\\#00a0df\\] { border-color: var(--primary) !important; }
+    .hover\\:bg-\\[\\#008ac2\\]:hover, .hover\\:bg-\\[\\#008ec7\\]:hover, .hover\\:bg-\\[\\#008bc2\\]:hover { background-color: var(--primary-hover) !important; }
+    .hover\\:text-\\[\\#00A0DF\\]:hover, .hover\\:text-\\[\\#00a0df\\]:hover { color: var(--primary) !important; }
+    .hover\\:border-\\[\\#00A0DF\\]:hover, .hover\\:border-\\[\\#00a0df\\]:hover { border-color: var(--primary) !important; }
+    .fill-\\[\\#00A0DF\\], .fill-\\[\\#00a0df\\] { fill: var(--primary) !important; }
+    [class*="bg-\\[\\#00A0DF\\]\\/"], [class*="bg-\\[\\#00a0df\\]\\/"] { background-color: rgba(${primaryRgb}, 0.15) !important; }
+    [class*="border-\\[\\#00A0DF\\]\\/"], [class*="border-\\[\\#00a0df\\]\\/"] { border-color: rgba(${primaryRgb}, 0.3) !important; }
+    [class*="text-\\[\\#00A0DF\\]\\/"], [class*="text-\\[\\#00a0df\\]\\/"] { color: rgba(${primaryRgb}, 0.85) !important; }
+    [class*="shadow-\\[\\#00A0DF\\]"], [class*="shadow-\\[\\#00a0df\\]"] { --tw-shadow-color: rgba(${primaryRgb}, 0.35) !important; }
+    [class*="from-\\[\\#00A0DF\\]"], [class*="from-\\[\\#00a0df\\]"] { --tw-gradient-from: ${c.primary} var(--tw-gradient-from-position) !important; }
+    [class*="to-\\[\\#00A0DF\\]"], [class*="to-\\[\\#00a0df\\]"] { --tw-gradient-to: ${c.secondary || c.primary_hover} var(--tw-gradient-to-position) !important; }
+    ::selection { background-color: ${c.primary} !important; color: #FFFFFF !important; }
+  `;
 }
 
 export const defaultCmsContent: CmsContentSchema = {
@@ -337,7 +490,9 @@ export const defaultCmsContent: CmsContentSchema = {
     custom_head_code: ''
   },
   theme: {
-    active_theme: 'default'
+    active_preset: 'default',
+    active_theme: 'default',
+    custom_colors: { ...DEFAULT_THEME_COLORS }
   }
 };
 
