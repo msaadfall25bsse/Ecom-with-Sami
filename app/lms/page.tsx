@@ -68,13 +68,9 @@ export default function LmsClassroomPage() {
 
   // DRM & Anti-Piracy Security System State
   const [showDrmModal, setShowDrmModal] = useState(false);
-  const [strikes, setStrikes] = useState<number>(0);
-  const [strikeToast, setStrikeToast] = useState<{ strikeCount: number; message: string; visible: boolean } | null>(null);
-  const lastStrikeTimeRef = React.useRef<number>(0);
 
-  // Fullscreen Watermark & Anti-Snipping Blur State
+  // Fullscreen Player & Forensic Watermark State
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [isWindowBlurred, setIsWindowBlurred] = useState(false);
   const playerContainerRef = React.useRef<HTMLDivElement>(null);
   const videoRef = React.useRef<HTMLVideoElement>(null);
 
@@ -100,59 +96,6 @@ export default function LmsClassroomPage() {
         (document as any).webkitExitFullscreen();
       }
       setIsFullscreen(false);
-    }
-  };
-
-  const handleSecurityStrike = async (violationType: string) => {
-    // Debounce cooldown: At least 3.5 seconds between strikes
-    const now = Date.now();
-    if (now - lastStrikeTimeRef.current < 3500) return;
-    lastStrikeTimeRef.current = now;
-
-    // Instantly neutralize clipboard
-    try {
-      if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
-        navigator.clipboard.writeText('⚠️ SAMI LMS CONTENT PROTECTED: Screen capture & recording is strictly prohibited. Security strike recorded.');
-      }
-    } catch (e) {}
-
-    const nextCount = strikes + 1;
-    setStrikes(nextCount);
-
-    setStrikeToast({
-      strikeCount: nextCount,
-      message: nextCount >= 5 
-        ? 'Maximum violations reached (5/5). LMS Access Terminated.'
-        : `Screen capture attempt detected (${nextCount}/5 Strikes). DRM Active.`,
-      visible: true
-    });
-
-    setTimeout(() => {
-      setStrikeToast(prev => prev ? { ...prev, visible: false } : null);
-    }, 5000);
-
-    // Persist strike to Supabase backend
-    try {
-      const res = await fetch('/api/lms/security/strike', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          violationType,
-          studentId: user?.id,
-          email: user?.email
-        })
-      });
-      const data = await res.json();
-      if (data && data.strikeCount !== undefined) {
-        setStrikes(data.strikeCount);
-      }
-      if (data && (data.isBlocked || nextCount >= 5)) {
-        handleImmediateForceLogout('Account permanently locked due to repeated DRM screenshot/recording violations (5/5 strikes). Contact Mentor Sardar Samiullah on WhatsApp to pay fine and request reactivation.');
-      }
-    } catch (e) {
-      if (nextCount >= 5) {
-        handleImmediateForceLogout('Account permanently locked due to repeated DRM screenshot/recording violations (5/5 strikes). Contact Mentor Sardar Samiullah on WhatsApp to pay fine and request reactivation.');
-      }
     }
   };
 
@@ -319,9 +262,6 @@ export default function LmsClassroomPage() {
       .then(res => {
         if (res.authenticated && res.user) {
           setUser(res.user);
-          if (res.user.strikeCount !== undefined) {
-            setStrikes(Number(res.user.strikeCount || 0));
-          }
           try {
             if (sessionStorage.getItem('sami_lms_drm_modal_seen') !== 'true') {
               setShowDrmModal(true);
@@ -511,70 +451,6 @@ export default function LmsClassroomPage() {
     };
   }, []);
 
-  // 2. Window Blur & Anti-Snipping Protection (Pauses & protects video on window blur)
-  useEffect(() => {
-    const handleBlur = () => {
-      if (videoRef.current && !videoRef.current.paused && !videoRef.current.ended) {
-        videoRef.current.pause();
-        setIsWindowBlurred(true);
-      }
-    };
-
-    const handleFocus = () => {
-      // Keep paused so user clicks resume
-    };
-
-    window.addEventListener('blur', handleBlur);
-    window.addEventListener('focus', handleFocus);
-    return () => {
-      window.removeEventListener('blur', handleBlur);
-      window.removeEventListener('focus', handleFocus);
-    };
-  }, []);
-
-  // 3. Security Sensor: Anti-Piracy Keyboard Traps (PrintScreen, Snipping Tool, DevTools)
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // 1. PrintScreen key
-      if (e.key === 'PrintScreen' || e.keyCode === 44) {
-        e.preventDefault();
-        handleSecurityStrike('PRINT_SCREEN_KEY');
-        return;
-      }
-
-      // 2. Windows Snipping Tool (Meta + Shift + S or Ctrl + Shift + S)
-      if ((e.metaKey || e.ctrlKey) && e.shiftKey && (e.key === 's' || e.key === 'S')) {
-        e.preventDefault();
-        handleSecurityStrike('SNIPPING_TOOL_SHORTCUT');
-        return;
-      }
-
-      // 3. F12 or DevTools inspect (Ctrl + Shift + I/J/C)
-      if (e.key === 'F12' || ((e.ctrlKey || e.metaKey) && e.shiftKey && ['I', 'i', 'J', 'j', 'C', 'c'].includes(e.key))) {
-        e.preventDefault();
-        handleSecurityStrike('DEVTOOLS_INSPECT');
-        return;
-      }
-
-      // 4. View Source (Ctrl + U)
-      if ((e.ctrlKey || e.metaKey) && (e.key === 'u' || e.key === 'U')) {
-        e.preventDefault();
-        handleSecurityStrike('VIEW_SOURCE');
-        return;
-      }
-
-      // 5. Print Page (Ctrl + P)
-      if ((e.ctrlKey || e.metaKey) && (e.key === 'p' || e.key === 'P')) {
-        e.preventDefault();
-        handleSecurityStrike('PRINT_PAGE');
-        return;
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown, true);
-    return () => window.removeEventListener('keydown', handleKeyDown, true);
-  }, [strikes, user]);
-
   const isAdmin = Boolean(
     user?.role === 'SUPER_ADMIN' || 
     user?.role === 'ADMIN' || 
@@ -753,16 +629,11 @@ export default function LmsClassroomPage() {
         {/* DRM Security Status Indicator Badge */}
         <button
           onClick={() => setShowDrmModal(true)}
-          className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-800/90 hover:bg-slate-700 text-[#00A0DF] hover:text-white border border-[#00A0DF]/30 text-[11px] font-bold transition-all shadow-sm"
+          className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-800/90 hover:bg-slate-700 text-[#00A0DF] hover:text-white border border-[#00A0DF]/30 text-[11px] font-bold transition-all shadow-sm cursor-pointer"
           title="Click to view Anti-Piracy DRM Policy"
         >
           <Shield size={12} className="text-[#00A0DF]" />
           <span>DRM Active</span>
-          {strikes > 0 && (
-            <span className="px-1.5 py-0.2 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-mono border border-amber-500/30">
-              {strikes}/5
-            </span>
-          )}
         </button>
 
         {/* User Profile & Sign Out */}
@@ -922,20 +793,56 @@ export default function LmsClassroomPage() {
         {/* Right Stage: Main Classroom Area */}
         <main className="flex-1 flex flex-col overflow-y-auto max-h-screen lg:max-h-[calc(100vh-57px)]">
           
-          {/* LMS Top DRM & Anti-Piracy Announcement Bar */}
-          <div className="bg-gradient-to-r from-red-950/40 via-[#111827] to-slate-900 border-b border-red-500/20 px-3 sm:px-6 py-2 flex items-center justify-between gap-3 text-xs z-20 shadow-sm">
-            <div className="flex items-center gap-2 min-w-0">
-              <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-500/20 text-red-400 border border-red-500/30 text-[10px] font-black uppercase tracking-wider flex-shrink-0 animate-pulse">
-                <ShieldAlert size={12} />
-                <span>DRM ACTIVE</span>
-              </span>
-              <p className="text-[11px] sm:text-xs text-slate-300 truncate font-medium">
-                <strong className="text-white">Content Protected:</strong> Lectures are watermarked with your Student ID &amp; IP. Screen recording or screenshot capture is strictly monitored. 5 strikes lead to immediate ban and reactivation fine.
-              </p>
+          {/* LMS Top DRM & Anti-Piracy Scrolling Announcement Bar */}
+          <div className="bg-gradient-to-r from-red-950/50 via-[#111827] to-slate-900 border-b border-red-500/20 px-3 sm:px-4 py-2 flex items-center gap-3 text-xs z-20 shadow-sm overflow-hidden">
+            {/* Left Pinned DRM Badge */}
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-red-500/15 border border-red-500/30 text-red-400 text-[10px] font-black uppercase tracking-wider flex-shrink-0 z-10 shadow-sm">
+              <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-ping inline-block flex-shrink-0" />
+              <ShieldAlert size={12} className="text-red-400" />
+              <span>DRM ACTIVE</span>
             </div>
+
+            {/* Continuous Scrolling Marquee Ticker */}
+            <div className="flex-1 overflow-hidden relative flex items-center min-w-0">
+              <div className="animate-lms-marquee flex items-center gap-8 py-0.5">
+                {/* Loop 1 */}
+                <div className="flex items-center gap-6 text-[11px] sm:text-xs text-slate-300 font-medium">
+                  <span className="flex items-center gap-1.5">
+                    <span className="text-white font-bold">🔒 Content Protected:</span>
+                    <span>All course lectures are dynamically watermarked with your Student Name, ID &amp; Live IP.</span>
+                  </span>
+                  <span className="text-red-400 font-semibold flex items-center gap-1">
+                    <span>•</span>
+                    <span>Screen recording, external capture, and unauthorized sharing are strictly prohibited.</span>
+                  </span>
+                  <span className="text-cyan-400 font-medium flex items-center gap-1">
+                    <span>•</span>
+                    <span>Dynamic forensic tracking is permanently active across all video streams.</span>
+                  </span>
+                </div>
+
+                {/* Loop 2 (Identical duplicate for seamless 0% to -50% infinite loop) */}
+                <div className="flex items-center gap-6 text-[11px] sm:text-xs text-slate-300 font-medium" aria-hidden="true">
+                  <span className="flex items-center gap-1.5">
+                    <span className="text-white font-bold">🔒 Content Protected:</span>
+                    <span>All course lectures are dynamically watermarked with your Student Name, ID &amp; Live IP.</span>
+                  </span>
+                  <span className="text-red-400 font-semibold flex items-center gap-1">
+                    <span>•</span>
+                    <span>Screen recording, external capture, and unauthorized sharing are strictly prohibited.</span>
+                  </span>
+                  <span className="text-cyan-400 font-medium flex items-center gap-1">
+                    <span>•</span>
+                    <span>Dynamic forensic tracking is permanently active across all video streams.</span>
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Pinned "View Policy" Button */}
             <button
               onClick={() => setShowDrmModal(true)}
-              className="text-[10px] sm:text-[11px] font-bold text-[#00A0DF] hover:underline whitespace-nowrap flex-shrink-0 flex items-center gap-1"
+              className="text-[10px] sm:text-[11px] font-bold text-[#00A0DF] hover:text-[#38bdf8] whitespace-nowrap flex-shrink-0 flex items-center gap-1 bg-[#00A0DF]/10 hover:bg-[#00A0DF]/20 px-2.5 py-1 rounded-lg border border-[#00A0DF]/30 transition-all z-10 cursor-pointer"
             >
               <span>View Policy</span>
               <ChevronRight size={12} />
@@ -1118,35 +1025,6 @@ export default function LmsClassroomPage() {
                       allowFullScreen
                       className="w-full h-full border-0"
                     />
-                  )}
-
-                  {/* Anti-Snipping Blackout Protection on Window Blur */}
-                  {isWindowBlurred && (
-                    <div className="absolute inset-0 z-40 bg-black/95 backdrop-blur-md flex flex-col items-center justify-center p-4 text-center select-none animate-in fade-in duration-150">
-                      <div className="w-14 h-14 rounded-2xl bg-red-500/10 border border-red-500/30 text-red-400 flex items-center justify-center mb-3 shadow-lg shadow-red-500/20">
-                        <ShieldAlert size={28} />
-                      </div>
-                      <span className="inline-block bg-red-500/20 text-red-400 border border-red-500/30 text-[10px] font-black uppercase tracking-wider px-3 py-0.5 rounded-full mb-2">
-                        DRM CONTENT PROTECTION ACTIVE
-                      </span>
-                      <h4 className="text-sm sm:text-base font-black text-white mb-1">
-                        Playback Paused &bull; Screen Capture Protected
-                      </h4>
-                      <p className="text-xs text-slate-400 max-w-sm mb-4 leading-relaxed">
-                        Window focus lost or screen capture tool detected. Click below to resume your lecture.
-                      </p>
-                      <button
-                        onClick={() => {
-                          setIsWindowBlurred(false);
-                          if (videoRef.current) {
-                            videoRef.current.play().catch(() => {});
-                          }
-                        }}
-                        className="px-5 py-2 rounded-xl bg-[#00A0DF] hover:bg-[#008ec7] text-white text-xs font-black shadow-lg shadow-[#00A0DF]/30 transition-all active:scale-95"
-                      >
-                        Resume Lecture
-                      </button>
-                    </div>
                   )}
 
                   {/* Floating Custom Fullscreen Toggle Button (Watermark stays visible) */}
@@ -1520,45 +1398,6 @@ export default function LmsClassroomPage() {
         </a>
       </div>
 
-      {/* Piracy Strike Warning Floating Banner / Toast */}
-      {strikeToast && strikeToast.visible && (
-        <div className="fixed top-14 sm:top-16 left-1/2 -translate-x-1/2 z-50 w-[92vw] max-w-md animate-in slide-in-from-top-4 duration-300 pointer-events-auto">
-          <div className={`p-3.5 rounded-2xl border shadow-2xl flex items-center justify-between gap-3 ${
-            strikeToast.strikeCount >= 4
-              ? 'bg-red-950/95 border-red-500/50 text-red-200 shadow-red-950/50'
-              : 'bg-[#1e1503]/95 border-amber-500/50 text-amber-200 shadow-amber-950/50'
-          }`}>
-            <div className="flex items-center gap-2.5 min-w-0">
-              <div className={`p-2 rounded-xl flex-shrink-0 ${
-                strikeToast.strikeCount >= 4 ? 'bg-red-500/20 text-red-400' : 'bg-amber-500/20 text-amber-400'
-              }`}>
-                <ShieldAlert size={18} />
-              </div>
-              <div className="min-w-0">
-                <div className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider flex items-center gap-1.5 text-white">
-                  <span>PIRACY WARNING</span>
-                  <span className={`px-1.5 py-0.2 rounded text-[9px] font-mono font-bold ${
-                    strikeToast.strikeCount >= 4 ? 'bg-red-500/30 text-red-300' : 'bg-amber-500/30 text-amber-300'
-                  }`}>
-                    {strikeToast.strikeCount}/5 Strikes
-                  </span>
-                </div>
-                <div className="text-[11px] sm:text-xs truncate font-medium text-slate-200">
-                  {strikeToast.message}
-                </div>
-              </div>
-            </div>
-            <button
-              onClick={() => setStrikeToast(prev => prev ? { ...prev, visible: false } : null)}
-              className="p-1 rounded-lg text-slate-400 hover:text-white flex-shrink-0"
-              title="Dismiss"
-            >
-              <X size={14} />
-            </button>
-          </div>
-        </div>
-      )}
-
       {/* DRM Security Announcement Policy Modal */}
       <DrmAnnouncementModal
         isOpen={showDrmModal}
@@ -1578,30 +1417,31 @@ export default function LmsClassroomPage() {
 // SUBCOMPONENT: Dynamic Moving Forensic Watermark Overlay
 // =============================================================================
 function DynamicForensicWatermark({ user, isFullscreen = false }: { user: any; isFullscreen?: boolean }) {
-  const [sector, setSector] = useState(0);
+  const [zone, setZone] = useState(0);
   const [clock, setClock] = useState('');
 
   useEffect(() => {
-    // 1. Live real-time digital clock
+    // 1. Live real-time digital clock (HH:mm:ss)
     const updateClock = () => {
       const now = new Date();
-      const dateStr = now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+      const dateStr = now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
       const timeStr = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-      setClock(`${dateStr} • ${timeStr}`);
+      setClock(`${dateStr} ${timeStr}`);
     };
     updateClock();
     const clockInterval = setInterval(updateClock, 1000);
 
-    // 2. Randomize watermark position across 9 sectors every 5 seconds
+    // 2. Rotate watermark gently across perimeter safe zones every 12 seconds
+    // (Prevents covering the dead center where lecture presentation slides are)
     const moveInterval = setInterval(() => {
-      setSector(prev => {
-        let next = Math.floor(Math.random() * 9);
+      setZone(prev => {
+        let next = Math.floor(Math.random() * 4);
         while (next === prev) {
-          next = Math.floor(Math.random() * 9);
+          next = Math.floor(Math.random() * 4);
         }
         return next;
       });
-    }, 5000);
+    }, 12000);
 
     return () => {
       clearInterval(clockInterval);
@@ -1609,43 +1449,36 @@ function DynamicForensicWatermark({ user, isFullscreen = false }: { user: any; i
     };
   }, []);
 
-  // 9 grid sectors with responsive placement
-  const sectorClasses = [
-    'top-2.5 left-2.5 text-left',                          // 0: Top-Left
-    'top-2.5 left-1/2 -translate-x-1/2 text-center',       // 1: Top-Center
-    'top-2.5 right-2.5 text-right',                        // 2: Top-Right
-    'top-1/2 -translate-y-1/2 left-2.5 text-left',         // 3: Mid-Left
-    'top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2 text-center', // 4: Center
-    'top-1/2 -translate-y-1/2 right-2.5 text-right',       // 5: Mid-Right
-    'bottom-10 left-2.5 text-left',                        // 6: Bottom-Left
-    'bottom-10 left-1/2 -translate-x-1/2 text-center',     // 7: Bottom-Center
-    'bottom-10 right-2.5 text-right',                      // 8: Bottom-Right
+  // 4 Perimeter Safe Zones (strictly outside central lecture slides area)
+  const safeZones = [
+    'top-3 left-3 text-left',                    // 0: Top-Left Corner
+    'top-3 right-3 text-right',                  // 1: Top-Right Corner
+    'bottom-14 right-3 text-right',              // 2: Bottom-Right (Safe above video controls)
+    'bottom-14 left-3 text-left',                // 3: Bottom-Left (Safe above video controls)
   ];
 
-  const studentName = user?.name || 'Authorized Student';
+  const studentName = user?.name || 'Student';
   const studentId = user?.id ? String(user.id).slice(-5).toUpperCase() : 'SAMI';
-  const maskedPhone = user?.phone ? user.phone.replace(/(\d{4})\d{4}(\d{3})/, '$1****$2') : '';
-  const ipAddress = user?.ip || 'Verified Session';
+  const ipAddress = user?.ip || 'Verified';
 
   return (
     <div className="absolute inset-0 pointer-events-none select-none z-[999999] overflow-hidden">
       <div
-        className={`absolute transition-all duration-1000 ease-in-out px-2.5 py-1.5 rounded-xl bg-black/40 backdrop-blur-[1px] border border-white/10 text-white/50 shadow-md ${
-          isFullscreen ? 'max-w-[280px] sm:max-w-[340px]' : 'max-w-[200px] sm:max-w-[250px]'
-        } ${sectorClasses[sector]}`}
+        className={`absolute transition-all duration-1000 ease-in-out px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-lg bg-black/30 backdrop-blur-[0.5px] border border-white/10 text-white/50 shadow-sm ${
+          isFullscreen 
+            ? 'max-w-[210px] sm:max-w-[270px]' 
+            : 'max-w-[170px] sm:max-w-[230px]'
+        } ${safeZones[zone]}`}
       >
-        <div className="flex items-center gap-1 text-[8px] sm:text-[9.5px] font-black tracking-wider text-[#00A0DF]/80 uppercase leading-none mb-0.5">
-          <Shield size={10} className="flex-shrink-0" />
-          <span>SAMI DRM PROTECTED</span>
+        <div className="flex items-center gap-1 text-[7.5px] sm:text-[9px] font-black tracking-wider text-[#00A0DF]/80 uppercase leading-none mb-0.5">
+          <Shield size={9} className="flex-shrink-0" />
+          <span>SAMI DRM • {studentId}</span>
         </div>
-        <div className="text-[8.5px] sm:text-[10px] font-mono font-bold leading-tight truncate text-white/70">
-          {studentName} • SAMI-{studentId}
+        <div className="text-[8px] sm:text-[9.5px] font-mono font-bold leading-tight truncate text-white/70">
+          {studentName}
         </div>
-        <div className="text-[7.5px] sm:text-[9px] font-mono leading-tight text-white/50 truncate">
-          {maskedPhone ? `${maskedPhone} • ` : ''}IP: {ipAddress}
-        </div>
-        <div className="text-[7px] sm:text-[8px] font-mono text-white/40 leading-none mt-0.5">
-          {clock}
+        <div className="text-[7px] sm:text-[8px] font-mono leading-none text-white/40 mt-0.5 truncate">
+          {ipAddress} • {clock}
         </div>
       </div>
     </div>
@@ -1664,7 +1497,7 @@ function DrmAnnouncementModal({ isOpen, onClose }: { isOpen: boolean; onClose: (
         {/* Close Button [X] */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-1.5 rounded-xl bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700 transition-colors"
+          className="absolute top-4 right-4 p-1.5 rounded-xl bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700 transition-colors cursor-pointer"
           title="Dismiss Policy Notice"
         >
           <X size={18} />
@@ -1698,31 +1531,31 @@ function DrmAnnouncementModal({ isOpen, onClose }: { isOpen: boolean; onClose: (
             <div>
               <strong className="text-white block font-bold text-xs mb-0.5">Dynamic Forensic Watermarking</strong>
               <span className="text-slate-400 text-[11px] leading-tight">
-                Your Student Name, ID, and IP address are dynamically embedded across all video frames to prevent unauthorized recording and content leaks.
+                Your Student Name, ID, and IP address are dynamically embedded across all video frames to prevent unauthorized recording and trace content leaks.
               </span>
             </div>
           </div>
 
           <div className="p-3 rounded-2xl bg-[#0B0F19] border border-white/5 flex items-start gap-2.5">
             <span className="p-1.5 rounded-xl bg-amber-500/10 text-amber-400 mt-0.5 flex-shrink-0">
-              <AlertTriangle size={15} />
+              <Lock size={15} />
             </span>
             <div>
-              <strong className="text-white block font-bold text-xs mb-0.5">5-Strike Anti-Capture Sensor</strong>
+              <strong className="text-white block font-bold text-xs mb-0.5">Authorized Student License</strong>
               <span className="text-slate-400 text-[11px] leading-tight">
-                Screen recording software, screenshot shortcuts, and DevTools inspections are actively tracked. Each violation registers a strike on your account.
+                This portal is licensed exclusively for your individual learning. Sharing account credentials, downloading files, or screen capturing is strictly prohibited.
               </span>
             </div>
           </div>
 
           <div className="p-3 rounded-2xl bg-[#0B0F19] border border-white/5 flex items-start gap-2.5">
-            <span className="p-1.5 rounded-xl bg-red-500/10 text-red-400 mt-0.5 flex-shrink-0">
-              <Lock size={15} />
+            <span className="p-1.5 rounded-xl bg-emerald-500/10 text-emerald-400 mt-0.5 flex-shrink-0">
+              <ShieldCheck size={15} />
             </span>
             <div>
-              <strong className="text-white block font-bold text-xs mb-0.5">Instant Lockout &amp; Fine Policy</strong>
+              <strong className="text-white block font-bold text-xs mb-0.5">Intellectual Property Protection</strong>
               <span className="text-slate-400 text-[11px] leading-tight">
-                Accumulating 5 strikes will immediately terminate your LMS portal access. Restoring access requires administrative review and payment of a reactivation fine.
+                Any leaked recordings or unauthorized distribution will be forensically traced back to the offending student account, resulting in immediate termination and legal action.
               </span>
             </div>
           </div>
@@ -1732,7 +1565,7 @@ function DrmAnnouncementModal({ isOpen, onClose }: { isOpen: boolean; onClose: (
         <div className="pt-2">
           <button
             onClick={onClose}
-            className="w-full py-2.5 sm:py-3 rounded-xl bg-gradient-to-r from-[#00A0DF] to-[#0077aa] hover:from-[#008ec7] hover:to-[#006699] text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-[#00A0DF]/30 transition-all active:scale-[0.98]"
+            className="w-full py-2.5 sm:py-3 rounded-xl bg-gradient-to-r from-[#00A0DF] to-[#0077aa] hover:from-[#008ec7] hover:to-[#006699] text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-[#00A0DF]/30 transition-all active:scale-[0.98] cursor-pointer"
           >
             I Understand &amp; Agree
           </button>

@@ -523,3 +523,25 @@ body {
 .animate-star-twinkle {
   animation: starTwinkle 3s ease-in-out infinite;
 }
+
+/* LMS Announcement Bar Continuous Marquee Ticker */
+@keyframes lmsMarquee {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-lms-marquee {
+  display: inline-flex;
+  white-space: nowrap;
+  animation: lmsMarquee 35s linear infinite;
+  will-change: transform;
+}
+
+.animate-lms-marquee:hover {
+  animation-play-state: paused;
+}
+
