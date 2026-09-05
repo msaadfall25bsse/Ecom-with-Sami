@@ -36,7 +36,7 @@ import {
   X
 } from 'lucide-react';
 import { defaultCmsContent, CmsContentSchema } from '@/utils/cmsStore';
-import { Module, Supplier } from '@/utils/db';
+import { Module, Supplier, initialModules, initialSuppliers } from '@/utils/db';
 
 import { supabase } from '@/lib/supabase';
 
@@ -45,8 +45,8 @@ export default function AdminCmsPage() {
   const [authChecking, setAuthChecking] = useState(true);
   const [activeTab, setActiveTab] = useState<'lms' | 'hero' | 'stats' | 'bonuses' | 'reviews' | 'faqs' | 'payments' | 'contact' | 'pixels'>('lms');
   const [cmsData, setCmsData] = useState<CmsContentSchema>(defaultCmsContent);
-  const [modules, setModules] = useState<Module[]>([]);
-  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+  const [modules, setModules] = useState<Module[]>(initialModules);
+  const [suppliers, setSuppliers] = useState<Supplier[]>(initialSuppliers);
   const [loading, setLoading] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
   const [openModuleId, setOpenModuleId] = useState<number>(1);
@@ -117,7 +117,7 @@ export default function AdminCmsPage() {
 
     const cacheBuster = `${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
 
-    // 1. Try local API route
+    // 1. Try local API route for CMS content
     try {
       const res = await fetch(`/api/cms/content?_nocache=${cacheBuster}`, {
         cache: 'no-store',
@@ -131,7 +131,35 @@ export default function AdminCmsPage() {
       }
     } catch (err) {}
 
-    // 2. Direct Supabase Cloud Fetch (Guaranteed fallback for static web hosts like Hostinger)
+    // 2. Fetch LMS Modules from API
+    try {
+      const modRes = await fetch(`/api/lms/modules?_nocache=${cacheBuster}`, {
+        cache: 'no-store',
+        headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache' }
+      });
+      if (modRes.ok) {
+        const modData = await modRes.json();
+        if (modData.success && Array.isArray(modData.modules) && modData.modules.length > 0) {
+          setModules(modData.modules);
+        }
+      }
+    } catch (err) {}
+
+    // 3. Fetch Suppliers from API
+    try {
+      const supRes = await fetch(`/api/lms/suppliers?_nocache=${cacheBuster}`, {
+        cache: 'no-store',
+        headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache' }
+      });
+      if (supRes.ok) {
+        const supData = await supRes.json();
+        if (supData.success && Array.isArray(supData.suppliers) && supData.suppliers.length > 0) {
+          setSuppliers(supData.suppliers);
+        }
+      }
+    } catch (err) {}
+
+    // 4. Direct Supabase Cloud Fetch (Guaranteed fallback for static web hosts like Hostinger)
     if (supabase) {
       try {
         const { data, error } = await supabase.from('cms_settings').select('value_json').eq('key', 'main_cms').maybeSingle();
