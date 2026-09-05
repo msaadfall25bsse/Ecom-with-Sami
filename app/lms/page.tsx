@@ -35,7 +35,9 @@ import {
   Loader2,
   Shield,
   ShieldAlert,
-  AlertTriangle
+  AlertTriangle,
+  Maximize2,
+  Minimize2
 } from 'lucide-react';
 import { Module, Supplier, ResourceItem } from '@/utils/db';
 import { supabase } from '@/lib/supabase';
@@ -67,9 +69,46 @@ export default function LmsClassroomPage() {
   // DRM & Anti-Piracy Security System State
   const [showDrmModal, setShowDrmModal] = useState(false);
 
-  // Player Container & Video Ref
+  // Fullscreen Player & Watermark State
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const playerContainerRef = React.useRef<HTMLDivElement>(null);
   const videoRef = React.useRef<HTMLVideoElement>(null);
+
+  const togglePlayerFullscreen = () => {
+    if (!playerContainerRef.current) return;
+    const isCurrentlyFs = Boolean(document.fullscreenElement || (document as any).webkitFullscreenElement || isFullscreen);
+
+    if (!isCurrentlyFs) {
+      const elem: any = playerContainerRef.current;
+      if (elem.requestFullscreen) {
+        elem.requestFullscreen().catch(() => {});
+      } else if (elem.webkitRequestFullscreen) {
+        elem.webkitRequestFullscreen();
+      } else if (elem.mozRequestFullScreen) {
+        elem.mozRequestFullScreen();
+      } else if (elem.msRequestFullscreen) {
+        elem.msRequestFullscreen();
+      }
+      try {
+        if (screen.orientation && (screen.orientation as any).lock) {
+          (screen.orientation as any).lock('landscape').catch(() => {});
+        }
+      } catch (e) {}
+      setIsFullscreen(true);
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen().catch(() => {});
+      } else if ((document as any).webkitExitFullscreen) {
+        (document as any).webkitExitFullscreen();
+      }
+      try {
+        if (screen.orientation && (screen.orientation as any).unlock) {
+          (screen.orientation as any).unlock();
+        }
+      } catch (e) {}
+      setIsFullscreen(false);
+    }
+  };
 
   const getEmbedUrl = (url?: string) => {
     if (!url) return 'https://www.youtube.com/embed/dQw4w9WgXcQ';
@@ -391,6 +430,19 @@ export default function LmsClassroomPage() {
       if (bc) bc.close();
       if (realtimeChannel && supabase) supabase.removeChannel(realtimeChannel);
       if (realtimeEnrChannel && supabase) supabase.removeChannel(realtimeEnrChannel);
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleFsChange = () => {
+      const fsElem = document.fullscreenElement || (document as any).webkitFullscreenElement;
+      setIsFullscreen(Boolean(fsElem));
+    };
+    document.addEventListener('fullscreenchange', handleFsChange);
+    document.addEventListener('webkitfullscreenchange', handleFsChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFsChange);
+      document.removeEventListener('webkitfullscreenchange', handleFsChange);
     };
   }, []);
 
@@ -864,109 +916,139 @@ export default function LmsClassroomPage() {
                 {/* Widescreen Responsive Video Player */}
                 <div
                   ref={playerContainerRef}
-                  className="relative bg-black rounded-xl sm:rounded-3xl overflow-hidden border-2 border-white/10 shadow-2xl w-full aspect-video flex items-center justify-center"
+                  onDoubleClick={togglePlayerFullscreen}
+                  className={`relative bg-black flex items-center justify-center transition-all ${
+                    isFullscreen 
+                      ? 'fixed inset-0 z-[99999] w-screen h-screen' 
+                      : 'w-full aspect-video rounded-xl sm:rounded-3xl overflow-hidden border-2 border-white/10 shadow-2xl'
+                  }`}
                 >
-                  {activeLesson?.videoUrl && (
-                    activeLesson.videoUrl.match(/\.(mp4|webm|mov|m4v|ogg)(\?.*)?$/i) ||
-                    activeLesson.videoUrl.includes('supabase.co/storage') ||
-                    activeLesson.videoUrl.startsWith('/uploads/') ||
-                    activeLesson.videoUrl.startsWith('/api/videos/')
-                  ) ? (
-                    <div className="relative w-full h-full flex items-center justify-center bg-black">
-                      <video
-                        ref={videoRef}
-                        key={activeLesson.id + activeLesson.videoUrl}
-                        controls
-                        controlsList="nodownload"
-                        playsInline
-                        preload="metadata"
-                        onError={() => setVideoLoadError(true)}
-                        onLoadedData={() => setVideoLoadError(false)}
-                        onLoadedMetadata={(e) => {
-                          setVideoLoadError(false);
-                          try {
-                            const savedPos = localStorage.getItem(`sami_lms_pos_${activeLesson.id}`);
-                            if (savedPos && Number(savedPos) > 5 && Number(savedPos) < e.currentTarget.duration - 10) {
-                              e.currentTarget.currentTime = Number(savedPos);
-                            }
-                          } catch (err) {}
-                        }}
-                        onTimeUpdate={(e) => {
-                          const vid = e.currentTarget;
-                          if (!vid.duration || !isFinite(vid.duration) || vid.duration <= 0) return;
-                          const pct = Math.min(100, Math.round((vid.currentTime / vid.duration) * 100));
-
-                          try {
-                            localStorage.setItem(`sami_lms_pos_${activeLesson.id}`, String(Math.floor(vid.currentTime)));
-                          } catch (err) {}
-
-                          setWatchProgress(prev => {
-                            const current = prev[activeLesson.id] || 0;
-                            if (pct > current) {
-                              const nextMap = { ...prev, [activeLesson.id]: pct };
-                              try {
-                                localStorage.setItem('sami_lms_watch_progress', JSON.stringify(nextMap));
-                              } catch (err) {}
-                              return nextMap;
-                            }
-                            return prev;
-                          });
-
-                          // Auto complete when >= 90%
-                          if (pct >= 90 && activeLesson && !completedLessons.includes(activeLesson.id)) {
-                            markLessonComplete(activeLesson.id, true);
+                  {/* Exact 16:9 Video Stage - Keeps Watermark 100% on the video without blank border drift */}
+                  <div
+                    style={
+                      isFullscreen
+                        ? {
+                            width: 'min(100vw, calc(100vh * 16 / 9))',
+                            height: 'min(100vh, calc(100vw * 9 / 16))',
                           }
-                        }}
-                        onEnded={() => {
-                          if (activeLesson && !completedLessons.includes(activeLesson.id)) {
-                            markLessonComplete(activeLesson.id, true);
-                          }
-                        }}
-                        className="w-full h-full object-contain bg-black"
-                      >
-                        <source src={activeLesson.videoUrl} />
-                        {activeLesson.videoUrl.startsWith('/api/videos/') && (
-                          <source src={activeLesson.videoUrl.replace('/api/videos/', '/uploads/videos/')} />
-                        )}
-                        Your browser does not support HTML5 video streaming.
-                      </video>
-
-                      {videoLoadError && (
-                        <div className="absolute inset-0 bg-black/90 flex flex-col items-center justify-center p-4 text-center z-20">
-                          <AlertCircle size={32} className="text-amber-400 mb-2 animate-bounce" />
-                          <p className="text-sm font-bold text-white mb-1">Video stream connection loading...</p>
-                          <p className="text-xs text-slate-400 mb-4 max-w-sm">
-                            Click below to refresh the video stream buffer.
-                          </p>
-                          <button
-                            onClick={() => {
-                              setVideoLoadError(false);
-                              const vid = document.querySelector('video');
-                              if (vid) {
-                                vid.load();
-                                vid.play().catch(() => {});
+                        : undefined
+                    }
+                    className="relative w-full h-full flex items-center justify-center overflow-hidden"
+                  >
+                    {activeLesson?.videoUrl && (
+                      activeLesson.videoUrl.match(/\.(mp4|webm|mov|m4v|ogg)(\?.*)?$/i) ||
+                      activeLesson.videoUrl.includes('supabase.co/storage') ||
+                      activeLesson.videoUrl.startsWith('/uploads/') ||
+                      activeLesson.videoUrl.startsWith('/api/videos/')
+                    ) ? (
+                      <div className="relative w-full h-full flex items-center justify-center bg-black">
+                        <video
+                          ref={videoRef}
+                          key={activeLesson.id + activeLesson.videoUrl}
+                          controls
+                          controlsList="nodownload nofullscreen"
+                          playsInline
+                          preload="metadata"
+                          onError={() => setVideoLoadError(true)}
+                          onLoadedData={() => setVideoLoadError(false)}
+                          onLoadedMetadata={(e) => {
+                            setVideoLoadError(false);
+                            try {
+                              const savedPos = localStorage.getItem(`sami_lms_pos_${activeLesson.id}`);
+                              if (savedPos && Number(savedPos) > 5 && Number(savedPos) < e.currentTarget.duration - 10) {
+                                e.currentTarget.currentTime = Number(savedPos);
                               }
-                            }}
-                            className="px-4 py-2 rounded-xl bg-[#00A0DF] hover:bg-[#008bc2] text-xs font-bold text-white flex items-center gap-1.5 transition-colors shadow-lg shadow-[#00A0DF]/30"
-                          >
-                            <RotateCcw size={13} />
-                            <span>Reload Video Stream</span>
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <iframe
-                      src={getEmbedUrl(activeLesson?.videoUrl)}
-                      title={activeLesson?.title || 'Lesson Video'}
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                      className="w-full h-full border-0"
-                    />
-                  )}
+                            } catch (err) {}
+                          }}
+                          onTimeUpdate={(e) => {
+                            const vid = e.currentTarget;
+                            if (!vid.duration || !isFinite(vid.duration) || vid.duration <= 0) return;
+                            const pct = Math.min(100, Math.round((vid.currentTime / vid.duration) * 100));
 
-                  {/* Dynamic Forensic Watermark Overlay */}
-                  <DynamicForensicWatermark user={user} />
+                            try {
+                              localStorage.setItem(`sami_lms_pos_${activeLesson.id}`, String(Math.floor(vid.currentTime)));
+                            } catch (err) {}
+
+                            setWatchProgress(prev => {
+                              const current = prev[activeLesson.id] || 0;
+                              if (pct > current) {
+                                const nextMap = { ...prev, [activeLesson.id]: pct };
+                                try {
+                                  localStorage.setItem('sami_lms_watch_progress', JSON.stringify(nextMap));
+                                } catch (err) {}
+                                return nextMap;
+                              }
+                              return prev;
+                            });
+
+                            // Auto complete when >= 90%
+                            if (pct >= 90 && activeLesson && !completedLessons.includes(activeLesson.id)) {
+                              markLessonComplete(activeLesson.id, true);
+                            }
+                          }}
+                          onEnded={() => {
+                            if (activeLesson && !completedLessons.includes(activeLesson.id)) {
+                              markLessonComplete(activeLesson.id, true);
+                            }
+                          }}
+                          className="w-full h-full object-contain bg-black"
+                        >
+                          <source src={activeLesson.videoUrl} />
+                          {activeLesson.videoUrl.startsWith('/api/videos/') && (
+                            <source src={activeLesson.videoUrl.replace('/api/videos/', '/uploads/videos/')} />
+                          )}
+                          Your browser does not support HTML5 video streaming.
+                        </video>
+
+                        {videoLoadError && (
+                          <div className="absolute inset-0 bg-black/90 flex flex-col items-center justify-center p-4 text-center z-20">
+                            <AlertCircle size={32} className="text-amber-400 mb-2 animate-bounce" />
+                            <p className="text-sm font-bold text-white mb-1">Video stream connection loading...</p>
+                            <p className="text-xs text-slate-400 mb-4 max-w-sm">
+                              Click below to refresh the video stream buffer.
+                            </p>
+                            <button
+                              onClick={() => {
+                                setVideoLoadError(false);
+                                const vid = document.querySelector('video');
+                                if (vid) {
+                                  vid.load();
+                                  vid.play().catch(() => {});
+                                }
+                              }}
+                              className="px-4 py-2 rounded-xl bg-[#00A0DF] hover:bg-[#008bc2] text-xs font-bold text-white flex items-center gap-1.5 transition-colors shadow-lg shadow-[#00A0DF]/30"
+                            >
+                              <RotateCcw size={13} />
+                              <span>Reload Video Stream</span>
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <iframe
+                        src={getEmbedUrl(activeLesson?.videoUrl)}
+                        title={activeLesson?.title || 'Lesson Video'}
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                        className="w-full h-full border-0"
+                      />
+                    )}
+
+                    {/* Zoom / Fullscreen Button - Placed directly on the 16:9 stage */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        togglePlayerFullscreen();
+                      }}
+                      className="absolute bottom-3 right-3 z-30 p-2 rounded-xl bg-black/80 hover:bg-[#00A0DF] text-white border border-white/20 transition-all shadow-lg active:scale-95 flex items-center justify-center cursor-pointer"
+                      title={isFullscreen ? 'Exit Fullscreen' : 'Full Screen'}
+                    >
+                      {isFullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+                    </button>
+
+                    {/* Dynamic Forensic Watermark Overlay (100% On Video!) */}
+                    <DynamicForensicWatermark user={user} isFullscreen={isFullscreen} />
+                  </div>
                 </div>
 
                 {/* Live Watch Verification Bar & Cloud Sync Banner */}
@@ -1342,7 +1424,7 @@ export default function LmsClassroomPage() {
 // =============================================================================
 // SUBCOMPONENT: Dynamic Moving Forensic Watermark Overlay
 // =============================================================================
-function DynamicForensicWatermark({ user }: { user: any }) {
+function DynamicForensicWatermark({ user, isFullscreen = false }: { user: any; isFullscreen?: boolean }) {
   const [sector, setSector] = useState(0);
   const [clock, setClock] = useState('');
 
@@ -1395,7 +1477,9 @@ function DynamicForensicWatermark({ user }: { user: any }) {
   return (
     <div className="absolute inset-0 pointer-events-none select-none z-[999999] overflow-hidden">
       <div
-        className={`absolute transition-all duration-1000 ease-in-out px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-lg bg-black/40 backdrop-blur-[1px] border border-white/10 text-white/50 shadow-md max-w-[190px] sm:max-w-[250px] ${sectorClasses[sector]}`}
+        className={`absolute transition-all duration-1000 ease-in-out px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-lg bg-black/45 backdrop-blur-[1px] border border-white/10 text-white/55 shadow-md ${
+          isFullscreen ? 'max-w-[220px] sm:max-w-[290px]' : 'max-w-[190px] sm:max-w-[250px]'
+        } ${sectorClasses[sector]}`}
       >
         <div className="flex items-center gap-1 text-[7.5px] sm:text-[9px] font-black tracking-wider text-[#00A0DF]/80 uppercase leading-none mb-0.5">
           <Shield size={9} className="flex-shrink-0" />
