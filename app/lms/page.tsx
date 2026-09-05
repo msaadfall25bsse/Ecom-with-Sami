@@ -35,9 +35,7 @@ import {
   Loader2,
   Shield,
   ShieldAlert,
-  AlertTriangle,
-  Maximize2,
-  Minimize2
+  AlertTriangle
 } from 'lucide-react';
 import { Module, Supplier, ResourceItem } from '@/utils/db';
 import { supabase } from '@/lib/supabase';
@@ -69,35 +67,9 @@ export default function LmsClassroomPage() {
   // DRM & Anti-Piracy Security System State
   const [showDrmModal, setShowDrmModal] = useState(false);
 
-  // Fullscreen Player & Forensic Watermark State
-  const [isFullscreen, setIsFullscreen] = useState(false);
+  // Player Container & Video Ref
   const playerContainerRef = React.useRef<HTMLDivElement>(null);
   const videoRef = React.useRef<HTMLVideoElement>(null);
-
-  const togglePlayerFullscreen = () => {
-    if (!playerContainerRef.current) return;
-    const isCurrentlyFs = Boolean(document.fullscreenElement || (document as any).webkitFullscreenElement);
-    if (!isCurrentlyFs) {
-      const elem: any = playerContainerRef.current;
-      if (elem.requestFullscreen) {
-        elem.requestFullscreen().catch(() => {});
-      } else if (elem.webkitRequestFullscreen) {
-        elem.webkitRequestFullscreen();
-      } else if (elem.mozRequestFullScreen) {
-        elem.mozRequestFullScreen();
-      } else if (elem.msRequestFullscreen) {
-        elem.msRequestFullscreen();
-      }
-      setIsFullscreen(true);
-    } else {
-      if (document.exitFullscreen) {
-        document.exitFullscreen().catch(() => {});
-      } else if ((document as any).webkitExitFullscreen) {
-        (document as any).webkitExitFullscreen();
-      }
-      setIsFullscreen(false);
-    }
-  };
 
   const getEmbedUrl = (url?: string) => {
     if (!url) return 'https://www.youtube.com/embed/dQw4w9WgXcQ';
@@ -419,35 +391,6 @@ export default function LmsClassroomPage() {
       if (bc) bc.close();
       if (realtimeChannel && supabase) supabase.removeChannel(realtimeChannel);
       if (realtimeEnrChannel && supabase) supabase.removeChannel(realtimeEnrChannel);
-    };
-  }, []);
-
-  // 1. Fullscreen Change Synchronizer (Keeps Forensic Watermark visible in fullscreen)
-  useEffect(() => {
-    const handleFsChange = () => {
-      const fsElem = document.fullscreenElement || (document as any).webkitFullscreenElement;
-      setIsFullscreen(Boolean(fsElem));
-
-      // If native video element entered fullscreen alone, immediately transfer to the container!
-      if (fsElem && fsElem === videoRef.current && playerContainerRef.current) {
-        if (document.exitFullscreen) {
-          document.exitFullscreen().then(() => {
-            const elem: any = playerContainerRef.current;
-            if (elem?.requestFullscreen) {
-              elem.requestFullscreen().catch(() => {});
-            } else if (elem?.webkitRequestFullscreen) {
-              elem.webkitRequestFullscreen();
-            }
-          }).catch(() => {});
-        }
-      }
-    };
-
-    document.addEventListener('fullscreenchange', handleFsChange);
-    document.addEventListener('webkitfullscreenchange', handleFsChange);
-    return () => {
-      document.removeEventListener('fullscreenchange', handleFsChange);
-      document.removeEventListener('webkitfullscreenchange', handleFsChange);
     };
   }, []);
 
@@ -921,12 +864,7 @@ export default function LmsClassroomPage() {
                 {/* Widescreen Responsive Video Player */}
                 <div
                   ref={playerContainerRef}
-                  onDoubleClick={togglePlayerFullscreen}
-                  className={`relative bg-black rounded-xl sm:rounded-3xl overflow-hidden border-2 border-white/10 shadow-2xl w-full flex items-center justify-center transition-all ${
-                    isFullscreen 
-                      ? '!fixed !inset-0 !z-[9999] !w-screen !h-screen !rounded-none !border-0 !max-w-none !aspect-auto bg-black' 
-                      : 'aspect-video'
-                  }`}
+                  className="relative bg-black rounded-xl sm:rounded-3xl overflow-hidden border-2 border-white/10 shadow-2xl w-full aspect-video flex items-center justify-center"
                 >
                   {activeLesson?.videoUrl && (
                     activeLesson.videoUrl.match(/\.(mp4|webm|mov|m4v|ogg)(\?.*)?$/i) ||
@@ -939,7 +877,7 @@ export default function LmsClassroomPage() {
                         ref={videoRef}
                         key={activeLesson.id + activeLesson.videoUrl}
                         controls
-                        controlsList="nodownload nofullscreen"
+                        controlsList="nodownload"
                         playsInline
                         preload="metadata"
                         onError={() => setVideoLoadError(true)}
@@ -1027,20 +965,8 @@ export default function LmsClassroomPage() {
                     />
                   )}
 
-                  {/* Floating Custom Fullscreen Toggle Button (Watermark stays visible) */}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      togglePlayerFullscreen();
-                    }}
-                    className="absolute bottom-3 right-3 z-30 p-2 rounded-xl bg-black/75 hover:bg-[#00A0DF] text-white border border-white/20 transition-all shadow-lg active:scale-95 flex items-center justify-center cursor-pointer"
-                    title={isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen (Keep Watermark)'}
-                  >
-                    {isFullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
-                  </button>
-
                   {/* Dynamic Forensic Watermark Overlay */}
-                  <DynamicForensicWatermark user={user} isFullscreen={isFullscreen} />
+                  <DynamicForensicWatermark user={user} />
                 </div>
 
                 {/* Live Watch Verification Bar & Cloud Sync Banner */}
@@ -1416,32 +1342,31 @@ export default function LmsClassroomPage() {
 // =============================================================================
 // SUBCOMPONENT: Dynamic Moving Forensic Watermark Overlay
 // =============================================================================
-function DynamicForensicWatermark({ user, isFullscreen = false }: { user: any; isFullscreen?: boolean }) {
-  const [zone, setZone] = useState(0);
+function DynamicForensicWatermark({ user }: { user: any }) {
+  const [sector, setSector] = useState(0);
   const [clock, setClock] = useState('');
 
   useEffect(() => {
-    // 1. Live real-time digital clock (HH:mm:ss)
+    // 1. Live real-time digital clock
     const updateClock = () => {
       const now = new Date();
       const dateStr = now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
       const timeStr = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-      setClock(`${dateStr} ${timeStr}`);
+      setClock(`${dateStr} • ${timeStr}`);
     };
     updateClock();
     const clockInterval = setInterval(updateClock, 1000);
 
-    // 2. Rotate watermark gently across perimeter safe zones every 12 seconds
-    // (Prevents covering the dead center where lecture presentation slides are)
+    // 2. Randomize watermark position across 9 sectors (including mid/center) every 5.5 seconds
     const moveInterval = setInterval(() => {
-      setZone(prev => {
-        let next = Math.floor(Math.random() * 4);
+      setSector(prev => {
+        let next = Math.floor(Math.random() * 9);
         while (next === prev) {
-          next = Math.floor(Math.random() * 4);
+          next = Math.floor(Math.random() * 9);
         }
         return next;
       });
-    }, 12000);
+    }, 5500);
 
     return () => {
       clearInterval(clockInterval);
@@ -1449,26 +1374,28 @@ function DynamicForensicWatermark({ user, isFullscreen = false }: { user: any; i
     };
   }, []);
 
-  // 4 Perimeter Safe Zones (strictly outside central lecture slides area)
-  const safeZones = [
-    'top-3 left-3 text-left',                    // 0: Top-Left Corner
-    'top-3 right-3 text-right',                  // 1: Top-Right Corner
-    'bottom-14 right-3 text-right',              // 2: Bottom-Right (Safe above video controls)
-    'bottom-14 left-3 text-left',                // 3: Bottom-Left (Safe above video controls)
+  // 9 grid sectors covering all parts of the video (including center/mid to prevent cropping)
+  const sectorClasses = [
+    'top-2.5 left-2.5 text-left',                          // 0: Top-Left
+    'top-2.5 left-1/2 -translate-x-1/2 text-center',       // 1: Top-Center
+    'top-2.5 right-2.5 text-right',                        // 2: Top-Right
+    'top-1/2 -translate-y-1/2 left-2.5 text-left',         // 3: Mid-Left
+    'top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2 text-center', // 4: Center (Mid)
+    'top-1/2 -translate-y-1/2 right-2.5 text-right',       // 5: Mid-Right
+    'bottom-10 left-2.5 text-left',                        // 6: Bottom-Left
+    'bottom-10 left-1/2 -translate-x-1/2 text-center',     // 7: Bottom-Center
+    'bottom-10 right-2.5 text-right',                      // 8: Bottom-Right
   ];
 
-  const studentName = user?.name || 'Student';
+  const studentName = user?.name || 'Authorized Student';
   const studentId = user?.id ? String(user.id).slice(-5).toUpperCase() : 'SAMI';
-  const ipAddress = user?.ip || 'Verified';
+  const maskedPhone = user?.phone ? user.phone.replace(/(\d{4})\d{4}(\d{3})/, '$1****$2') : '';
+  const ipAddress = user?.ip || 'Verified Session';
 
   return (
     <div className="absolute inset-0 pointer-events-none select-none z-[999999] overflow-hidden">
       <div
-        className={`absolute transition-all duration-1000 ease-in-out px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-lg bg-black/30 backdrop-blur-[0.5px] border border-white/10 text-white/50 shadow-sm ${
-          isFullscreen 
-            ? 'max-w-[210px] sm:max-w-[270px]' 
-            : 'max-w-[170px] sm:max-w-[230px]'
-        } ${safeZones[zone]}`}
+        className={`absolute transition-all duration-1000 ease-in-out px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-lg bg-black/40 backdrop-blur-[1px] border border-white/10 text-white/50 shadow-md max-w-[190px] sm:max-w-[250px] ${sectorClasses[sector]}`}
       >
         <div className="flex items-center gap-1 text-[7.5px] sm:text-[9px] font-black tracking-wider text-[#00A0DF]/80 uppercase leading-none mb-0.5">
           <Shield size={9} className="flex-shrink-0" />
@@ -1478,7 +1405,10 @@ function DynamicForensicWatermark({ user, isFullscreen = false }: { user: any; i
           {studentName}
         </div>
         <div className="text-[7px] sm:text-[8px] font-mono leading-none text-white/40 mt-0.5 truncate">
-          {ipAddress} • {clock}
+          {maskedPhone ? `${maskedPhone} • ` : ''}IP: {ipAddress}
+        </div>
+        <div className="text-[6.5px] sm:text-[7.5px] font-mono text-white/30 leading-none mt-0.5">
+          {clock}
         </div>
       </div>
     </div>
