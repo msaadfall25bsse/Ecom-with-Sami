@@ -52,30 +52,32 @@ export async function GET(request: NextRequest) {
         student = allStudents.find(s => String(s.id) === String(studentSession.id)) || null;
       }
 
-      if (student) {
-        if (!student.isActive) {
-          return NextResponse.json({
-            authenticated: false,
-            role: 'GUEST',
-            user: null,
-            message: 'Account is pending activation.'
-          });
-        }
-
-        return NextResponse.json({
-          authenticated: true,
-          role: 'STUDENT',
-          user: {
-            id: student.id,
-            name: student.name,
-            email: student.email,
-            phone: student.phone,
-            city: student.city,
-            completedLessons: student.completedLessons || [],
-            role: 'student'
-          }
+      if (!student || !student.isActive) {
+        const res = NextResponse.json({
+          authenticated: false,
+          role: 'GUEST',
+          user: null,
+          reason: 'suspended',
+          message: 'Student account has been suspended or rejected by the administrator.'
         });
+        res.cookies.set('sami_student_auth', '', { path: '/', maxAge: 0 });
+        res.cookies.set('sami_student_session', '', { path: '/', maxAge: 0 });
+        return res;
       }
+
+      return NextResponse.json({
+        authenticated: true,
+        role: 'STUDENT',
+        user: {
+          id: student.id,
+          name: student.name,
+          email: student.email,
+          phone: student.phone,
+          city: student.city,
+          completedLessons: student.completedLessons || [],
+          role: 'student'
+        }
+      });
     }
 
     return NextResponse.json({

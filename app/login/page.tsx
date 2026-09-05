@@ -21,6 +21,18 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [suspendedNotice, setSuspendedNotice] = useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const reason = params.get('reason');
+      const msg = params.get('msg');
+      if (reason === 'rejected' || reason === 'suspended' || msg) {
+        setSuspendedNotice(msg || 'Your student enrollment has been rejected or suspended by the administrator.');
+      }
+    }
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,6 +83,29 @@ export default function LoginPage() {
               <h1 className="text-xl sm:text-2xl font-black text-slate-900">Student LMS Login</h1>
               <p className="text-xs text-slate-500 mt-1">Access your 11 video modules &amp; supplier directory</p>
             </div>
+
+            {suspendedNotice && (
+              <div className="bg-red-500/10 border-2 border-red-500/30 text-red-700 text-xs rounded-2xl p-4 mb-4 space-y-2">
+                <div className="flex items-center gap-2 font-black text-red-800">
+                  <AlertCircle size={16} className="text-red-600 flex-shrink-0" />
+                  <span>Account Access Suspended / Rejected</span>
+                </div>
+                <p className="text-[11px] text-red-600/90 leading-relaxed">
+                  Your student enrollment has been rejected or suspended by the administration. If you have already submitted your payment proof, please contact Mentor Sardar Samiullah on WhatsApp for verification.
+                </p>
+                <div className="pt-1">
+                  <a
+                    href={getWhatsAppUrl('Assalam-o-Alaikum Mentor Sami! My student account was marked as rejected/suspended. Please verify my payment proof slip.')}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-black text-[11px] transition-colors"
+                  >
+                    <span>Contact Mentor on WhatsApp</span>
+                    <ArrowRight size={12} />
+                  </a>
+                </div>
+              </div>
+            )}
 
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-600 text-xs font-bold rounded-xl p-3 mb-4 text-center flex items-center justify-center gap-2">

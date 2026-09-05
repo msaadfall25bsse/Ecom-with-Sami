@@ -35,6 +35,7 @@ import {
   Loader2
 } from 'lucide-react';
 import { Module, Supplier, ResourceItem } from '@/utils/db';
+import { supabase } from '@/lib/supabase';
 
 export default function LmsClassroomPage() {
   const router = useRouter();
@@ -69,6 +70,42 @@ export default function LmsClassroomPage() {
     return url;
   };
 
+  const handleImmediateForceLogout = (reason = 'Your student access has been suspended or rejected by the administrator.') => {
+    setUser(null);
+    setActiveLesson(null);
+    setAuthChecking(true);
+
+    try {
+      fetch('/api/auth/logout', { method: 'POST', cache: 'no-store' }).catch(() => {});
+    } catch (e) {}
+
+    try {
+      document.cookie = 'sami_student_auth=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+      document.cookie = 'sami_student_session=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+      document.cookie = 'sami_admin_auth=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+    } catch (e) {}
+
+    try {
+      localStorage.removeItem('sami_student_auth');
+      localStorage.removeItem('sami_lms_completed_cache');
+      localStorage.removeItem('sami_lms_watch_progress');
+    } catch (e) {}
+
+    try {
+      if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+        const channel = new BroadcastChannel('sami_auth_sync');
+        channel.postMessage({ type: 'FORCE_LOGOUT', reason });
+      }
+      localStorage.setItem('sami_force_logout_signal', Date.now().toString());
+    } catch (e) {}
+
+    if (typeof window !== 'undefined') {
+      window.location.replace(`/login?reason=rejected&msg=${encodeURIComponent(reason)}`);
+    } else {
+      router.replace('/login?reason=rejected');
+    }
+  };
+
   const handleLogout = async () => {
     try {
       await fetch('/api/auth/logout', { method: 'POST' });
@@ -97,9 +134,33 @@ export default function LmsClassroomPage() {
       }
     } catch (e) {}
 
+    let realtimeChannel: any = null;
+    let realtimeEnrChannel: any = null;
+    let heartbeatInterval: any = null;
+    let bc: BroadcastChannel | null = null;
+
+    // 1. Cross-tab instant synchronization
+    try {
+      if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+        bc = new BroadcastChannel('sami_auth_sync');
+        bc.onmessage = (event) => {
+          if (event.data?.type === 'FORCE_LOGOUT') {
+            handleImmediateForceLogout(event.data.reason);
+          }
+        };
+      }
+    } catch (e) {}
+
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === 'sami_force_logout_signal' || (e.key === 'sami_student_auth' && !e.newValue)) {
+        handleImmediateForceLogout('Session ended from another tab.');
+      }
+    };
+    window.addEventListener('storage', onStorage);
+
     const timestamp = Date.now();
 
-    // 1. Strict Authentication Check
+    // 2. Strict Authentication Check with Supabase Realtime Hookup
     fetch(`/api/auth/me?t=${timestamp}`, {
       cache: 'no-store',
       headers: {
@@ -128,30 +189,90 @@ export default function LmsClassroomPage() {
             }
           } catch (e) {}
           setAuthChecking(false);
-        } else {
-          // Check cookie fallback for static hosting
-          let foundUser = null;
-          try {
-            const cookieAuth = document.cookie
-              .split('; ')
-              .find(row => row.startsWith('sami_student_auth='))
-              ?.split('=')[1];
-            if (cookieAuth) {
-              foundUser = JSON.parse(decodeURIComponent(cookieAuth));
-            }
-          } catch (e) {}
 
-          if (foundUser && foundUser.email) {
-            setUser(foundUser);
-            setAuthChecking(false);
-          } else {
-            router.replace('/login?redirect=/lms');
+          // 3. Supabase Real-Time WebSocket Push (Instant 0ms Logout on Reject/Suspend)
+          if (supabase && res.user.id) {
+            try {
+              realtimeChannel = supabase
+                .channel(`lms_auth_user_${res.user.id}`)
+                .on(
+                  'postgres_changes',
+                  {
+                    event: 'UPDATE',
+                    schema: 'public',
+                    table: 'students',
+                    filter: `id=eq.${res.user.id}`
+                  },
+                  (payload: any) => {
+                    if (payload.new && payload.new.is_active === false) {
+                      handleImmediateForceLogout('Your enrollment has been rejected or suspended by the administrator.');
+                    }
+                  }
+                )
+                .on(
+                  'postgres_changes',
+                  {
+                    event: 'DELETE',
+                    schema: 'public',
+                    table: 'students',
+                    filter: `id=eq.${res.user.id}`
+                  },
+                  () => {
+                    handleImmediateForceLogout('Your student account has been removed by the administrator.');
+                  }
+                )
+                .subscribe();
+            } catch (err) {}
           }
+
+          if (supabase && res.user.email) {
+            try {
+              const safeEmail = res.user.email.replace(/[^a-zA-Z0-9]/g, '_');
+              realtimeEnrChannel = supabase
+                .channel(`lms_enr_user_${safeEmail}`)
+                .on(
+                  'postgres_changes',
+                  {
+                    event: 'UPDATE',
+                    schema: 'public',
+                    table: 'enrollments',
+                    filter: `email=eq.${res.user.email}`
+                  },
+                  (payload: any) => {
+                    if (payload.new && payload.new.status === 'rejected') {
+                      handleImmediateForceLogout('Your enrollment has been rejected by the administrator.');
+                    }
+                  }
+                )
+                .subscribe();
+            } catch (err) {}
+          }
+        } else {
+          // If unauthenticated or rejected, immediately force logout (no cookie bypass)
+          handleImmediateForceLogout(res.message || 'Please log in with an active student account.');
         }
       })
       .catch(() => {
-        router.replace('/login?redirect=/lms');
+        handleImmediateForceLogout('Network connection error verifying credentials.');
       });
+
+    // 4. Fail-Safe Heartbeat (Runs every 10 seconds in the background)
+    heartbeatInterval = setInterval(() => {
+      fetch(`/api/auth/me?t=${Date.now()}`, {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache'
+        }
+      })
+        .then(r => r.json())
+        .then(authRes => {
+          if (!authRes.authenticated || !authRes.user) {
+            handleImmediateForceLogout(authRes.message || 'Your session has expired or access was revoked.');
+          }
+        })
+        .catch(() => {});
+    }, 10000);
 
     // Fetch modules directly from DB
     fetch(`/api/lms/modules?t=${timestamp}`, {
@@ -196,6 +317,14 @@ export default function LmsClassroomPage() {
       .then(res => {
         if (res.success && res.resources) setResources(res.resources);
       });
+
+    return () => {
+      clearInterval(heartbeatInterval);
+      window.removeEventListener('storage', onStorage);
+      if (bc) bc.close();
+      if (realtimeChannel && supabase) supabase.removeChannel(realtimeChannel);
+      if (realtimeEnrChannel && supabase) supabase.removeChannel(realtimeEnrChannel);
+    };
   }, []);
 
   const isAdmin = Boolean(
