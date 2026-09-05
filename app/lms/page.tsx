@@ -112,15 +112,26 @@ export default function LmsClassroomPage() {
 
   const getEmbedUrl = (url?: string) => {
     if (!url) return 'https://www.youtube.com/embed/dQw4w9WgXcQ';
-    if (url.includes('youtube.com/watch?v=')) {
-      const vId = url.split('v=')[1]?.split('&')[0];
+    let clean = url.trim();
+
+    // If raw iframe HTML or embed snippet was provided, extract the src URL
+    if (clean.includes('<iframe')) {
+      const match = clean.match(/<iframe[^>]+src=["']([^"']+)["']/i);
+      if (match && match[1]) {
+        clean = match[1];
+      }
+    }
+
+    if (clean.includes('youtube.com/watch?v=')) {
+      const vId = clean.split('v=')[1]?.split('&')[0];
       if (vId) return `https://www.youtube.com/embed/${vId}`;
     }
-    if (url.includes('youtu.be/')) {
-      const vId = url.split('youtu.be/')[1]?.split('?')[0];
+    if (clean.includes('youtu.be/')) {
+      const vId = clean.split('youtu.be/')[1]?.split('?')[0];
       if (vId) return `https://www.youtube.com/embed/${vId}`;
     }
-    return url;
+
+    return clean;
   };
 
   const handleImmediateForceLogout = (reason = 'Your student access has been suspended or rejected by the administrator.') => {
@@ -515,6 +526,14 @@ export default function LmsClassroomPage() {
   const currentLessonWatchPct = activeLesson 
     ? (isCurrentDone ? 100 : (watchProgress[activeLesson.id] || 0)) 
     : 0;
+  const isDirectLessonVideo = Boolean(
+    activeLesson?.videoUrl && (
+      activeLesson.videoUrl.match(/\.(mp4|webm|mov|m4v|ogg)(\?.*)?$/i) ||
+      activeLesson.videoUrl.includes('supabase.co/storage') ||
+      activeLesson.videoUrl.startsWith('/uploads/') ||
+      activeLesson.videoUrl.startsWith('/api/videos/')
+    )
+  );
 
   const filteredSuppliers = suppliers.filter(s => {
     const matchesCountry = supplierCountryFilter === 'ALL' || s.country === supplierCountryFilter;
@@ -755,7 +774,15 @@ export default function LmsClassroomPage() {
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     const lessonWatch = watchProgress[lesson.id] || 0;
-                                    if (isAdmin || isDone || lessonWatch >= 90) {
+                                    const isDirect = Boolean(
+                                      lesson.videoUrl && (
+                                        lesson.videoUrl.match(/\.(mp4|webm|mov|m4v|ogg)(\?.*)?$/i) ||
+                                        lesson.videoUrl.includes('supabase.co/storage') ||
+                                        lesson.videoUrl.startsWith('/uploads/') ||
+                                        lesson.videoUrl.startsWith('/api/videos/')
+                                      )
+                                    );
+                                    if (isAdmin || isDone || !isDirect || lessonWatch >= 90) {
                                       toggleLessonComplete(lesson.id);
                                     } else {
                                       setSyncFeedback('🔒 Please watch 90% of the video to complete this lecture');
@@ -1017,10 +1044,12 @@ export default function LmsClassroomPage() {
                       </div>
                     ) : (
                       <iframe
+                        key={activeLesson?.id + (activeLesson?.videoUrl || '')}
                         src={getEmbedUrl(activeLesson?.videoUrl)}
                         title={activeLesson?.title || 'Lesson Video'}
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture; clipboard-write;"
                         allowFullScreen
+                        loading="lazy"
                         className="w-full h-full border-0"
                       />
                     )}
@@ -1050,27 +1079,37 @@ export default function LmsClassroomPage() {
                         <span className="w-2 h-2 rounded-full bg-[#00A0DF] animate-pulse" />
                         <span>Lecture Watch Progress:</span>
                         <span className={isCurrentDone ? 'text-emerald-400 font-black' : 'text-[#00A0DF] font-black'}>
-                          {isCurrentDone ? '100% Completed' : `${currentLessonWatchPct}% Watched`}
+                          {isCurrentDone 
+                            ? '100% Completed' 
+                            : isDirectLessonVideo 
+                            ? `${currentLessonWatchPct}% Watched` 
+                            : 'HD Stream Ready'}
                         </span>
                       </div>
                       <span className="text-[11px] text-slate-400 font-medium">
                         {isCurrentDone 
                           ? '✓ Verified & Cloud Saved' 
-                          : `${Math.max(0, 90 - currentLessonWatchPct)}% more needed to complete`}
+                          : isDirectLessonVideo 
+                          ? `${Math.max(0, 90 - currentLessonWatchPct)}% more needed to complete`
+                          : 'Mark complete when finished watching'}
                       </span>
                     </div>
                     {/* Visual Progress Track */}
                     <div className="w-full bg-slate-800 rounded-full h-2 overflow-hidden border border-slate-700/60 relative">
-                      <div className="absolute top-0 bottom-0 left-[90%] w-0.5 bg-amber-400/80 z-10" title="90% Completion Unlock Target" />
+                      {isDirectLessonVideo && (
+                        <div className="absolute top-0 bottom-0 left-[90%] w-0.5 bg-amber-400/80 z-10" title="90% Completion Unlock Target" />
+                      )}
                       <div
                         className={`h-full rounded-full transition-all duration-300 ${
                           isCurrentDone
                             ? 'bg-gradient-to-r from-emerald-500 to-teal-400'
+                            : !isDirectLessonVideo
+                            ? 'bg-gradient-to-r from-[#00A0DF] via-emerald-400 to-[#00A0DF]'
                             : currentLessonWatchPct >= 90
                             ? 'bg-gradient-to-r from-[#00A0DF] to-emerald-400'
                             : 'bg-gradient-to-r from-[#00A0DF] to-[#0077aa]'
                         }`}
-                        style={{ width: `${isCurrentDone ? 100 : Math.min(100, currentLessonWatchPct)}%` }}
+                        style={{ width: `${isCurrentDone ? 100 : !isDirectLessonVideo ? 100 : Math.min(100, currentLessonWatchPct)}%` }}
                       />
                     </div>
                   </div>
@@ -1149,15 +1188,15 @@ export default function LmsClassroomPage() {
                         if (!activeLesson) return;
                         if (isCurrentDone) {
                           markLessonComplete(activeLesson.id, false);
-                        } else if (currentLessonWatchPct >= 90 || isAdmin) {
+                        } else if (!isDirectLessonVideo || currentLessonWatchPct >= 90 || isAdmin) {
                           markLessonComplete(activeLesson.id, true);
                         }
                       }}
-                      disabled={!isCurrentDone && currentLessonWatchPct < 90 && !isAdmin}
+                      disabled={!isCurrentDone && isDirectLessonVideo && currentLessonWatchPct < 90 && !isAdmin}
                       className={`w-full sm:w-auto px-5 py-3 rounded-xl text-xs sm:text-sm font-black flex items-center justify-center gap-2 transition-all shadow-lg ${
                         isCurrentDone
                           ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-900/40 active:scale-95 cursor-pointer'
-                          : currentLessonWatchPct >= 90 || isAdmin
+                          : !isDirectLessonVideo || currentLessonWatchPct >= 90 || isAdmin
                           ? 'bg-[#00A0DF] hover:bg-[#008ec7] text-white shadow-[#00A0DF]/30 active:scale-95 cursor-pointer'
                           : 'bg-slate-800/80 text-slate-400 border border-white/5 cursor-not-allowed opacity-80'
                       }`}
@@ -1166,6 +1205,11 @@ export default function LmsClassroomPage() {
                         <>
                           <CheckCircle2 size={16} />
                           <span>Completed (Click to Undo)</span>
+                        </>
+                      ) : !isDirectLessonVideo ? (
+                        <>
+                          <CheckCircle2 size={16} />
+                          <span>Mark as Completed</span>
                         </>
                       ) : currentLessonWatchPct >= 90 ? (
                         <>

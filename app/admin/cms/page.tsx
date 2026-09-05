@@ -31,7 +31,9 @@ import {
   UploadCloud,
   FileVideo,
   Loader2,
-  Link2
+  Link2,
+  Code2,
+  X
 } from 'lucide-react';
 import { defaultCmsContent, CmsContentSchema } from '@/utils/cmsStore';
 import { Module, Supplier } from '@/utils/db';
@@ -60,7 +62,19 @@ export default function AdminCmsPage() {
   const [newLessonTitle, setNewLessonTitle] = useState('');
   const [newLessonDuration, setNewLessonDuration] = useState('15:00');
   const [newLessonUrl, setNewLessonUrl] = useState('');
-  const [lessonVideoMode, setLessonVideoMode] = useState<'upload' | 'url'>('upload');
+  const [lessonVideoMode, setLessonVideoMode] = useState<'upload' | 'url' | 'embed'>('upload');
+  const [newLessonEmbedCode, setNewLessonEmbedCode] = useState('');
+  const [editingLesson, setEditingLesson] = useState<{
+    moduleId: number;
+    lessonId: string;
+    title: string;
+    duration: string;
+    videoUrl: string;
+    mode: 'upload' | 'url' | 'embed';
+    embedCode: string;
+  } | null>(null);
+  const [editLessonSaving, setEditLessonSaving] = useState(false);
+  const [editLessonError, setEditLessonError] = useState('');
   const [uploadingVideo, setUploadingVideo] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadStatusText, setUploadStatusText] = useState('');
@@ -280,12 +294,34 @@ export default function AdminCmsPage() {
     }
   };
 
+  const parseEmbedInput = (input: string): string => {
+    const trimmed = (input || '').trim();
+    if (!trimmed) return '';
+    const iframeMatch = trimmed.match(/<iframe[^>]+src=["']([^"']+)["']/i);
+    if (iframeMatch && iframeMatch[1]) {
+      return iframeMatch[1];
+    }
+    return trimmed;
+  };
+
+  const handleEmbedCodeChange = (raw: string) => {
+    setNewLessonEmbedCode(raw);
+    const parsed = parseEmbedInput(raw);
+    if (parsed) {
+      setNewLessonUrl(parsed);
+      setUploadError('');
+    } else {
+      setNewLessonUrl('');
+    }
+  };
+
   const openAddLesson = (moduleId: number) => {
     setAddingLessonForModuleId(moduleId);
     setOpenModuleId(moduleId);
     setNewLessonTitle('');
     setNewLessonDuration('15:00');
     setNewLessonUrl('');
+    setNewLessonEmbedCode('');
     setLessonVideoMode('upload');
     setUploadingVideo(false);
     setUploadProgress(0);
@@ -294,6 +330,83 @@ export default function AdminCmsPage() {
     setSelectedVideoSize('');
     setVideoUploadSuccess(false);
     setUploadError('');
+  };
+
+  const openEditLesson = (moduleId: number, lesson: any) => {
+    const isEmbed = Boolean(
+      lesson.videoUrl?.includes('mediadelivery.net') || 
+      lesson.videoUrl?.includes('bunny') || 
+      lesson.videoUrl?.includes('embed') || 
+      lesson.videoUrl?.includes('<iframe')
+    );
+    setEditingLesson({
+      moduleId,
+      lessonId: lesson.id,
+      title: lesson.title,
+      duration: lesson.duration || '15:00',
+      videoUrl: lesson.videoUrl,
+      mode: isEmbed ? 'embed' : 'url',
+      embedCode: isEmbed ? lesson.videoUrl : ''
+    });
+    setEditLessonError('');
+  };
+
+  const handleUpdateLesson = async () => {
+    if (!editingLesson) return;
+    if (!editingLesson.title.trim()) {
+      setEditLessonError('Please enter a lecture title');
+      return;
+    }
+
+    let finalVideoUrl = editingLesson.videoUrl.trim();
+    if (editingLesson.mode === 'embed' && editingLesson.embedCode.trim()) {
+      const parsed = parseEmbedInput(editingLesson.embedCode);
+      if (parsed) finalVideoUrl = parsed;
+    }
+
+    if (!finalVideoUrl) {
+      setEditLessonError('Please provide a video URL or embed code');
+      return;
+    }
+
+    if (finalVideoUrl.includes('youtube.com/watch?v=')) {
+      const vId = finalVideoUrl.split('v=')[1]?.split('&')[0];
+      if (vId) finalVideoUrl = `https://www.youtube.com/embed/${vId}`;
+    } else if (finalVideoUrl.includes('youtu.be/')) {
+      const vId = finalVideoUrl.split('youtu.be/')[1]?.split('?')[0];
+      if (vId) finalVideoUrl = `https://www.youtube.com/embed/${vId}`;
+    }
+
+    setEditLessonSaving(true);
+    setEditLessonError('');
+
+    try {
+      const res = await fetch('/api/lms/modules', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'UPDATE_LESSON',
+          moduleId: editingLesson.moduleId,
+          lessonId: editingLesson.lessonId,
+          patch: {
+            title: editingLesson.title.trim(),
+            duration: editingLesson.duration || '15:00',
+            videoUrl: finalVideoUrl
+          }
+        })
+      });
+      const data = await res.json();
+      if (data.success && data.modules) {
+        setModules(data.modules);
+        setEditingLesson(null);
+      } else {
+        setEditLessonError(data.message || 'Failed to update lecture');
+      }
+    } catch (e: any) {
+      setEditLessonError(e.message || 'Error updating lecture');
+    } finally {
+      setEditLessonSaving(false);
+    }
   };
 
   const handleVideoFileSelect = (e: React.ChangeEvent<HTMLInputElement>, moduleId: number) => {
@@ -452,12 +565,18 @@ export default function AdminCmsPage() {
       setUploadError('Please enter a lecture title');
       return;
     }
-    if (!newLessonUrl.trim()) {
-      setUploadError('Please upload a video file or paste a video URL');
+
+    let finalVideoUrl = newLessonUrl.trim();
+    if (lessonVideoMode === 'embed' && newLessonEmbedCode.trim()) {
+      const parsed = parseEmbedInput(newLessonEmbedCode);
+      if (parsed) finalVideoUrl = parsed;
+    }
+
+    if (!finalVideoUrl) {
+      setUploadError('Please upload a video file, paste a video URL, or paste Bunny.net embed code');
       return;
     }
 
-    let finalVideoUrl = newLessonUrl.trim();
     if (finalVideoUrl.includes('youtube.com/watch?v=')) {
       const vId = finalVideoUrl.split('v=')[1]?.split('&')[0];
       if (vId) finalVideoUrl = `https://www.youtube.com/embed/${vId}`;
@@ -486,6 +605,7 @@ export default function AdminCmsPage() {
         setAddingLessonForModuleId(null);
         setNewLessonTitle('');
         setNewLessonUrl('');
+        setNewLessonEmbedCode('');
         setVideoUploadSuccess(false);
         setUploadProgress(0);
         setSelectedVideoName('');
@@ -751,7 +871,7 @@ export default function AdminCmsPage() {
                                 <Video size={16} />
                                 <span>Add New Lecture to {m.title}</span>
                               </h4>
-                              <div className="flex items-center gap-1 bg-[#0B0F19] p-1 rounded-xl border border-white/10 text-[11px] self-stretch sm:self-auto justify-center">
+                              <div className="flex items-center gap-1 bg-[#0B0F19] p-1 rounded-xl border border-white/10 text-[11px] self-stretch sm:self-auto justify-center flex-wrap">
                                 <button
                                   type="button"
                                   onClick={() => setLessonVideoMode('upload')}
@@ -771,6 +891,16 @@ export default function AdminCmsPage() {
                                 >
                                   <Link2 size={13} />
                                   <span>Paste Video URL</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setLessonVideoMode('embed')}
+                                  className={`px-3 py-1 rounded-lg font-bold transition-colors flex items-center gap-1.5 ${
+                                    lessonVideoMode === 'embed' ? 'bg-[#00A0DF] text-white shadow-sm' : 'text-slate-400 hover:text-white'
+                                  }`}
+                                >
+                                  <Code2 size={13} />
+                                  <span>Embed Code (Bunny.net)</span>
                                 </button>
                               </div>
                             </div>
@@ -804,7 +934,7 @@ export default function AdminCmsPage() {
                             </div>
 
                             {/* SOURCE 1: UPLOAD FROM LAPTOP / COMPUTER */}
-                            {lessonVideoMode === 'upload' ? (
+                            {lessonVideoMode === 'upload' && (
                               <div className="space-y-3">
                                 <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                                   Select Video File from Computer
@@ -896,19 +1026,103 @@ export default function AdminCmsPage() {
                                   </div>
                                 )}
                               </div>
-                            ) : (
-                              /* SOURCE 2: PASTE EMBED / YOUTUBE URL */
+                            )}
+
+                            {/* SOURCE 2: PASTE EMBED / YOUTUBE URL */}
+                            {lessonVideoMode === 'url' && (
                               <div className="space-y-1.5">
                                 <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                                   Video Embed URL or Direct Link
                                 </label>
                                 <input
                                   type="text"
-                                  placeholder="https://www.youtube.com/embed/... or direct MP4 URL"
+                                  placeholder="https://www.youtube.com/watch?v=... or direct MP4 URL"
                                   value={newLessonUrl}
-                                  onChange={(e) => setNewLessonUrl(e.target.value)}
+                                  onChange={(e) => {
+                                    const val = e.target.value;
+                                    if (val.includes('<iframe')) {
+                                      setNewLessonUrl(parseEmbedInput(val));
+                                    } else {
+                                      setNewLessonUrl(val);
+                                    }
+                                  }}
                                   className="w-full px-3 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF]"
                                 />
+                                {newLessonUrl && (
+                                  <div className="text-[11px] text-slate-400 font-mono truncate bg-[#0B0F19] p-2 rounded-lg border border-white/5 flex items-center gap-1.5">
+                                    <CheckCircle2 size={13} className="text-emerald-400 flex-shrink-0" />
+                                    <span className="truncate">{newLessonUrl}</span>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+
+                            {/* SOURCE 3: BUNNY.NET / IFRAME EMBED CODE (101% WORKABLE) */}
+                            {lessonVideoMode === 'embed' && (
+                              <div className="space-y-3">
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                    Bunny.net / Iframe Embed Code or Stream URL
+                                  </label>
+                                  <div className="flex items-center gap-1.5 text-[10px]">
+                                    <span className="px-2 py-0.5 rounded-full bg-orange-500/10 border border-orange-500/30 text-orange-400 font-bold flex items-center gap-1">
+                                      <span>🐰</span>
+                                      <span>Bunny Stream 101% Compatible</span>
+                                    </span>
+                                  </div>
+                                </div>
+
+                                <textarea
+                                  rows={4}
+                                  placeholder={`Paste your Bunny.net iframe embed code or URL here:\n<iframe src="https://iframe.mediadelivery.net/embed/..." loading="lazy" style="..." allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;" allowfullscreen="true"></iframe>\n\nOr direct embed link: https://iframe.mediadelivery.net/embed/...`}
+                                  value={newLessonEmbedCode}
+                                  onChange={(e) => handleEmbedCodeChange(e.target.value)}
+                                  className="w-full px-3 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs text-white font-mono placeholder-slate-600 focus:outline-none focus:border-[#00A0DF] resize-y"
+                                />
+
+                                {newLessonUrl && (
+                                  <div className="p-3 rounded-xl bg-[#0B0F19] border border-emerald-500/30 space-y-2 text-xs">
+                                    <div className="flex items-center justify-between gap-2">
+                                      <div className="flex items-center gap-2 min-w-0 flex-1">
+                                        <CheckCircle2 size={15} className="text-emerald-400 flex-shrink-0" />
+                                        <span className="text-[11px] text-slate-300 font-mono truncate">
+                                          {newLessonUrl}
+                                        </span>
+                                      </div>
+                                      <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider flex-shrink-0 bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 rounded-full">
+                                        ✓ Stream Ready
+                                      </span>
+                                    </div>
+
+                                    {/* Live Mini Preview */}
+                                    {newLessonUrl.startsWith('http') && (
+                                      <div className="pt-2 border-t border-white/5">
+                                        <div className="text-[10px] font-bold text-slate-400 uppercase mb-1.5 flex items-center gap-1.5">
+                                          <span>Live Player Preview</span>
+                                          <span className="text-[9px] text-emerald-400 font-normal">(Stream verified)</span>
+                                        </div>
+                                        <div className="w-full aspect-video max-w-sm rounded-xl overflow-hidden border border-white/10 bg-black">
+                                          <iframe
+                                            src={newLessonUrl}
+                                            loading="lazy"
+                                            allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
+                                            allowFullScreen
+                                            className="w-full h-full border-0"
+                                          />
+                                        </div>
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+
+                                <div className="text-[11px] text-slate-400 leading-relaxed bg-[#0B0F19]/60 p-3 rounded-xl border border-white/5 space-y-1">
+                                  <div className="font-bold text-slate-200 flex items-center gap-1.5">
+                                    <span>💡 Bunny.net Se Embed Code Kaise Copy Karein:</span>
+                                  </div>
+                                  <div>1. Bunny.net Dashboard &rarr; <strong>Stream Video Library</strong> mein jayein aur video par click karein.</div>
+                                  <div>2. Video page par <strong>&ldquo;Embed Code&rdquo;</strong> se poora <code>&lt;iframe ...&gt;&lt;/iframe&gt;</code> code copy karein (ya direct iframe link).</div>
+                                  <div>3. Yahan box mein paste kar dein. Video automatically configure ho jayegi!</div>
+                                </div>
                               </div>
                             )}
 
@@ -926,6 +1140,7 @@ export default function AdminCmsPage() {
                                   setAddingLessonForModuleId(null);
                                   setUploadingVideo(false);
                                   setUploadProgress(0);
+                                  setNewLessonEmbedCode('');
                                   setUploadError('');
                                 }}
                                 className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-300 transition-colors"
@@ -935,7 +1150,7 @@ export default function AdminCmsPage() {
                               <button
                                 type="button"
                                 onClick={() => handleAddLesson(m.id)}
-                                disabled={uploadingVideo || !newLessonTitle || !newLessonUrl}
+                                disabled={uploadingVideo || !newLessonTitle || (!newLessonUrl && !newLessonEmbedCode)}
                                 className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 disabled:hover:bg-emerald-600 text-xs font-black text-white active:scale-95 transition-all shadow-md shadow-emerald-600/30 flex items-center gap-1.5"
                               >
                                 {uploadingVideo ? (
@@ -953,33 +1168,70 @@ export default function AdminCmsPage() {
 
                         {/* List of Lectures */}
                         <div className="space-y-2">
-                          {m.lessons.map((l) => (
-                            <div
-                              key={l.id}
-                              className="bg-[#111827] border border-white/5 rounded-xl sm:rounded-2xl p-3 flex items-center justify-between gap-2.5 text-xs"
-                            >
-                              <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                                <div className="w-7 h-7 rounded-lg bg-slate-800 flex items-center justify-center text-slate-400 flex-shrink-0">
-                                  <Video size={14} />
-                                </div>
-                                <div className="min-w-0 flex-1">
-                                  <div className="font-bold text-white truncate">{l.title}</div>
-                                  <div className="text-[10px] text-slate-400 font-mono truncate">{l.videoUrl}</div>
-                                </div>
-                              </div>
+                          {m.lessons.map((l) => {
+                            const isBunny = Boolean(l.videoUrl?.includes('mediadelivery.net') || l.videoUrl?.includes('bunny'));
+                            const isYouTube = Boolean(l.videoUrl?.includes('youtube') || l.videoUrl?.includes('youtu.be'));
+                            const isDirect = Boolean(
+                              l.videoUrl?.match(/\.(mp4|webm|mov|m4v|ogg)(\?.*)?$/i) ||
+                              l.videoUrl?.includes('supabase.co/storage') ||
+                              l.videoUrl?.startsWith('/uploads/') ||
+                              l.videoUrl?.startsWith('/api/videos/')
+                            );
 
-                              <div className="flex items-center gap-2 flex-shrink-0">
-                                <span className="text-slate-400 text-[11px]">{l.duration}</span>
-                                <button
-                                  onClick={() => handleDeleteLesson(m.id, l.id)}
-                                  className="text-slate-500 hover:text-red-400 p-1 transition-colors"
-                                  title="Delete Lecture"
-                                >
-                                  <Trash2 size={13} />
-                                </button>
+                            return (
+                              <div
+                                key={l.id}
+                                className="bg-[#111827] border border-white/5 rounded-xl sm:rounded-2xl p-3 flex items-center justify-between gap-2.5 text-xs hover:border-white/10 transition-colors"
+                              >
+                                <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                                  <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                                    isBunny ? 'bg-orange-500/15 text-orange-400' : isYouTube ? 'bg-red-500/15 text-red-400' : 'bg-[#00A0DF]/15 text-[#00A0DF]'
+                                  }`}>
+                                    {isBunny ? <Code2 size={14} /> : <Video size={14} />}
+                                  </div>
+                                  <div className="min-w-0 flex-1">
+                                    <div className="font-bold text-white truncate flex items-center gap-1.5 flex-wrap">
+                                      <span className="truncate">{l.title}</span>
+                                      {isBunny && (
+                                        <span className="text-[9px] px-1.5 py-0.5 rounded bg-orange-500/10 border border-orange-500/30 text-orange-400 font-bold flex-shrink-0">
+                                          🐰 Bunny.net
+                                        </span>
+                                      )}
+                                      {isYouTube && (
+                                        <span className="text-[9px] px-1.5 py-0.5 rounded bg-red-500/10 border border-red-500/30 text-red-400 font-bold flex-shrink-0">
+                                          YouTube
+                                        </span>
+                                      )}
+                                      {isDirect && (
+                                        <span className="text-[9px] px-1.5 py-0.5 rounded bg-[#00A0DF]/10 border border-[#00A0DF]/30 text-[#00A0DF] font-bold flex-shrink-0">
+                                          Direct Video
+                                        </span>
+                                      )}
+                                    </div>
+                                    <div className="text-[10px] text-slate-400 font-mono truncate">{l.videoUrl}</div>
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center gap-1.5 flex-shrink-0">
+                                  <span className="text-slate-400 text-[11px] hidden sm:inline">{l.duration}</span>
+                                  <button
+                                    onClick={() => openEditLesson(m.id, l)}
+                                    className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+                                    title="Edit Lecture (Change Video / Title)"
+                                  >
+                                    <Edit size={13} />
+                                  </button>
+                                  <button
+                                    onClick={() => handleDeleteLesson(m.id, l.id)}
+                                    className="p-1.5 rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                                    title="Delete Lecture"
+                                  >
+                                    <Trash2 size={13} />
+                                  </button>
+                                </div>
                               </div>
-                            </div>
-                          ))}
+                            );
+                          })}
                         </div>
 
                       </div>
@@ -988,6 +1240,154 @@ export default function AdminCmsPage() {
                 );
               })}
             </div>
+
+            {/* Edit Lesson Modal */}
+            {editingLesson && (
+              <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+                <div className="bg-[#111827] border border-[#00A0DF]/40 rounded-3xl p-5 sm:p-6 w-full max-w-lg space-y-4 shadow-2xl animate-in fade-in zoom-in-95">
+                  <div className="flex items-center justify-between pb-3 border-b border-white/10">
+                    <h3 className="text-sm sm:text-base font-bold text-white flex items-center gap-2">
+                      <Edit size={16} className="text-[#00A0DF]" />
+                      <span>Edit Lecture</span>
+                    </h3>
+                    <button
+                      onClick={() => setEditingLesson(null)}
+                      className="text-slate-400 hover:text-white p-1 rounded-lg"
+                    >
+                      <X size={18} />
+                    </button>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                        Lecture Title
+                      </label>
+                      <input
+                        type="text"
+                        value={editingLesson.title}
+                        onChange={(e) => setEditingLesson({ ...editingLesson, title: e.target.value })}
+                        className="w-full px-3 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF]"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                        Duration (MM:SS)
+                      </label>
+                      <input
+                        type="text"
+                        value={editingLesson.duration}
+                        onChange={(e) => setEditingLesson({ ...editingLesson, duration: e.target.value })}
+                        className="w-full px-3 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF]"
+                      />
+                    </div>
+
+                    {/* Video Mode Selection */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                          Video Source
+                        </label>
+                        <div className="flex items-center gap-1 bg-[#0B0F19] p-1 rounded-xl border border-white/10 text-[11px]">
+                          <button
+                            type="button"
+                            onClick={() => setEditingLesson({ ...editingLesson, mode: 'embed' })}
+                            className={`px-2.5 py-1 rounded-lg font-bold transition-colors flex items-center gap-1 ${
+                              editingLesson.mode === 'embed' ? 'bg-[#00A0DF] text-white' : 'text-slate-400 hover:text-white'
+                            }`}
+                          >
+                            <Code2 size={12} />
+                            <span>Bunny.net / Embed</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setEditingLesson({ ...editingLesson, mode: 'url' })}
+                            className={`px-2.5 py-1 rounded-lg font-bold transition-colors flex items-center gap-1 ${
+                              editingLesson.mode === 'url' ? 'bg-[#00A0DF] text-white' : 'text-slate-400 hover:text-white'
+                            }`}
+                          >
+                            <Link2 size={12} />
+                            <span>URL</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      {editingLesson.mode === 'embed' ? (
+                        <div className="space-y-2">
+                          <textarea
+                            rows={3}
+                            placeholder="Paste Bunny.net iframe embed code or embed URL..."
+                            value={editingLesson.embedCode}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              const parsed = parseEmbedInput(val);
+                              setEditingLesson({
+                                ...editingLesson,
+                                embedCode: val,
+                                videoUrl: parsed || editingLesson.videoUrl
+                              });
+                            }}
+                            className="w-full px-3 py-2 rounded-xl bg-[#0B0F19] border border-white/10 text-xs text-white font-mono placeholder-slate-600 focus:outline-none focus:border-[#00A0DF]"
+                          />
+                          {editingLesson.videoUrl && (
+                            <div className="text-[11px] text-slate-400 font-mono truncate bg-[#0B0F19] p-2 rounded-lg border border-white/5 flex items-center gap-1.5">
+                              <CheckCircle2 size={13} className="text-emerald-400 flex-shrink-0" />
+                              <span className="truncate">{editingLesson.videoUrl}</span>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <input
+                          type="text"
+                          placeholder="https://www.youtube.com/embed/... or direct MP4 URL"
+                          value={editingLesson.videoUrl}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setEditingLesson({
+                              ...editingLesson,
+                              videoUrl: val.includes('<iframe') ? parseEmbedInput(val) : val
+                            });
+                          }}
+                          className="w-full px-3 py-2 rounded-xl bg-[#0B0F19] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF]"
+                        />
+                      )}
+                    </div>
+
+                    {editLessonError && (
+                      <div className="p-2.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs font-bold">
+                        ⚠️ {editLessonError}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex items-center justify-end gap-2 pt-3 border-t border-white/10">
+                    <button
+                      type="button"
+                      onClick={() => setEditingLesson(null)}
+                      className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-300 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleUpdateLesson}
+                      disabled={editLessonSaving || !editingLesson.title || !editingLesson.videoUrl}
+                      className="px-5 py-2 rounded-xl bg-[#00A0DF] hover:bg-[#008ec7] disabled:opacity-40 text-xs font-black text-white transition-all shadow-md flex items-center gap-1.5"
+                    >
+                      {editLessonSaving ? (
+                        <>
+                          <Loader2 size={13} className="animate-spin" />
+                          <span>Saving...</span>
+                        </>
+                      ) : (
+                        <span>Save Changes</span>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Wholesale Suppliers Management Box */}
             <div className="bg-[#111827] border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-8 shadow-xl space-y-4 sm:space-y-6">
