@@ -339,7 +339,8 @@ export async function dbGetStudents(forceFresh = false): Promise<Student[]> {
             isActive: Boolean(r.is_active),
             enrolledAt: r.enrolled_at,
             completedLessons: typeof r.completed_lessons_json === 'string' ? JSON.parse(r.completed_lessons_json || '[]') : (r.completed_lessons_json || []),
-            lastLogin: r.last_login
+            lastLogin: r.last_login,
+            strikeCount: Number(r.strike_count || 0)
           };
         });
       }
@@ -351,7 +352,8 @@ export async function dbGetStudents(forceFresh = false): Promise<Student[]> {
   if (result.length === 0) {
     result = initialStudents.map(s => ({
       ...s,
-      password: (!s.password || s.password === 'studentpass2026') ? generateStableNumericPassword(s.id || s.email) : s.password
+      password: (!s.password || s.password === 'studentpass2026') ? generateStableNumericPassword(s.id || s.email) : s.password,
+      strikeCount: s.strikeCount || 0
     }));
   }
 
@@ -378,7 +380,8 @@ export async function dbGetStudentByEmail(email: string): Promise<Student | null
           isActive: Boolean(data.is_active),
           enrolledAt: data.enrolled_at,
           completedLessons: typeof data.completed_lessons_json === 'string' ? JSON.parse(data.completed_lessons_json || '[]') : (data.completed_lessons_json || []),
-          lastLogin: data.last_login
+          lastLogin: data.last_login,
+          strikeCount: Number(data.strike_count || 0)
         };
       }
     } catch (e) {
@@ -473,6 +476,88 @@ export async function dbDeleteStudent(idOrEmail: string): Promise<boolean> {
   } catch (e) {}
 
   return true;
+}
+
+export async function dbRecordStudentStrike(studentId: string, violationType = 'CAPTURE_ATTEMPT'): Promise<{ strikeCount: number; isBlocked: boolean; student: Student | null }> {
+  clearDatabaseCache();
+  const students = await dbGetStudents(true);
+  const target = students.find(s => String(s.id) === String(studentId) || s.email.toLowerCase() === studentId.toLowerCase());
+  if (!target) {
+    return { strikeCount: 1, isBlocked: false, student: null };
+  }
+
+  const currentStrikes = Number(target.strikeCount || 0);
+  const newStrikes = currentStrikes + 1;
+  const isBlocked = newStrikes >= 5;
+
+  const updated: Student = {
+    ...target,
+    strikeCount: newStrikes,
+    isActive: isBlocked ? false : target.isActive
+  };
+
+  if (supabase) {
+    try {
+      const updatePayload: any = {
+        strike_count: newStrikes,
+        is_active: updated.isActive,
+        updated_at: new Date().toISOString()
+      };
+      const { error } = await supabase.from('students').update(updatePayload).eq('id', target.id);
+      if (error && isBlocked) {
+        // Resilient fallback if strike_count column is pending in Supabase schema
+        await supabase.from('students').update({ is_active: false }).eq('id', target.id);
+      }
+    } catch (e) {
+      console.error('Error updating student strike in Supabase:', e);
+    }
+  }
+
+  // Fallback in-memory sync
+  const initIdx = initialStudents.findIndex(s => s.id === target.id);
+  if (initIdx !== -1) {
+    initialStudents[initIdx].strikeCount = newStrikes;
+    if (isBlocked) initialStudents[initIdx].isActive = false;
+  }
+
+  return { strikeCount: newStrikes, isBlocked, student: updated };
+}
+
+export async function dbResetStudentStrikes(studentId: string, reactivate = true): Promise<{ success: boolean; student: Student | null }> {
+  clearDatabaseCache();
+  const students = await dbGetStudents(true);
+  const target = students.find(s => String(s.id) === String(studentId) || s.email.toLowerCase() === studentId.toLowerCase());
+  if (!target) return { success: false, student: null };
+
+  const updated: Student = {
+    ...target,
+    strikeCount: 0,
+    isActive: reactivate ? true : target.isActive
+  };
+
+  if (supabase) {
+    try {
+      const updatePayload: any = {
+        strike_count: 0,
+        is_active: updated.isActive,
+        updated_at: new Date().toISOString()
+      };
+      const { error } = await supabase.from('students').update(updatePayload).eq('id', target.id);
+      if (error && reactivate) {
+        await supabase.from('students').update({ is_active: true }).eq('id', target.id);
+      }
+    } catch (e) {
+      console.error('Error resetting student strikes in Supabase:', e);
+    }
+  }
+
+  const initIdx = initialStudents.findIndex(s => s.id === target.id);
+  if (initIdx !== -1) {
+    initialStudents[initIdx].strikeCount = 0;
+    if (reactivate) initialStudents[initIdx].isActive = true;
+  }
+
+  return { success: true, student: updated };
 }
 
 // -----------------------------------------------------------------------------

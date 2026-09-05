@@ -11,6 +11,7 @@ export interface Student {
   enrolledAt: string;
   completedLessons: string[]; // array of lesson IDs
   lastLogin?: string;
+  strikeCount?: number;
 }
 
 export interface Enrollment {

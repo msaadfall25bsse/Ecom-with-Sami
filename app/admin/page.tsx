@@ -348,6 +348,34 @@ export default function AdminDashboardPage() {
     }
   };
 
+  const handleResetStudentStrikes = async (student: Student) => {
+    if (!confirm(`🛡️ RESET DRM STRIKES:\nAre you sure you want to reset strikes to 0/5 for "${student.name}" (${student.email}) and restore their LMS access?`)) {
+      return;
+    }
+    setActionLoadingId(`reset-strike-${student.id}`);
+    try {
+      const res = await fetch('/api/admin/students/reset-strikes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ studentId: student.id, reactivate: true })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setStudents(prev => prev.map(s => s.id === student.id ? { ...s, strikeCount: 0, isActive: true } : s));
+        setToastMessage(`🛡️ DRM strikes successfully reset to 0/5 for "${student.name}". Account restored!`);
+        setTimeout(() => setToastMessage(null), 5000);
+        fetchDashboardData();
+      } else {
+        alert(data.message || 'Failed to reset strikes');
+      }
+    } catch (err: any) {
+      console.error(err);
+      alert('Error resetting strikes: ' + err.message);
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
   const handleCopyPass = (text: string, id: string) => {
     try {
       navigator.clipboard.writeText(text);
@@ -1301,6 +1329,7 @@ export default function AdminDashboardPage() {
                       <th className="pb-3">WhatsApp</th>
                       <th className="pb-3">City</th>
                       <th className="pb-3">LMS Access</th>
+                      <th className="pb-3">DRM Strikes</th>
                       <th className="pb-3">LMS Password</th>
                       <th className="pb-3">Lectures</th>
                       <th className="pb-3 text-right">Credentials Actions</th>
@@ -1321,6 +1350,36 @@ export default function AdminDashboardPage() {
                           >
                             {s.isActive ? 'Active' : 'Suspended'}
                           </span>
+                        </td>
+                        <td className="py-3">
+                          <div className="flex items-center gap-1.5">
+                            <span
+                              className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                                (s.strikeCount || 0) >= 5
+                                  ? 'bg-red-500/20 text-red-400 border border-red-500/30 font-black'
+                                  : (s.strikeCount || 0) > 0
+                                  ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                                  : 'bg-slate-800 text-slate-400'
+                              }`}
+                            >
+                              {(s.strikeCount || 0) >= 5 ? '5/5 Banned' : `${s.strikeCount || 0}/5 Strikes`}
+                            </span>
+                            {((s.strikeCount || 0) > 0 || !s.isActive) && (
+                              <button
+                                onClick={() => handleResetStudentStrikes(s)}
+                                disabled={actionLoadingId === `reset-strike-${s.id}`}
+                                className="p-1 rounded bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 transition-all text-[10px] flex items-center gap-0.5 active:scale-95"
+                                title="Reset DRM strikes to 0/5 & restore LMS access"
+                              >
+                                {actionLoadingId === `reset-strike-${s.id}` ? (
+                                  <Loader2 size={10} className="animate-spin text-emerald-400" />
+                                ) : (
+                                  <RotateCcw size={10} />
+                                )}
+                                <span className="hidden sm:inline font-bold">Reset</span>
+                              </button>
+                            )}
+                          </div>
                         </td>
                         <td className="py-3">
                           <div className="flex items-center gap-1">

@@ -43,6 +43,9 @@ export async function GET(request: NextRequest) {
     // 2. Check Student Session
     const studentSession = getStudentSessionFromRequest(request);
     if (studentSession) {
+      const forwarded = request.headers.get('x-forwarded-for');
+      const clientIp = forwarded ? forwarded.split(',')[0].trim() : (request.headers.get('x-real-ip') || '127.0.0.1');
+
       let student = null;
       if (studentSession.email) {
         student = await dbGetStudentByEmail(studentSession.email);
@@ -75,7 +78,9 @@ export async function GET(request: NextRequest) {
           phone: student.phone,
           city: student.city,
           completedLessons: student.completedLessons || [],
-          role: 'student'
+          role: 'student',
+          ip: clientIp,
+          strikeCount: student.strikeCount || 0
         }
       });
     }
