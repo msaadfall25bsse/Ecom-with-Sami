@@ -69,11 +69,43 @@ export default function LmsClassroomPage() {
 
   // Fullscreen Player & Watermark State
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isIos, setIsIos] = useState(false);
+  const [isIosFullscreen, setIsIosFullscreen] = useState(false);
+  const isIosRef = React.useRef(false);
+  const lastToggleRef = React.useRef(0);
   const playerContainerRef = React.useRef<HTMLDivElement>(null);
   const videoRef = React.useRef<HTMLVideoElement>(null);
   const topLayerWatermarkRef = React.useRef<HTMLDivElement>(null);
 
+  const toggleIosFullscreen = () => {
+    const now = Date.now();
+    if (now - lastToggleRef.current < 400) return;
+    lastToggleRef.current = now;
+
+    setIsIosFullscreen(prev => {
+      const next = !prev;
+      try {
+        if (next) {
+          document.body.style.overflow = 'hidden';
+          if (screen.orientation && (screen.orientation as any).lock) {
+            (screen.orientation as any).lock('landscape').catch(() => {});
+          }
+        } else {
+          document.body.style.overflow = '';
+          if (screen.orientation && (screen.orientation as any).unlock) {
+            (screen.orientation as any).unlock();
+          }
+        }
+      } catch (e) {}
+      return next;
+    });
+  };
+
   const togglePlayerFullscreen = () => {
+    if (isIosRef.current) {
+      toggleIosFullscreen();
+      return;
+    }
     if (!playerContainerRef.current) return;
     const isCurrentlyFs = Boolean(document.fullscreenElement || (document as any).webkitFullscreenElement || isFullscreen);
 
@@ -225,6 +257,16 @@ export default function LmsClassroomPage() {
   };
 
   useEffect(() => {
+    // Detect iOS / iPhone / iPad WebKit for Apple AVPlayer prevention
+    if (typeof window !== 'undefined' && typeof navigator !== 'undefined') {
+      const isApple = 
+        /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) ||
+        (/Macintosh/.test(navigator.userAgent) && 'ontouchend' in document);
+      setIsIos(isApple);
+      isIosRef.current = isApple;
+    }
+
     // 0. Instant restore from LocalStorage so refresh has 0ms delay and no 0% reset
     try {
       const cached = localStorage.getItem('sami_lms_completed_cache');
@@ -482,11 +524,25 @@ export default function LmsClassroomPage() {
         if (!data) return;
 
         if (data.event === 'fullscreen') {
-          setIsFullscreen(true);
-          showTopWatermark();
+          if (isIosRef.current) {
+            setIsIosFullscreen(true);
+            try {
+              document.body.style.overflow = 'hidden';
+            } catch (e) {}
+          } else {
+            setIsFullscreen(true);
+            showTopWatermark();
+          }
         } else if (data.event === 'exitfullscreen') {
-          setIsFullscreen(false);
-          hideTopWatermark();
+          if (isIosRef.current) {
+            setIsIosFullscreen(false);
+            try {
+              document.body.style.overflow = '';
+            } catch (e) {}
+          } else {
+            setIsFullscreen(false);
+            hideTopWatermark();
+          }
         }
       } catch (e) {}
     };
@@ -499,6 +555,27 @@ export default function LmsClassroomPage() {
       document.removeEventListener('fullscreenchange', handleFsChange);
       document.removeEventListener('webkitfullscreenchange', handleFsChange);
       window.removeEventListener('message', handleWindowMessage);
+    };
+  }, []);
+
+  // Keyboard Escape listener & body overflow cleanup for iOS Viewport Fullscreen
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isIosFullscreen) {
+        toggleIosFullscreen();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isIosFullscreen]);
+
+  useEffect(() => {
+    return () => {
+      try {
+        document.body.style.overflow = '';
+      } catch (e) {}
     };
   }, []);
 
@@ -979,10 +1056,39 @@ export default function LmsClassroomPage() {
                 {/* Widescreen Responsive Video Player */}
                 <div
                   ref={playerContainerRef}
-                  className="relative w-full aspect-video rounded-xl sm:rounded-3xl overflow-hidden border-2 border-white/10 shadow-2xl bg-black flex items-center justify-center"
+                  className={`bg-black flex items-center justify-center transition-all ${
+                    isIosFullscreen
+                      ? 'fixed inset-0 z-[999999] w-screen h-screen max-w-none max-h-none m-0 p-0 rounded-none border-0 shadow-none'
+                      : 'relative w-full aspect-video rounded-xl sm:rounded-3xl overflow-hidden border-2 border-white/10 shadow-2xl'
+                  }`}
+                  style={
+                    isIosFullscreen
+                      ? {
+                          position: 'fixed',
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          width: '100vw',
+                          height: '100dvh',
+                          zIndex: 999999,
+                          backgroundColor: '#000',
+                        }
+                      : undefined
+                  }
                 >
                   {/* Exact 16:9 Video Stage - Keeps Watermark 100% on the video without blank border drift */}
-                  <div className="relative w-full h-full flex items-center justify-center overflow-hidden">
+                  <div
+                    className="relative w-full h-full flex items-center justify-center overflow-hidden"
+                    style={
+                      isIosFullscreen
+                        ? {
+                            width: 'min(100vw, calc(100dvh * 16 / 9))',
+                            height: 'min(100dvh, calc(100vw * 9 / 16))',
+                          }
+                        : undefined
+                    }
+                  >
                     {activeLesson?.videoUrl && (
                       activeLesson.videoUrl.match(/\.(mp4|webm|mov|m4v|ogg)(\?.*)?$/i) ||
                       activeLesson.videoUrl.includes('supabase.co/storage') ||
@@ -996,6 +1102,9 @@ export default function LmsClassroomPage() {
                           controls
                           controlsList="nodownload nofullscreen"
                           playsInline
+                          // @ts-ignore
+                          webkit-playsinline="true"
+                          x5-playsinline="true"
                           preload="metadata"
                           onError={() => setVideoLoadError(true)}
                           onLoadedData={() => setVideoLoadError(false)}
@@ -1085,8 +1194,49 @@ export default function LmsClassroomPage() {
                     )}
 
                     {/* Dynamic Forensic Watermark Overlay (100% On Video - Single Instance) */}
-                    {!isFullscreen && (
-                      <DynamicForensicWatermark user={user} isFullscreen={false} />
+                    {(!isFullscreen || isIosFullscreen) && (
+                      <DynamicForensicWatermark user={user} isFullscreen={isIosFullscreen} />
+                    )}
+
+                    {/* iOS-Exclusive Transparent Fullscreen Button Interceptor */}
+                    {isIos && (
+                      <button
+                        type="button"
+                        aria-label={isIosFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          toggleIosFullscreen();
+                        }}
+                        onTouchEnd={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          toggleIosFullscreen();
+                        }}
+                        className="absolute bottom-0 right-0 z-30 w-14 h-12 bg-transparent opacity-0 cursor-pointer"
+                        style={{ touchAction: 'manipulation' }}
+                      />
+                    )}
+
+                    {/* iOS Fullscreen Floating Exit [X] Button */}
+                    {isIosFullscreen && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          toggleIosFullscreen();
+                        }}
+                        onTouchEnd={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          toggleIosFullscreen();
+                        }}
+                        className="absolute top-3 right-3 z-[9999999] p-2.5 rounded-full bg-black/80 hover:bg-red-600 text-white border border-white/20 shadow-2xl backdrop-blur-md active:scale-95 flex items-center justify-center cursor-pointer"
+                        title="Exit Fullscreen"
+                      >
+                        <X size={18} className="text-white" />
+                      </button>
                     )}
                   </div>
                 </div>
@@ -1457,7 +1607,7 @@ export default function LmsClassroomPage() {
           pointerEvents: 'none',
         }}
       >
-        {isFullscreen && (
+        {isFullscreen && !isIosFullscreen && (
           <div className="relative w-full h-full flex items-center justify-center pointer-events-none">
             <div
               style={{
