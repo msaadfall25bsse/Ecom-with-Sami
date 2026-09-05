@@ -35,7 +35,9 @@ import {
   Loader2,
   Shield,
   ShieldAlert,
-  AlertTriangle
+  AlertTriangle,
+  Maximize2,
+  Minimize2
 } from 'lucide-react';
 import { Module, Supplier, ResourceItem } from '@/utils/db';
 import { supabase } from '@/lib/supabase';
@@ -69,6 +71,37 @@ export default function LmsClassroomPage() {
   const [strikes, setStrikes] = useState<number>(0);
   const [strikeToast, setStrikeToast] = useState<{ strikeCount: number; message: string; visible: boolean } | null>(null);
   const lastStrikeTimeRef = React.useRef<number>(0);
+
+  // Fullscreen Watermark & Anti-Snipping Blur State
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isWindowBlurred, setIsWindowBlurred] = useState(false);
+  const playerContainerRef = React.useRef<HTMLDivElement>(null);
+  const videoRef = React.useRef<HTMLVideoElement>(null);
+
+  const togglePlayerFullscreen = () => {
+    if (!playerContainerRef.current) return;
+    const isCurrentlyFs = Boolean(document.fullscreenElement || (document as any).webkitFullscreenElement);
+    if (!isCurrentlyFs) {
+      const elem: any = playerContainerRef.current;
+      if (elem.requestFullscreen) {
+        elem.requestFullscreen().catch(() => {});
+      } else if (elem.webkitRequestFullscreen) {
+        elem.webkitRequestFullscreen();
+      } else if (elem.mozRequestFullScreen) {
+        elem.mozRequestFullScreen();
+      } else if (elem.msRequestFullscreen) {
+        elem.msRequestFullscreen();
+      }
+      setIsFullscreen(true);
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen().catch(() => {});
+      } else if ((document as any).webkitExitFullscreen) {
+        (document as any).webkitExitFullscreen();
+      }
+      setIsFullscreen(false);
+    }
+  };
 
   const handleSecurityStrike = async (violationType: string) => {
     // Debounce cooldown: At least 3.5 seconds between strikes
@@ -220,6 +253,7 @@ export default function LmsClassroomPage() {
     } catch (e) {}
     try {
       localStorage.removeItem('sami_student_auth');
+      sessionStorage.removeItem('sami_lms_drm_modal_seen');
       document.cookie = 'sami_student_auth=; path=/; max-age=0';
       document.cookie = 'sami_student_session=; path=/; max-age=0';
     } catch (e) {}
@@ -289,7 +323,7 @@ export default function LmsClassroomPage() {
             setStrikes(Number(res.user.strikeCount || 0));
           }
           try {
-            if (localStorage.getItem('sami_lms_drm_policy_accepted') !== 'true') {
+            if (sessionStorage.getItem('sami_lms_drm_modal_seen') !== 'true') {
               setShowDrmModal(true);
             }
           } catch (e) {}
@@ -448,7 +482,57 @@ export default function LmsClassroomPage() {
     };
   }, []);
 
-  // Security Sensor: Anti-Piracy Keyboard Traps (PrintScreen, Snipping Tool, DevTools)
+  // 1. Fullscreen Change Synchronizer (Keeps Forensic Watermark visible in fullscreen)
+  useEffect(() => {
+    const handleFsChange = () => {
+      const fsElem = document.fullscreenElement || (document as any).webkitFullscreenElement;
+      setIsFullscreen(Boolean(fsElem));
+
+      // If native video element entered fullscreen alone, immediately transfer to the container!
+      if (fsElem && fsElem === videoRef.current && playerContainerRef.current) {
+        if (document.exitFullscreen) {
+          document.exitFullscreen().then(() => {
+            const elem: any = playerContainerRef.current;
+            if (elem?.requestFullscreen) {
+              elem.requestFullscreen().catch(() => {});
+            } else if (elem?.webkitRequestFullscreen) {
+              elem.webkitRequestFullscreen();
+            }
+          }).catch(() => {});
+        }
+      }
+    };
+
+    document.addEventListener('fullscreenchange', handleFsChange);
+    document.addEventListener('webkitfullscreenchange', handleFsChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFsChange);
+      document.removeEventListener('webkitfullscreenchange', handleFsChange);
+    };
+  }, []);
+
+  // 2. Window Blur & Anti-Snipping Protection (Pauses & protects video on window blur)
+  useEffect(() => {
+    const handleBlur = () => {
+      if (videoRef.current && !videoRef.current.paused && !videoRef.current.ended) {
+        videoRef.current.pause();
+        setIsWindowBlurred(true);
+      }
+    };
+
+    const handleFocus = () => {
+      // Keep paused so user clicks resume
+    };
+
+    window.addEventListener('blur', handleBlur);
+    window.addEventListener('focus', handleFocus);
+    return () => {
+      window.removeEventListener('blur', handleBlur);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, []);
+
+  // 3. Security Sensor: Anti-Piracy Keyboard Traps (PrintScreen, Snipping Tool, DevTools)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // 1. PrintScreen key
@@ -487,8 +571,8 @@ export default function LmsClassroomPage() {
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener('keydown', handleKeyDown, true);
+    return () => window.removeEventListener('keydown', handleKeyDown, true);
   }, [strikes, user]);
 
   const isAdmin = Boolean(
@@ -838,6 +922,26 @@ export default function LmsClassroomPage() {
         {/* Right Stage: Main Classroom Area */}
         <main className="flex-1 flex flex-col overflow-y-auto max-h-screen lg:max-h-[calc(100vh-57px)]">
           
+          {/* LMS Top DRM & Anti-Piracy Announcement Bar */}
+          <div className="bg-gradient-to-r from-red-950/40 via-[#111827] to-slate-900 border-b border-red-500/20 px-3 sm:px-6 py-2 flex items-center justify-between gap-3 text-xs z-20 shadow-sm">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-500/20 text-red-400 border border-red-500/30 text-[10px] font-black uppercase tracking-wider flex-shrink-0 animate-pulse">
+                <ShieldAlert size={12} />
+                <span>DRM ACTIVE</span>
+              </span>
+              <p className="text-[11px] sm:text-xs text-slate-300 truncate font-medium">
+                <strong className="text-white">Content Protected:</strong> Lectures are watermarked with your Student ID &amp; IP. Screen recording or screenshot capture is strictly monitored. 5 strikes lead to immediate ban and reactivation fine.
+              </p>
+            </div>
+            <button
+              onClick={() => setShowDrmModal(true)}
+              className="text-[10px] sm:text-[11px] font-bold text-[#00A0DF] hover:underline whitespace-nowrap flex-shrink-0 flex items-center gap-1"
+            >
+              <span>View Policy</span>
+              <ChevronRight size={12} />
+            </button>
+          </div>
+
           {/* Classroom Sub-Tabs */}
           <div className="bg-[#111827] border-b border-white/10 px-3 sm:px-6 py-2 flex items-center justify-between gap-2 overflow-x-auto no-scrollbar sticky top-0 z-20">
             <div className="flex items-center gap-1.5 sm:gap-2 text-xs font-bold">
@@ -908,7 +1012,15 @@ export default function LmsClassroomPage() {
               <div className="max-w-5xl mx-auto space-y-4 sm:space-y-6">
                 
                 {/* Widescreen Responsive Video Player */}
-                <div className="relative bg-black rounded-xl sm:rounded-3xl overflow-hidden border-2 border-white/10 shadow-2xl aspect-video w-full flex items-center justify-center">
+                <div
+                  ref={playerContainerRef}
+                  onDoubleClick={togglePlayerFullscreen}
+                  className={`relative bg-black rounded-xl sm:rounded-3xl overflow-hidden border-2 border-white/10 shadow-2xl w-full flex items-center justify-center transition-all ${
+                    isFullscreen 
+                      ? '!fixed !inset-0 !z-[9999] !w-screen !h-screen !rounded-none !border-0 !max-w-none !aspect-auto bg-black' 
+                      : 'aspect-video'
+                  }`}
+                >
                   {activeLesson?.videoUrl && (
                     activeLesson.videoUrl.match(/\.(mp4|webm|mov|m4v|ogg)(\?.*)?$/i) ||
                     activeLesson.videoUrl.includes('supabase.co/storage') ||
@@ -917,9 +1029,10 @@ export default function LmsClassroomPage() {
                   ) ? (
                     <div className="relative w-full h-full flex items-center justify-center bg-black">
                       <video
+                        ref={videoRef}
                         key={activeLesson.id + activeLesson.videoUrl}
                         controls
-                        controlsList="nodownload"
+                        controlsList="nodownload nofullscreen"
                         playsInline
                         preload="metadata"
                         onError={() => setVideoLoadError(true)}
@@ -1007,8 +1120,49 @@ export default function LmsClassroomPage() {
                     />
                   )}
 
+                  {/* Anti-Snipping Blackout Protection on Window Blur */}
+                  {isWindowBlurred && (
+                    <div className="absolute inset-0 z-40 bg-black/95 backdrop-blur-md flex flex-col items-center justify-center p-4 text-center select-none animate-in fade-in duration-150">
+                      <div className="w-14 h-14 rounded-2xl bg-red-500/10 border border-red-500/30 text-red-400 flex items-center justify-center mb-3 shadow-lg shadow-red-500/20">
+                        <ShieldAlert size={28} />
+                      </div>
+                      <span className="inline-block bg-red-500/20 text-red-400 border border-red-500/30 text-[10px] font-black uppercase tracking-wider px-3 py-0.5 rounded-full mb-2">
+                        DRM CONTENT PROTECTION ACTIVE
+                      </span>
+                      <h4 className="text-sm sm:text-base font-black text-white mb-1">
+                        Playback Paused &bull; Screen Capture Protected
+                      </h4>
+                      <p className="text-xs text-slate-400 max-w-sm mb-4 leading-relaxed">
+                        Window focus lost or screen capture tool detected. Click below to resume your lecture.
+                      </p>
+                      <button
+                        onClick={() => {
+                          setIsWindowBlurred(false);
+                          if (videoRef.current) {
+                            videoRef.current.play().catch(() => {});
+                          }
+                        }}
+                        className="px-5 py-2 rounded-xl bg-[#00A0DF] hover:bg-[#008ec7] text-white text-xs font-black shadow-lg shadow-[#00A0DF]/30 transition-all active:scale-95"
+                      >
+                        Resume Lecture
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Floating Custom Fullscreen Toggle Button (Watermark stays visible) */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      togglePlayerFullscreen();
+                    }}
+                    className="absolute bottom-3 right-3 z-30 p-2 rounded-xl bg-black/75 hover:bg-[#00A0DF] text-white border border-white/20 transition-all shadow-lg active:scale-95 flex items-center justify-center cursor-pointer"
+                    title={isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen (Keep Watermark)'}
+                  >
+                    {isFullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+                  </button>
+
                   {/* Dynamic Forensic Watermark Overlay */}
-                  <DynamicForensicWatermark user={user} />
+                  <DynamicForensicWatermark user={user} isFullscreen={isFullscreen} />
                 </div>
 
                 {/* Live Watch Verification Bar & Cloud Sync Banner */}
@@ -1411,7 +1565,7 @@ export default function LmsClassroomPage() {
         onClose={() => {
           setShowDrmModal(false);
           try {
-            localStorage.setItem('sami_lms_drm_policy_accepted', 'true');
+            sessionStorage.setItem('sami_lms_drm_modal_seen', 'true');
           } catch (e) {}
         }}
       />
@@ -1423,7 +1577,7 @@ export default function LmsClassroomPage() {
 // =============================================================================
 // SUBCOMPONENT: Dynamic Moving Forensic Watermark Overlay
 // =============================================================================
-function DynamicForensicWatermark({ user }: { user: any }) {
+function DynamicForensicWatermark({ user, isFullscreen = false }: { user: any; isFullscreen?: boolean }) {
   const [sector, setSector] = useState(0);
   const [clock, setClock] = useState('');
 
@@ -1463,9 +1617,9 @@ function DynamicForensicWatermark({ user }: { user: any }) {
     'top-1/2 -translate-y-1/2 left-2.5 text-left',         // 3: Mid-Left
     'top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2 text-center', // 4: Center
     'top-1/2 -translate-y-1/2 right-2.5 text-right',       // 5: Mid-Right
-    'bottom-9 left-2.5 text-left',                         // 6: Bottom-Left
-    'bottom-9 left-1/2 -translate-x-1/2 text-center',      // 7: Bottom-Center
-    'bottom-9 right-2.5 text-right',                       // 8: Bottom-Right
+    'bottom-10 left-2.5 text-left',                        // 6: Bottom-Left
+    'bottom-10 left-1/2 -translate-x-1/2 text-center',     // 7: Bottom-Center
+    'bottom-10 right-2.5 text-right',                      // 8: Bottom-Right
   ];
 
   const studentName = user?.name || 'Authorized Student';
@@ -1474,21 +1628,23 @@ function DynamicForensicWatermark({ user }: { user: any }) {
   const ipAddress = user?.ip || 'Verified Session';
 
   return (
-    <div className="absolute inset-0 pointer-events-none select-none z-20 overflow-hidden">
+    <div className="absolute inset-0 pointer-events-none select-none z-[999999] overflow-hidden">
       <div
-        className={`absolute transition-all duration-1000 ease-in-out px-2 py-1 rounded-lg bg-black/30 backdrop-blur-[0.5px] border border-white/10 text-white/40 shadow-sm max-w-[200px] sm:max-w-[250px] ${sectorClasses[sector]}`}
+        className={`absolute transition-all duration-1000 ease-in-out px-2.5 py-1.5 rounded-xl bg-black/40 backdrop-blur-[1px] border border-white/10 text-white/50 shadow-md ${
+          isFullscreen ? 'max-w-[280px] sm:max-w-[340px]' : 'max-w-[200px] sm:max-w-[250px]'
+        } ${sectorClasses[sector]}`}
       >
-        <div className="flex items-center gap-1 text-[8px] sm:text-[9px] font-black tracking-wider text-[#00A0DF]/70 uppercase leading-none mb-0.5">
-          <Shield size={9} className="flex-shrink-0" />
+        <div className="flex items-center gap-1 text-[8px] sm:text-[9.5px] font-black tracking-wider text-[#00A0DF]/80 uppercase leading-none mb-0.5">
+          <Shield size={10} className="flex-shrink-0" />
           <span>SAMI DRM PROTECTED</span>
         </div>
-        <div className="text-[8px] sm:text-[9.5px] font-mono font-bold leading-tight truncate text-white/60">
+        <div className="text-[8.5px] sm:text-[10px] font-mono font-bold leading-tight truncate text-white/70">
           {studentName} • SAMI-{studentId}
         </div>
-        <div className="text-[7px] sm:text-[8.5px] font-mono leading-tight text-white/45 truncate">
+        <div className="text-[7.5px] sm:text-[9px] font-mono leading-tight text-white/50 truncate">
           {maskedPhone ? `${maskedPhone} • ` : ''}IP: {ipAddress}
         </div>
-        <div className="text-[6.5px] sm:text-[7.5px] font-mono text-white/35 leading-none mt-0.5">
+        <div className="text-[7px] sm:text-[8px] font-mono text-white/40 leading-none mt-0.5">
           {clock}
         </div>
       </div>
