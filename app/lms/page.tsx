@@ -35,9 +35,7 @@ import {
   Loader2,
   Shield,
   ShieldAlert,
-  AlertTriangle,
-  Maximize2,
-  Minimize2
+  AlertTriangle
 } from 'lucide-react';
 import { Module, Supplier, ResourceItem } from '@/utils/db';
 import { supabase } from '@/lib/supabase';
@@ -503,30 +501,6 @@ export default function LmsClassroomPage() {
       window.removeEventListener('message', handleWindowMessage);
     };
   }, []);
-
-  useEffect(() => {
-    if (isFullscreen) {
-      try {
-        document.body.style.overflow = 'hidden';
-      } catch (e) {}
-    } else {
-      try {
-        document.body.style.overflow = '';
-      } catch (e) {}
-    }
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isFullscreen) {
-        togglePlayerFullscreen();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => {
-      try {
-        document.body.style.overflow = '';
-      } catch (e) {}
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [isFullscreen]);
 
   const isAdmin = Boolean(
     user?.role === 'SUPER_ADMIN' || 
@@ -1005,40 +979,10 @@ export default function LmsClassroomPage() {
                 {/* Widescreen Responsive Video Player */}
                 <div
                   ref={playerContainerRef}
-                  onDoubleClick={togglePlayerFullscreen}
-                  className={`relative bg-black flex items-center justify-center transition-all ${
-                    isFullscreen 
-                      ? 'fixed inset-0 z-[999999] w-screen h-screen max-w-none max-h-none m-0 p-0' 
-                      : 'w-full aspect-video rounded-xl sm:rounded-3xl overflow-hidden border-2 border-white/10 shadow-2xl'
-                  }`}
-                  style={
-                    isFullscreen
-                      ? {
-                          position: 'fixed',
-                          top: 0,
-                          left: 0,
-                          right: 0,
-                          bottom: 0,
-                          width: '100vw',
-                          height: '100dvh',
-                          zIndex: 999999,
-                          backgroundColor: '#000000',
-                        }
-                      : undefined
-                  }
+                  className="relative w-full aspect-video rounded-xl sm:rounded-3xl overflow-hidden border-2 border-white/10 shadow-2xl bg-black flex items-center justify-center"
                 >
                   {/* Exact 16:9 Video Stage - Keeps Watermark 100% on the video without blank border drift */}
-                  <div
-                    style={
-                      isFullscreen
-                        ? {
-                            width: 'min(100vw, calc(100dvh * 16 / 9))',
-                            height: 'min(100dvh, calc(100vw * 9 / 16))',
-                          }
-                        : undefined
-                    }
-                    className="relative w-full h-full flex items-center justify-center overflow-hidden"
-                  >
+                  <div className="relative w-full h-full flex items-center justify-center overflow-hidden">
                     {activeLesson?.videoUrl && (
                       activeLesson.videoUrl.match(/\.(mp4|webm|mov|m4v|ogg)(\?.*)?$/i) ||
                       activeLesson.videoUrl.includes('supabase.co/storage') ||
@@ -1050,11 +994,8 @@ export default function LmsClassroomPage() {
                           ref={videoRef}
                           key={activeLesson.id + activeLesson.videoUrl}
                           controls
-                          controlsList="nodownload nofullscreen noplaybackrate"
+                          controlsList="nodownload nofullscreen"
                           playsInline
-                          // @ts-ignore
-                          webkit-playsinline="true"
-                          disablePictureInPicture
                           preload="metadata"
                           onError={() => setVideoLoadError(true)}
                           onLoadedData={() => setVideoLoadError(false)}
@@ -1136,52 +1077,16 @@ export default function LmsClassroomPage() {
                         key={activeLesson?.id + (activeLesson?.videoUrl || '')}
                         src={getEmbedUrl(activeLesson?.videoUrl)}
                         title={activeLesson?.title || 'Lesson Video'}
-                        allow="accelerometer; gyroscope; autoplay; encrypted-media; clipboard-write;"
+                        allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
+                        allowFullScreen
                         loading="lazy"
                         className="w-full h-full border-0"
                       />
                     )}
 
-                    {/* Fullscreen / Theater Toggle Button (Top-Right of Video Player) */}
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        togglePlayerFullscreen();
-                      }}
-                      className="absolute top-3 right-3 z-30 px-3 py-1.5 rounded-xl bg-black/75 hover:bg-[#00A0DF] text-white border border-white/20 transition-all shadow-xl backdrop-blur-md active:scale-95 flex items-center gap-1.5 text-xs font-bold cursor-pointer"
-                      title={isFullscreen ? 'Exit Fullscreen' : 'Full Screen (Theater Mode)'}
-                    >
-                      {isFullscreen ? (
-                        <>
-                          <X size={14} className="text-red-400" />
-                          <span className="text-[11px] font-bold">Exit Fullscreen</span>
-                        </>
-                      ) : (
-                        <>
-                          <Maximize2 size={13} className="text-[#00A0DF]" />
-                          <span className="text-[11px] font-bold">Full Screen</span>
-                        </>
-                      )}
-                    </button>
-
-                    {/* Dynamic Forensic Watermark Overlay (100% On Video!) */}
-                    <DynamicForensicWatermark user={user} isFullscreen={isFullscreen} />
-
-                    {/* In Fullscreen: Prominent Top-Right Exit Fullscreen Button */}
-                    {isFullscreen && (
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          togglePlayerFullscreen();
-                        }}
-                        className="absolute top-3 right-3 sm:top-5 sm:right-5 z-[9999999] px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-full bg-black/85 hover:bg-red-600 text-white border border-white/25 transition-all shadow-2xl backdrop-blur-md active:scale-95 flex items-center gap-1.5 sm:gap-2 text-xs font-black cursor-pointer"
-                        title="Exit Fullscreen"
-                      >
-                        <X size={15} className="text-red-400" />
-                        <span>Exit Fullscreen</span>
-                      </button>
+                    {/* Dynamic Forensic Watermark Overlay (100% On Video - Single Instance) */}
+                    {!isFullscreen && (
+                      <DynamicForensicWatermark user={user} isFullscreen={false} />
                     )}
                   </div>
                 </div>
@@ -1230,17 +1135,8 @@ export default function LmsClassroomPage() {
                   </div>
 
                   {/* Cloud Database Sync Status & Fullscreen Toggle */}
+                  {/* Cloud Database Sync Status */}
                   <div className="flex-shrink-0 flex items-center gap-2 self-end sm:self-center">
-                    <button
-                      type="button"
-                      onClick={togglePlayerFullscreen}
-                      className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-[#00A0DF] text-white border border-white/10 text-xs font-bold transition-all active:scale-95 shadow-sm cursor-pointer"
-                      title={isFullscreen ? 'Exit Fullscreen' : 'Full Screen'}
-                    >
-                      {isFullscreen ? <Minimize2 size={13} className="text-red-400" /> : <Maximize2 size={13} className="text-[#00A0DF]" />}
-                      <span>{isFullscreen ? 'Exit Fullscreen' : 'Full Screen'}</span>
-                    </button>
-
                     {syncStatus === 'syncing' ? (
                       <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-semibold animate-pulse">
                         <Loader2 size={12} className="animate-spin" />
@@ -1260,29 +1156,21 @@ export default function LmsClassroomPage() {
                   </div>
                 </div>
 
-                {/* Mobile Next / Prev / Fullscreen Control Buttons */}
+                {/* Mobile Next / Prev Control Buttons */}
                 <div className="flex sm:hidden items-center justify-between gap-2">
                   <button
                     onClick={() => prevLesson && setActiveLesson(prevLesson)}
                     disabled={!prevLesson}
                     className="flex-1 py-2 rounded-xl bg-slate-800 disabled:opacity-30 text-xs font-bold text-slate-300 flex items-center justify-center gap-1"
                   >
-                    <ChevronLeft size={14} /> Prev
-                  </button>
-                  <button
-                    type="button"
-                    onClick={togglePlayerFullscreen}
-                    className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-[#00A0DF] text-xs font-bold text-white flex items-center justify-center gap-1.5 border border-white/10 active:scale-95 shadow-sm cursor-pointer"
-                  >
-                    {isFullscreen ? <Minimize2 size={13} className="text-red-400" /> : <Maximize2 size={13} className="text-[#00A0DF]" />}
-                    <span>{isFullscreen ? 'Exit' : 'Full Screen'}</span>
+                    <ChevronLeft size={14} /> Prev Lecture
                   </button>
                   <button
                     onClick={() => nextLesson && setActiveLesson(nextLesson)}
                     disabled={!nextLesson}
                     className="flex-1 py-2 rounded-xl bg-[#00A0DF] disabled:opacity-30 text-xs font-black text-white flex items-center justify-center gap-1"
                   >
-                    Next <ChevronRight size={14} />
+                    Next Lecture <ChevronRight size={14} />
                   </button>
                 </div>
 
@@ -1569,17 +1457,19 @@ export default function LmsClassroomPage() {
           pointerEvents: 'none',
         }}
       >
-        <div className="relative w-full h-full flex items-center justify-center pointer-events-none">
-          <div
-            style={{
-              width: 'min(100vw, calc(100vh * 16 / 9))',
-              height: 'min(100vh, calc(100vw * 9 / 16))',
-            }}
-            className="relative pointer-events-none overflow-hidden"
-          >
-            <DynamicForensicWatermark user={user} isFullscreen={true} />
+        {isFullscreen && (
+          <div className="relative w-full h-full flex items-center justify-center pointer-events-none">
+            <div
+              style={{
+                width: 'min(100vw, calc(100vh * 16 / 9))',
+                height: 'min(100vh, calc(100vw * 9 / 16))',
+              }}
+              className="relative pointer-events-none overflow-hidden"
+            >
+              <DynamicForensicWatermark user={user} isFullscreen={true} />
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
     </div>
