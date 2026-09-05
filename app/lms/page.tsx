@@ -73,6 +73,7 @@ export default function LmsClassroomPage() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const playerContainerRef = React.useRef<HTMLDivElement>(null);
   const videoRef = React.useRef<HTMLVideoElement>(null);
+  const topLayerWatermarkRef = React.useRef<HTMLDivElement>(null);
 
   const togglePlayerFullscreen = () => {
     if (!playerContainerRef.current) return;
@@ -445,15 +446,61 @@ export default function LmsClassroomPage() {
   }, []);
 
   useEffect(() => {
+    const showTopWatermark = () => {
+      try {
+        if (topLayerWatermarkRef.current && typeof (topLayerWatermarkRef.current as any).showPopover === 'function') {
+          if (!(topLayerWatermarkRef.current as any).matches(':popover-open')) {
+            (topLayerWatermarkRef.current as any).showPopover();
+          }
+        }
+      } catch (e) {}
+    };
+
+    const hideTopWatermark = () => {
+      try {
+        if (topLayerWatermarkRef.current && typeof (topLayerWatermarkRef.current as any).hidePopover === 'function') {
+          if ((topLayerWatermarkRef.current as any).matches(':popover-open')) {
+            (topLayerWatermarkRef.current as any).hidePopover();
+          }
+        }
+      } catch (e) {}
+    };
+
     const handleFsChange = () => {
       const fsElem = document.fullscreenElement || (document as any).webkitFullscreenElement;
-      setIsFullscreen(Boolean(fsElem));
+      const isFs = Boolean(fsElem);
+      setIsFullscreen(isFs);
+
+      if (isFs) {
+        showTopWatermark();
+      } else {
+        hideTopWatermark();
+      }
     };
+
+    const handleWindowMessage = (event: MessageEvent) => {
+      try {
+        const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
+        if (!data) return;
+
+        if (data.event === 'fullscreen') {
+          setIsFullscreen(true);
+          showTopWatermark();
+        } else if (data.event === 'exitfullscreen') {
+          setIsFullscreen(false);
+          hideTopWatermark();
+        }
+      } catch (e) {}
+    };
+
     document.addEventListener('fullscreenchange', handleFsChange);
     document.addEventListener('webkitfullscreenchange', handleFsChange);
+    window.addEventListener('message', handleWindowMessage);
+
     return () => {
       document.removeEventListener('fullscreenchange', handleFsChange);
       document.removeEventListener('webkitfullscreenchange', handleFsChange);
+      window.removeEventListener('message', handleWindowMessage);
     };
   }, []);
 
@@ -1054,18 +1101,6 @@ export default function LmsClassroomPage() {
                       />
                     )}
 
-                    {/* Zoom / Fullscreen Button - Placed directly on the 16:9 stage */}
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        togglePlayerFullscreen();
-                      }}
-                      className="absolute bottom-3 right-3 z-30 p-2 rounded-xl bg-black/80 hover:bg-[#00A0DF] text-white border border-white/20 transition-all shadow-lg active:scale-95 flex items-center justify-center cursor-pointer"
-                      title={isFullscreen ? 'Exit Fullscreen' : 'Full Screen'}
-                    >
-                      {isFullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
-                    </button>
-
                     {/* Dynamic Forensic Watermark Overlay (100% On Video!) */}
                     <DynamicForensicWatermark user={user} isFullscreen={isFullscreen} />
                   </div>
@@ -1414,6 +1449,40 @@ export default function LmsClassroomPage() {
           } catch (e) {}
         }}
       />
+
+      {/* Top-Layer Fullscreen Persistent Forensic Watermark (Renders directly on top of Bunny.net Fullscreen) */}
+      <div
+        ref={topLayerWatermarkRef}
+        // @ts-ignore
+        popover="manual"
+        className="lms-fullscreen-watermark-popover fixed inset-0 w-screen h-screen bg-transparent pointer-events-none overflow-hidden"
+        style={{
+          background: 'transparent',
+          backgroundColor: 'transparent',
+          border: 'none',
+          outline: 'none',
+          boxShadow: 'none',
+          width: '100vw',
+          height: '100vh',
+          maxWidth: '100vw',
+          maxHeight: '100vh',
+          margin: 0,
+          padding: 0,
+          pointerEvents: 'none',
+        }}
+      >
+        <div className="relative w-full h-full flex items-center justify-center pointer-events-none">
+          <div
+            style={{
+              width: 'min(100vw, calc(100vh * 16 / 9))',
+              height: 'min(100vh, calc(100vw * 9 / 16))',
+            }}
+            className="relative pointer-events-none overflow-hidden"
+          >
+            <DynamicForensicWatermark user={user} isFullscreen={true} />
+          </div>
+        </div>
+      </div>
 
     </div>
   );
