@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
-import { dbGetStudents, dbUpdateStudent } from '@/lib/database';
+import { dbGetStudents, dbUpdateStudent, dbDeleteStudent } from '@/lib/database';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -43,3 +43,36 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({ success: false, message: error.message }, { status: 500, headers: NO_CACHE_HEADERS });
   }
 }
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const url = new URL(request.url);
+    let id = url.searchParams.get('id');
+
+    if (!id) {
+      try {
+        const body = await request.json();
+        id = body.id || body.email;
+      } catch (e) {}
+    }
+
+    if (!id) {
+      return NextResponse.json({ success: false, message: 'Missing student ID or email' }, { status: 400, headers: NO_CACHE_HEADERS });
+    }
+
+    await dbDeleteStudent(id);
+
+    try {
+      revalidatePath('/admin', 'page');
+      revalidatePath('/lms', 'page');
+    } catch (e) {}
+
+    return NextResponse.json({
+      success: true,
+      message: 'Student permanently deleted from database.'
+    }, { headers: NO_CACHE_HEADERS });
+  } catch (error: any) {
+    return NextResponse.json({ success: false, message: error.message }, { status: 500, headers: NO_CACHE_HEADERS });
+  }
+}
+

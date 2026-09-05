@@ -316,6 +316,38 @@ export default function AdminDashboardPage() {
     }
   };
 
+  const handleDeleteStudent = async (student: Student) => {
+    if (!confirm(`⚠️ PERMANENT DELETE:\nAre you sure you want to permanently delete student "${student.name}" (${student.email})?\n\nThis will remove their account and LMS access completely from the database.`)) {
+      return;
+    }
+    setActionLoadingId(`del-std-${student.id}`);
+    try {
+      const res = await fetch('/api/admin/students', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: student.id, email: student.email })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setStudents(prev => prev.filter(s => s.id !== student.id && s.email.toLowerCase() !== student.email.toLowerCase()));
+        setStats(prev => ({
+          ...prev,
+          totalStudents: Math.max(0, prev.totalStudents - 1)
+        }));
+        setToastMessage(`🗑️ Student "${student.name}" permanently deleted.`);
+        setTimeout(() => setToastMessage(null), 5000);
+        fetchDashboardData();
+      } else {
+        alert(data.message || 'Failed to delete student');
+      }
+    } catch (err: any) {
+      console.error(err);
+      alert('Error deleting student: ' + err.message);
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
   const handleCopyPass = (text: string, id: string) => {
     try {
       navigator.clipboard.writeText(text);
@@ -1337,6 +1369,18 @@ export default function AdminDashboardPage() {
                                 <MessageSquare size={12} />
                               </a>
                             )}
+                            <button
+                              onClick={() => handleDeleteStudent(s)}
+                              disabled={actionLoadingId === `del-std-${s.id}`}
+                              className="p-1.5 bg-red-500/10 hover:bg-red-500/25 text-red-400 hover:text-red-300 rounded-lg text-[11px] flex items-center justify-center border border-red-500/20 transition-all active:scale-95"
+                              title="Delete Student from Database"
+                            >
+                              {actionLoadingId === `del-std-${s.id}` ? (
+                                <Loader2 size={12} className="animate-spin text-red-400" />
+                              ) : (
+                                <Trash2 size={12} />
+                              )}
+                            </button>
                           </div>
                         </td>
                       </tr>

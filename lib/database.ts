@@ -442,6 +442,39 @@ export async function dbUpdateStudent(id: string, patch: Partial<Student>): Prom
   return updated;
 }
 
+export async function dbDeleteStudent(idOrEmail: string): Promise<boolean> {
+  clearDatabaseCache();
+
+  if (supabase) {
+    try {
+      // 1. Delete student from students table
+      const { error: errId } = await supabase.from('students').delete().eq('id', idOrEmail);
+      if (errId) {
+        await supabase.from('students').delete().ilike('email', idOrEmail);
+      } else {
+        await supabase.from('students').delete().ilike('email', idOrEmail);
+      }
+
+      // 2. Also clean up any matching enrollments for this student so test data is completely wiped
+      await supabase.from('enrollments').delete().ilike('email', idOrEmail);
+      await supabase.from('enrollments').delete().eq('student_id', idOrEmail);
+    } catch (e) {
+      console.error('Supabase delete student error:', e);
+    }
+  }
+
+  // Also clean in-memory fallback arrays
+  try {
+    const sIdx = initialStudents.findIndex(s => s.id === idOrEmail || s.email.toLowerCase() === idOrEmail.toLowerCase());
+    if (sIdx !== -1) initialStudents.splice(sIdx, 1);
+
+    const eIdx = initialEnrollments.findIndex(e => e.email.toLowerCase() === idOrEmail.toLowerCase() || e.studentId === idOrEmail);
+    if (eIdx !== -1) initialEnrollments.splice(eIdx, 1);
+  } catch (e) {}
+
+  return true;
+}
+
 // -----------------------------------------------------------------------------
 // 5. ENROLLMENTS (100% DIRECT SUPABASE REAL-TIME READ/WRITE)
 // -----------------------------------------------------------------------------
@@ -651,6 +684,14 @@ export async function dbDeleteEnrollment(id: string): Promise<boolean> {
       const { error } = await supabase.from('enrollments').delete().eq('id', targetId);
       if (error) {
         await supabase.from('enrollments').delete().eq('tracking_code', targetId);
+      }
+
+      // Also clean up provisional/unapproved student record created for this enrollment
+      if (enr?.email) {
+        const { data: std } = await supabase.from('students').select('id, is_active, completed_lessons_json').ilike('email', enr.email).maybeSingle();
+        if (std && !std.is_active) {
+          await supabase.from('students').delete().eq('id', std.id);
+        }
       }
     } catch (e) {
       console.error('Supabase delete enrollment error:', e);

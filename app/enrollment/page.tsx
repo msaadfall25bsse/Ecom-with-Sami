@@ -21,7 +21,8 @@ import {
   Zap,
   Image as ImageIcon,
   X,
-  PhoneCall
+  PhoneCall,
+  Loader2
 } from 'lucide-react';
 import { useContactConfig } from '@/utils/contactConfig';
 import { defaultCmsContent } from '@/utils/cmsStore';
@@ -148,6 +149,7 @@ export default function EnrollmentPage() {
   const currentPayment = paymentMethods.find(p => p.id === selectedMethod) || paymentMethods[0];
 
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [isCompressing, setIsCompressing] = useState(false);
 
   const handleCopy = (text: string, id: string) => {
     navigator.clipboard.writeText(text);
@@ -155,15 +157,77 @@ export default function EnrollmentPage() {
     setTimeout(() => setCopiedId(null), 2500);
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Client-side image compression: reduces 2-5MB raw mobile screenshots to ~40-60KB
+  const compressReceiptImage = (file: File): Promise<string> => {
+    return new Promise((resolve) => {
+      if (!file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string || '');
+        reader.onerror = () => resolve('');
+        reader.readAsDataURL(file);
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = (event) => {
+        const img = new Image();
+        img.src = event.target?.result as string;
+        img.onload = () => {
+          const maxWidth = 1000;
+          const maxHeight = 1000;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > maxWidth) {
+              height = Math.round((height * maxWidth) / width);
+              width = maxWidth;
+            }
+          } else {
+            if (height > maxHeight) {
+              width = Math.round((width * maxHeight) / height);
+              height = maxHeight;
+            }
+          }
+
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            resolve(event.target?.result as string || '');
+            return;
+          }
+
+          // Render scaled image to canvas and export with 0.72 JPEG compression
+          ctx.drawImage(img, 0, 0, width, height);
+          const compressed = canvas.toDataURL('image/jpeg', 0.72);
+          resolve(compressed);
+        };
+        img.onerror = () => resolve(event.target?.result as string || '');
+      };
+      reader.onerror = () => resolve('');
+    });
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setReceiptFileName(file.name);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setReceiptBase64(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+      setIsCompressing(true);
+      try {
+        const compressed = await compressReceiptImage(file);
+        setReceiptBase64(compressed);
+      } catch (err) {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setReceiptBase64(reader.result as string);
+        };
+        reader.readAsDataURL(file);
+      } finally {
+        setIsCompressing(false);
+      }
     }
   };
 
@@ -545,9 +609,13 @@ export default function EnrollmentPage() {
                   <label className="border-2 border-dashed border-white/15 hover:border-[#00A0DF] rounded-2xl p-6 flex flex-col items-center justify-center cursor-pointer bg-[#0B0F19] transition-all group">
                     <Camera size={26} className="text-slate-400 group-hover:text-[#00A0DF] mb-2 transition-colors" />
                     <span className="text-xs font-bold text-slate-300 text-center">
-                      {receiptFileName ? (
+                      {isCompressing ? (
+                        <span className="text-[#00A0DF] flex items-center gap-1.5">
+                          <Loader2 size={15} className="animate-spin" /> Compressing payment slip for fast upload...
+                        </span>
+                      ) : receiptFileName ? (
                         <span className="text-emerald-400 flex items-center gap-1.5">
-                          <CheckCircle2 size={15} /> {receiptFileName}
+                          <CheckCircle2 size={15} /> {receiptFileName} (Ready &bull; Optimized)
                         </span>
                       ) : (
                         'Click to choose receipt screenshot image from gallery'
