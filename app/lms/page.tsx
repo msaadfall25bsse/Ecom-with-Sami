@@ -54,7 +54,7 @@ export default function LmsClassroomPage() {
   const [videoLoadError, setVideoLoadError] = useState(false);
   const [completedLessons, setCompletedLessons] = useState<string[]>([]);
   const [openModuleId, setOpenModuleId] = useState<number>(1);
-  const [activeTab, setActiveTab] = useState<'video' | 'suppliers' | 'resources' | 'mentorship'>('video');
+  const [activeTab, setActiveTab] = useState<'video' | 'suppliers' | 'resources'>('video');
   const [searchQuery, setSearchQuery] = useState('');
   const [supplierCountryFilter, setSupplierCountryFilter] = useState<'ALL' | 'UAE' | 'Saudi Arabia'>('ALL');
   const [supplierSearch, setSupplierSearch] = useState('');
@@ -874,15 +874,6 @@ export default function LmsClassroomPage() {
                 <Download size={13} />
                 <span>Bonuses</span>
               </button>
-              <button
-                onClick={() => setActiveTab('mentorship')}
-                className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-3.5 py-1.5 rounded-xl whitespace-nowrap text-xs transition-colors ${
-                  activeTab === 'mentorship' ? 'bg-emerald-600 text-white' : 'text-emerald-400 hover:bg-slate-800'
-                }`}
-              >
-                <MessageSquare size={13} />
-                <span>WhatsApp</span>
-              </button>
             </div>
 
             <div className="hidden sm:flex items-center gap-2">
@@ -1329,34 +1320,6 @@ export default function LmsClassroomPage() {
               </div>
             )}
 
-            {/* ========================================================================= */}
-            {/* TAB 4: WHATSAPP MENTORSHIP */}
-            {/* ========================================================================= */}
-            {activeTab === 'mentorship' && (
-              <div className="max-w-2xl mx-auto bg-gradient-to-br from-emerald-950/80 to-[#111827] border-2 border-emerald-500/40 rounded-3xl p-5 sm:p-10 text-center text-white shadow-2xl">
-                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto mb-3.5 sm:mb-4 border border-emerald-500/40 shadow-xl shadow-emerald-500/20">
-                  <Phone size={26} />
-                </div>
-                <h2 className="text-xl sm:text-2xl font-black mb-2">Direct WhatsApp Mentorship Desk</h2>
-                <p className="text-xs sm:text-sm text-slate-300 max-w-md mx-auto mb-5 sm:mb-6 leading-relaxed">
-                  Have questions about ad accounts, pixel verification, or supplier negotiations? Mentor Sami is available daily from 9:00 AM to 5:00 PM.
-                </p>
-                <div className="bg-[#0B0F19] rounded-2xl p-3.5 sm:p-4 max-w-sm mx-auto mb-5 sm:mb-6 text-xs text-slate-300 border border-white/10">
-                  <div>Official Support Line: <strong className="text-emerald-400">03158960026</strong></div>
-                  <div className="text-[11px] text-slate-400 mt-0.5">Average response time: 5–15 minutes</div>
-                </div>
-                <a
-                  href="https://wa.me/923158960026?text=Assalam%20o%20Alaikum%20Sami!%20I%20am%20enrolled%20in%20your%20LMS%20course%20and%20need%20mentorship%20help."
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 sm:px-8 py-3.5 rounded-xl text-xs sm:text-sm font-black text-white bg-[#25D366] hover:bg-[#1faa53] shadow-lg shadow-emerald-500/30 transition-all active:scale-95"
-                >
-                  <MessageSquare size={16} />
-                  <span>Open WhatsApp Direct Chat</span>
-                </a>
-              </div>
-            )}
-
           </div>
         </main>
 
@@ -1395,15 +1358,6 @@ export default function LmsClassroomPage() {
           <Download size={17} />
           <span>Bonuses</span>
         </button>
-        <a
-          href="https://wa.me/923158960026?text=Assalam%20o%20Alaikum%20Sami!"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex flex-col items-center gap-1 p-1 text-emerald-400 active:scale-95 transition-transform"
-        >
-          <MessageSquare size={17} />
-          <span>WhatsApp</span>
-        </a>
       </div>
 
       {/* DRM Security Announcement Policy Modal */}

@@ -1,12 +1,19 @@
 'use client';
 
 import React, { useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { analytics } from '@/utils/analytics';
 import { useContactConfig } from '@/utils/contactConfig';
 
 export function WhatsAppWidget() {
+  const pathname = usePathname();
   const { getWhatsAppUrl, displayPhone } = useContactConfig();
   const [isHovered, setIsHovered] = useState(false);
+
+  // Remove WhatsApp floating widget from LMS and Admin portals
+  if (pathname?.startsWith('/lms') || pathname?.startsWith('/admin')) {
+    return null;
+  }
 
   const whatsappUrl = getWhatsAppUrl('Hi Sami! I want to inquire about the UAE & KSA Dropshipping Course.');
 
