@@ -44,6 +44,7 @@ export default function LmsClassroomPage() {
   const [resources, setResources] = useState<ResourceItem[]>([]);
   const [user, setUser] = useState<any>(null);
   const [authChecking, setAuthChecking] = useState(true);
+  const [accountRevoked, setAccountRevoked] = useState<string | null>(null);
   const [activeLesson, setActiveLesson] = useState<any>(null);
   const [videoLoadError, setVideoLoadError] = useState(false);
   const [completedLessons, setCompletedLessons] = useState<string[]>([]);
@@ -56,6 +57,9 @@ export default function LmsClassroomPage() {
   const [watchProgress, setWatchProgress] = useState<{ [lessonId: string]: number }>({});
   const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'synced'>('idle');
   const [syncFeedback, setSyncFeedback] = useState<string>('');
+
+  const isLoggingOutRef = React.useRef(false);
+  const tabIdRef = React.useRef(typeof window !== 'undefined' ? Math.random().toString(36).substring(2, 9) : 'tab');
 
   const getEmbedUrl = (url?: string) => {
     if (!url) return 'https://www.youtube.com/embed/dQw4w9WgXcQ';
@@ -71,36 +75,78 @@ export default function LmsClassroomPage() {
   };
 
   const handleImmediateForceLogout = (reason = 'Your student access has been suspended or rejected by the administrator.') => {
+    if (isLoggingOutRef.current) return;
+    isLoggingOutRef.current = true;
+
+    // 1. Immediately render Full-Screen Lockout Overlay in 0ms (works universally across iPhone, Android, Desktop)
+    setAccountRevoked(reason);
     setUser(null);
     setActiveLesson(null);
     setAuthChecking(true);
 
+    // 2. Explicitly pause & detach all HTML5 media elements (releases iOS Safari Media Session)
+    try {
+      const mediaElements = document.querySelectorAll('video, audio');
+      mediaElements.forEach((m: any) => {
+        try {
+          m.pause();
+          m.removeAttribute('src');
+          m.load();
+        } catch (e) {}
+      });
+    } catch (e) {}
+
+    // 3. Clear server auth session
     try {
       fetch('/api/auth/logout', { method: 'POST', cache: 'no-store' }).catch(() => {});
     } catch (e) {}
 
+    // 4. Wipe all authentication cookies with explicit past expires
     try {
-      document.cookie = 'sami_student_auth=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT';
-      document.cookie = 'sami_student_session=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT';
-      document.cookie = 'sami_admin_auth=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+      const pastDate = 'Thu, 01 Jan 1970 00:00:01 GMT';
+      document.cookie = `sami_student_auth=; path=/; expires=${pastDate}; max-age=0;`;
+      document.cookie = `sami_student_session=; path=/; expires=${pastDate}; max-age=0;`;
+      document.cookie = `sami_admin_auth=; path=/; expires=${pastDate}; max-age=0;`;
     } catch (e) {}
 
+    // 5. Wipe client storage caches
     try {
       localStorage.removeItem('sami_student_auth');
       localStorage.removeItem('sami_lms_completed_cache');
       localStorage.removeItem('sami_lms_watch_progress');
     } catch (e) {}
 
+    // 6. Broadcast to all other open tabs (using tabId to prevent Safari loopback)
     try {
       if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
         const channel = new BroadcastChannel('sami_auth_sync');
-        channel.postMessage({ type: 'FORCE_LOGOUT', reason });
+        channel.postMessage({ type: 'FORCE_LOGOUT', reason, senderId: tabIdRef.current });
+        setTimeout(() => {
+          try { channel.close(); } catch (e) {}
+        }, 500);
       }
-      localStorage.setItem('sami_force_logout_signal', Date.now().toString());
+      localStorage.setItem('sami_force_logout_signal', `${Date.now()}_${tabIdRef.current}`);
     } catch (e) {}
 
+    // 7. Multi-strategy Navigation for iOS Safari, Chrome, Android, Mac, Windows
+    const targetUrl = `/login?reason=rejected&msg=${encodeURIComponent(reason)}&t=${Date.now()}`;
     if (typeof window !== 'undefined') {
-      window.location.replace(`/login?reason=rejected&msg=${encodeURIComponent(reason)}`);
+      try {
+        window.location.href = targetUrl;
+      } catch (e) {
+        try {
+          window.location.assign(targetUrl);
+        } catch (e2) {
+          window.location.replace(targetUrl);
+        }
+      }
+
+      // Fallback timer for iOS Safari
+      setTimeout(() => {
+        try {
+          window.location.href = targetUrl;
+        } catch (e) {}
+      }, 250);
     } else {
       router.replace('/login?reason=rejected');
     }
@@ -139,11 +185,12 @@ export default function LmsClassroomPage() {
     let heartbeatInterval: any = null;
     let bc: BroadcastChannel | null = null;
 
-    // 1. Cross-tab instant synchronization
+    // 1. Cross-tab instant synchronization (loopback-protected)
     try {
       if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
         bc = new BroadcastChannel('sami_auth_sync');
         bc.onmessage = (event) => {
+          if (event.data?.senderId === tabIdRef.current) return;
           if (event.data?.type === 'FORCE_LOGOUT') {
             handleImmediateForceLogout(event.data.reason);
           }
@@ -152,7 +199,11 @@ export default function LmsClassroomPage() {
     } catch (e) {}
 
     const onStorage = (e: StorageEvent) => {
-      if (e.key === 'sami_force_logout_signal' || (e.key === 'sami_student_auth' && !e.newValue)) {
+      if (e.key === 'sami_force_logout_signal') {
+        const sender = (e.newValue || '').split('_')[1];
+        if (sender === tabIdRef.current) return;
+        handleImmediateForceLogout('Session ended from another tab.');
+      } else if (e.key === 'sami_student_auth' && !e.newValue) {
         handleImmediateForceLogout('Session ended from another tab.');
       }
     };
@@ -404,6 +455,49 @@ export default function LmsClassroomPage() {
                          s.city.toLowerCase().includes(supplierSearch.toLowerCase());
     return matchesCountry && matchesQuery;
   });
+
+  if (accountRevoked) {
+    return (
+      <div className="fixed inset-0 z-50 bg-[#0B0F19] text-white flex flex-col items-center justify-center p-4 sm:p-6 text-center animate-in fade-in duration-200">
+        <div className="w-20 h-20 rounded-3xl bg-red-500/10 border-2 border-red-500/30 text-red-500 flex items-center justify-center mx-auto mb-6 shadow-2xl shadow-red-500/20">
+          <Lock size={40} className="text-red-400" />
+        </div>
+
+        <div className="max-w-md space-y-3">
+          <span className="inline-block bg-red-500/20 text-red-400 border border-red-500/30 text-[11px] font-black uppercase tracking-wider px-3.5 py-1 rounded-full">
+            LMS ACCESS SUSPENDED
+          </span>
+          <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+            Account Revoked
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
+            {accountRevoked}
+          </p>
+          <p className="text-[11px] text-slate-500">
+            If you already submitted your enrollment fee, please verify your payment proof slip with Mentor Sardar Samiullah on WhatsApp.
+          </p>
+
+          <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3">
+            <a
+              href="/login?reason=rejected"
+              className="w-full sm:w-auto px-6 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold transition-all"
+            >
+              Go to Login Page
+            </a>
+            <a
+              href="https://wa.me/923330093269?text=Assalam-o-Alaikum%20Mentor%20Sami!%20My%20LMS%20account%20was%20marked%20as%20suspended.%20Please%20verify%20my%20proof."
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full sm:w-auto px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/30 transition-all active:scale-95"
+            >
+              <MessageSquare size={14} />
+              <span>Contact on WhatsApp</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#0B0F19] text-white flex flex-col font-sans selection:bg-[#00A0DF] selection:text-white pb-16 lg:pb-0">
