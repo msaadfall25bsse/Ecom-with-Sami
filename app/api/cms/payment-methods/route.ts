@@ -24,6 +24,7 @@ export async function POST(request: NextRequest) {
     try {
       revalidatePath('/', 'page');
       revalidatePath('/checkout', 'page');
+      revalidatePath('/enrollment', 'page');
       revalidatePath('/admin/cms', 'page');
     } catch (e) {}
     return NextResponse.json({ success: true, message: 'Payment methods updated permanently in database', payment_methods: updated.payment_methods }, { headers: NO_CACHE_HEADERS });

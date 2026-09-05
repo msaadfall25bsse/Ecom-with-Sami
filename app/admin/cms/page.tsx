@@ -185,7 +185,7 @@ export default function AdminCmsPage() {
     let saved = false;
 
     try {
-      // 1. Persist to server API & trigger revalidation
+      // 1. Persist main CMS content to server API & trigger revalidation
       const res = await fetch('/api/cms/content', {
         method: 'POST',
         headers: { 
@@ -198,6 +198,19 @@ export default function AdminCmsPage() {
         const json = await res.json();
         if (json.success) saved = true;
       }
+    } catch (e) {}
+
+    // 1b. Also explicitly persist payment methods to /api/cms/payment-methods endpoint
+    try {
+      const pmRes = await fetch('/api/cms/payment-methods', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache, no-store, must-revalidate'
+        },
+        body: JSON.stringify({ payment_methods: cmsData.payment_methods })
+      });
+      if (pmRes.ok) saved = true;
     } catch (e) {}
 
     // 2. Direct Supabase Cloud Save (Guaranteed fallback for static web hosts like Hostinger)
@@ -215,6 +228,9 @@ export default function AdminCmsPage() {
     }
 
     if (saved) {
+      try {
+        localStorage.setItem('sami_cms_payment_methods', JSON.stringify(cmsData.payment_methods));
+      } catch (e) {}
       setSavedSuccess(true);
       window.dispatchEvent(new Event('sami_cms_updated'));
       setTimeout(() => setSavedSuccess(false), 3000);
@@ -1331,12 +1347,32 @@ export default function AdminCmsPage() {
         {/* TAB 6: PAYMENT ACCOUNTS */}
         {/* ========================================================================= */}
         {activeTab === 'payments' && (
-          <div className="bg-[#111827] border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-8 space-y-4">
-            <h3 className="text-sm sm:text-lg font-bold text-white">Enrollment Payment Accounts</h3>
+          <div className="bg-[#111827] border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-8 space-y-5">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <div>
+                <h3 className="text-sm sm:text-lg font-bold text-white">Enrollment Payment Accounts</h3>
+                <p className="text-[11px] sm:text-xs text-slate-400">Edit payment receiving accounts shown on public enrollment &amp; checkout pages</p>
+              </div>
+              <button
+                type="button"
+                onClick={handleSaveAll}
+                disabled={loading}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs font-black shadow-lg shadow-emerald-600/30 transition-all active:scale-95 flex-shrink-0"
+              >
+                <Save size={14} />
+                <span>{loading ? 'Saving Accounts...' : 'Save Payment Accounts'}</span>
+              </button>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {cmsData.payment_methods.map((pm, idx) => (
                 <div key={pm.id} className="bg-[#0B0F19] border border-white/10 rounded-2xl p-4 space-y-2.5">
-                  <span className="text-xs sm:text-sm font-bold text-white">{pm.name}</span>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs sm:text-sm font-bold text-white">{pm.name}</span>
+                    <span className="text-[10px] text-[#00A0DF] font-bold bg-[#00A0DF]/10 px-2 py-0.5 rounded-full border border-[#00A0DF]/20">
+                      {pm.badge || 'Active'}
+                    </span>
+                  </div>
                   <div>
                     <label className="block text-[11px] text-slate-400 mb-1">Account Title</label>
                     <input
@@ -1363,8 +1399,35 @@ export default function AdminCmsPage() {
                       className="w-full px-3 py-2 rounded-xl bg-[#111827] border border-white/10 text-xs font-mono font-black text-[#00A0DF] focus:outline-none"
                     />
                   </div>
+                  {pm.iban !== undefined && (
+                    <div>
+                      <label className="block text-[11px] text-slate-400 mb-1">IBAN (Bank Transfer)</label>
+                      <input
+                        type="text"
+                        value={pm.iban || ''}
+                        onChange={(e) => {
+                          const updated = [...cmsData.payment_methods];
+                          updated[idx].iban = e.target.value;
+                          setCmsData({ ...cmsData, payment_methods: updated });
+                        }}
+                        className="w-full px-3 py-2 rounded-xl bg-[#111827] border border-white/10 text-xs font-mono text-slate-300 focus:outline-none focus:border-[#00A0DF]"
+                      />
+                    </div>
+                  )}
                 </div>
               ))}
+            </div>
+
+            <div className="pt-3 border-t border-white/5 flex justify-end">
+              <button
+                type="button"
+                onClick={handleSaveAll}
+                disabled={loading}
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs sm:text-sm font-black shadow-lg shadow-emerald-600/30 transition-all active:scale-95"
+              >
+                <Save size={15} />
+                <span>{loading ? 'Saving Accounts...' : 'Save Payment Accounts Changes'}</span>
+              </button>
             </div>
           </div>
         )}

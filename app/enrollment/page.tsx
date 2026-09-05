@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Navbar, Footer, TopMarquee } from '@/components/layout';
 import { CountdownTimer } from '@/components/landing';
@@ -24,11 +24,13 @@ import {
   PhoneCall
 } from 'lucide-react';
 import { useContactConfig } from '@/utils/contactConfig';
+import { defaultCmsContent } from '@/utils/cmsStore';
+import { supabase } from '@/lib/supabase';
 
 export default function EnrollmentPage() {
   const { displayPhone } = useContactConfig();
 
-  const [selectedMethod, setSelectedMethod] = useState<'easypaisa' | 'jazzcash' | 'meezan' | 'sadapay'>('easypaisa');
+  const [selectedMethod, setSelectedMethod] = useState<string>('easypaisa');
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [receiptBase64, setReceiptBase64] = useState<string>('');
   const [receiptFileName, setReceiptFileName] = useState<string>('');
@@ -45,41 +47,103 @@ export default function EnrollmentPage() {
     transactionId: ''
   });
 
-  const paymentMethods = [
-    {
-      id: 'easypaisa',
-      name: 'Easypaisa',
-      accountTitle: 'SARDAR SAMIULLAH',
-      accountNumber: '03158960026',
-      badge: 'Instant Transfer',
-      themeColor: 'border-emerald-500 bg-emerald-500/10 text-emerald-400'
-    },
-    {
-      id: 'jazzcash',
-      name: 'JazzCash',
-      accountTitle: 'SARDAR SAMIULLAH',
-      accountNumber: '03158960026',
-      badge: 'Instant Transfer',
-      themeColor: 'border-amber-500 bg-amber-500/10 text-amber-400'
-    },
-    {
-      id: 'meezan',
-      name: 'Meezan Bank Ltd',
-      accountTitle: 'SARDAR SAMIULLAH',
-      accountNumber: '01010101010101',
-      iban: 'PK00MEZN0001010101010101',
-      badge: 'Direct Bank Transfer',
-      themeColor: 'border-blue-500 bg-blue-500/10 text-blue-400'
-    },
-    {
-      id: 'sadapay',
-      name: 'SadaPay / NayaPay',
-      accountTitle: 'SARDAR SAMIULLAH',
-      accountNumber: '03158960026',
-      badge: 'Fast & Zero Fees',
-      themeColor: 'border-cyan-500 bg-cyan-500/10 text-cyan-400'
-    }
-  ];
+  const [paymentMethods, setPaymentMethods] = useState(() => {
+    return defaultCmsContent.payment_methods.map(pm => ({
+      ...pm,
+      themeColor: pm.id === 'easypaisa' ? 'border-emerald-500 bg-emerald-500/10 text-emerald-400'
+        : pm.id === 'jazzcash' ? 'border-amber-500 bg-amber-500/10 text-amber-400'
+        : pm.id === 'meezan' ? 'border-blue-500 bg-blue-500/10 text-blue-400'
+        : 'border-cyan-500 bg-cyan-500/10 text-cyan-400'
+    }));
+  });
+
+  useEffect(() => {
+    const syncPaymentMethods = async () => {
+      // 1. Instant hydration from localStorage for 0ms speed
+      try {
+        const cached = localStorage.getItem('sami_cms_payment_methods');
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setPaymentMethods(parsed.map((pm: any) => ({
+              ...pm,
+              themeColor: pm.id === 'easypaisa' ? 'border-emerald-500 bg-emerald-500/10 text-emerald-400'
+                : pm.id === 'jazzcash' ? 'border-amber-500 bg-amber-500/10 text-amber-400'
+                : pm.id === 'meezan' ? 'border-blue-500 bg-blue-500/10 text-blue-400'
+                : 'border-cyan-500 bg-cyan-500/10 text-cyan-400'
+            })));
+          }
+        }
+      } catch (e) {}
+
+      // 2. Fetch fresh from public CMS API route
+      try {
+        const timestamp = `${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+        const res = await fetch(`/api/public/cms-content?_nocache=${timestamp}`, {
+          cache: 'no-store',
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache'
+          }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.sections?.payment_methods && Array.isArray(data.sections.payment_methods)) {
+            const methods = data.sections.payment_methods;
+            setPaymentMethods(methods.map((pm: any) => ({
+              ...pm,
+              themeColor: pm.id === 'easypaisa' ? 'border-emerald-500 bg-emerald-500/10 text-emerald-400'
+                : pm.id === 'jazzcash' ? 'border-amber-500 bg-amber-500/10 text-amber-400'
+                : pm.id === 'meezan' ? 'border-blue-500 bg-blue-500/10 text-blue-400'
+                : 'border-cyan-500 bg-cyan-500/10 text-cyan-400'
+            })));
+            try {
+              localStorage.setItem('sami_cms_payment_methods', JSON.stringify(methods));
+            } catch (e) {}
+            return;
+          }
+        }
+      } catch (e) {}
+
+      // 3. Direct Supabase Cloud Fetch fallback
+      if (supabase) {
+        try {
+          const { data, error } = await supabase
+            .from('cms_settings')
+            .select('value_json')
+            .eq('key', 'main_cms')
+            .maybeSingle();
+
+          if (!error && data && data.value_json) {
+            const parsed = typeof data.value_json === 'string' ? JSON.parse(data.value_json) : data.value_json;
+            if (parsed && Array.isArray(parsed.payment_methods)) {
+              const methods = parsed.payment_methods;
+              setPaymentMethods(methods.map((pm: any) => ({
+                ...pm,
+                themeColor: pm.id === 'easypaisa' ? 'border-emerald-500 bg-emerald-500/10 text-emerald-400'
+                  : pm.id === 'jazzcash' ? 'border-amber-500 bg-amber-500/10 text-amber-400'
+                  : pm.id === 'meezan' ? 'border-blue-500 bg-blue-500/10 text-blue-400'
+                  : 'border-cyan-500 bg-cyan-500/10 text-cyan-400'
+              })));
+              try {
+                localStorage.setItem('sami_cms_payment_methods', JSON.stringify(methods));
+              } catch (e) {}
+            }
+          }
+        } catch (e) {}
+      }
+    };
+
+    syncPaymentMethods();
+
+    window.addEventListener('sami_cms_updated', syncPaymentMethods);
+    window.addEventListener('storage', syncPaymentMethods);
+
+    return () => {
+      window.removeEventListener('sami_cms_updated', syncPaymentMethods);
+      window.removeEventListener('storage', syncPaymentMethods);
+    };
+  }, []);
 
   const currentPayment = paymentMethods.find(p => p.id === selectedMethod) || paymentMethods[0];
 
