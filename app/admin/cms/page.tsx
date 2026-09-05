@@ -33,6 +33,8 @@ import {
   Loader2,
   Link2,
   Code2,
+  Palette,
+  Check,
   X
 } from 'lucide-react';
 import { defaultCmsContent, CmsContentSchema } from '@/utils/cmsStore';
@@ -43,7 +45,7 @@ import { supabase } from '@/lib/supabase';
 export default function AdminCmsPage() {
   const router = useRouter();
   const [authChecking, setAuthChecking] = useState(true);
-  const [activeTab, setActiveTab] = useState<'lms' | 'hero' | 'stats' | 'bonuses' | 'reviews' | 'faqs' | 'payments' | 'contact' | 'pixels'>('lms');
+  const [activeTab, setActiveTab] = useState<'lms' | 'hero' | 'stats' | 'bonuses' | 'reviews' | 'faqs' | 'payments' | 'contact' | 'pixels' | 'themes'>('lms');
   const [cmsData, setCmsData] = useState<CmsContentSchema>(defaultCmsContent);
   const [modules, setModules] = useState<Module[]>(initialModules);
   const [suppliers, setSuppliers] = useState<Supplier[]>(initialSuppliers);
@@ -127,6 +129,12 @@ export default function AdminCmsPage() {
         const data = await res.json();
         if (data.success && data.content) {
           setCmsData(data.content);
+          if (data.content.theme?.active_theme) {
+            document.documentElement.setAttribute('data-theme', data.content.theme.active_theme);
+            try {
+              localStorage.setItem('sami_active_theme', data.content.theme.active_theme);
+            } catch (e) {}
+          }
         }
       }
     } catch (err) {}
@@ -167,6 +175,12 @@ export default function AdminCmsPage() {
           const parsed = typeof data.value_json === 'string' ? JSON.parse(data.value_json) : data.value_json;
           if (parsed && typeof parsed === 'object') {
             setCmsData({ ...defaultCmsContent, ...parsed });
+            if (parsed.theme?.active_theme) {
+              document.documentElement.setAttribute('data-theme', parsed.theme.active_theme);
+              try {
+                localStorage.setItem('sami_active_theme', parsed.theme.active_theme);
+              } catch (e) {}
+            }
           }
         }
       } catch (e) {}
@@ -225,6 +239,14 @@ export default function AdminCmsPage() {
     setLoading(true);
     setSavedSuccess(false);
     let saved = false;
+
+    if (cmsData.theme?.active_theme) {
+      document.documentElement.setAttribute('data-theme', cmsData.theme.active_theme);
+      try {
+        localStorage.setItem('sami_active_theme', cmsData.theme.active_theme);
+        document.cookie = `sami_active_theme=${cmsData.theme.active_theme}; path=/; max-age=31536000; SameSite=Lax`;
+      } catch (e) {}
+    }
 
     try {
       // 1. Persist main CMS content to server API & trigger revalidation
@@ -774,6 +796,7 @@ export default function AdminCmsPage() {
         <div className="max-w-7xl mx-auto flex items-center gap-1.5 sm:gap-2 overflow-x-auto py-2.5 no-scrollbar text-xs font-bold">
           {[
             { id: 'lms', label: '📚 LMS Modules', icon: BookOpen },
+            { id: 'themes', label: '🎨 Themes', icon: Palette },
             { id: 'hero', label: '📣 Hero Section', icon: Sparkles },
             { id: 'stats', label: '⏱ Urgency Stats', icon: Clock },
             { id: 'bonuses', label: '🎁 6 Bonuses', icon: Gift },
@@ -1914,6 +1937,352 @@ export default function AdminCmsPage() {
                   className="w-full px-3 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF]"
                 />
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* ========================================================================= */}
+        {/* TAB 9: THEMES (MULTI-THEME VISUAL SYSTEM) */}
+        {/* ========================================================================= */}
+        {activeTab === 'themes' && (
+          <div className="space-y-6 sm:space-y-8">
+            {/* Top Themes Action Bar */}
+            <div className="bg-[#111827] border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-7 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-xl">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-xl bg-[#00A0DF]/15 text-[#00A0DF] flex items-center justify-center border border-[#00A0DF]/30 shadow-md flex-shrink-0">
+                    <Palette size={20} />
+                  </div>
+                  <div>
+                    <h2 className="text-base sm:text-2xl font-black text-white">
+                      Website Theme &amp; Color Palette Selector
+                    </h2>
+                    <p className="text-xs text-slate-400 mt-0.5">
+                      Select and save from 3 curated themes. All styles are powered by frontend CSS variables and Tailwind — <strong>zero database schema impact</strong>.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3 self-stretch md:self-auto justify-between md:justify-end bg-[#0B0F19] p-2.5 sm:p-3 rounded-2xl border border-white/10">
+                <div>
+                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Live Website Theme:</span>
+                  <span className="text-xs sm:text-sm font-black text-white capitalize flex items-center gap-1.5 mt-0.5">
+                    <span className={`w-2.5 h-2.5 rounded-full ${
+                      (cmsData.theme?.active_theme || 'default') === 'sunset-orange'
+                        ? 'bg-[#FF6B00] shadow-sm shadow-[#FF6B00]'
+                        : (cmsData.theme?.active_theme || 'default') === 'emerald-luxury'
+                        ? 'bg-[#10B981] shadow-sm shadow-[#10B981]'
+                        : 'bg-[#00A0DF] shadow-sm shadow-[#00A0DF]'
+                    }`} />
+                    <span>
+                      {(cmsData.theme?.active_theme || 'default') === 'sunset-orange'
+                        ? 'Royal Sunset Orange'
+                        : (cmsData.theme?.active_theme || 'default') === 'emerald-luxury'
+                        ? 'Dubai Emerald & Gold'
+                        : 'Default Tech Cyan'}
+                    </span>
+                  </span>
+                </div>
+                <button
+                  onClick={handleSaveAll}
+                  disabled={loading}
+                  className="px-4 py-2 rounded-xl bg-[#00A0DF] hover:bg-[#008ec7] text-white text-xs font-black shadow-lg shadow-[#00A0DF]/20 transition-all active:scale-95 flex items-center gap-1.5 cursor-pointer flex-shrink-0"
+                >
+                  <Save size={14} />
+                  <span>{loading ? 'Saving...' : 'Save Theme'}</span>
+                </button>
+              </div>
+            </div>
+
+            {/* 3 Themes Responsive Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 sm:gap-6">
+              
+              {/* THEME 1: Default Tech Cyan */}
+              {(() => {
+                const isSelected = (cmsData.theme?.active_theme || 'default') === 'default';
+                return (
+                  <div className={`bg-[#111827] rounded-2xl sm:rounded-3xl border-2 transition-all flex flex-col overflow-hidden shadow-2xl ${
+                    isSelected ? 'border-[#00A0DF] ring-4 ring-[#00A0DF]/15 shadow-[#00A0DF]/10' : 'border-white/10 hover:border-white/20'
+                  }`}>
+                    {/* Visual Theme Banner */}
+                    <div className="h-28 bg-gradient-to-r from-[#00A0DF] via-[#0074A6] to-[#0B0F19] p-4 flex items-start justify-between relative overflow-hidden">
+                      <div className="absolute -right-4 -bottom-6 w-24 h-24 rounded-full bg-white/10 blur-xl pointer-events-none" />
+                      <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-black/40 text-white backdrop-blur-sm border border-white/15">
+                        <Sparkles size={11} className="text-[#00A0DF]" />
+                        <span>Original Signature</span>
+                      </span>
+                      {isSelected && (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-emerald-500 text-white shadow-md">
+                          <Check size={12} />
+                          <span>Active</span>
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
+                      <div>
+                        <h3 className="text-base sm:text-lg font-black text-white flex items-center gap-2">
+                          <span>Default Tech Cyan</span>
+                        </h3>
+                        <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                          Signature high-tech dropshipping brand look with vibrant electric cyan blue, deep obsidian black, and high-visibility action elements.
+                        </p>
+
+                        {/* Color Chips Palette */}
+                        <div className="mt-3.5 pt-3 border-t border-white/5 space-y-2">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Color Palette:</span>
+                          <div className="grid grid-cols-4 gap-2 text-center text-[10px] font-mono">
+                            <div className="p-2 rounded-xl bg-[#0B0F19] border border-white/10 flex flex-col items-center gap-1">
+                              <span className="w-5 h-5 rounded-lg bg-[#00A0DF] shadow-sm" />
+                              <span className="text-slate-300">#00A0DF</span>
+                            </div>
+                            <div className="p-2 rounded-xl bg-[#0B0F19] border border-white/10 flex flex-col items-center gap-1">
+                              <span className="w-5 h-5 rounded-lg bg-[#008AC2] shadow-sm" />
+                              <span className="text-slate-300">#008AC2</span>
+                            </div>
+                            <div className="p-2 rounded-xl bg-[#111827] border border-white/10 flex flex-col items-center gap-1">
+                              <span className="w-5 h-5 rounded-lg bg-[#111827] shadow-sm border border-white/20" />
+                              <span className="text-slate-300">#111827</span>
+                            </div>
+                            <div className="p-2 rounded-xl bg-[#0B0F19] border border-white/10 flex flex-col items-center gap-1">
+                              <span className="w-5 h-5 rounded-lg bg-white shadow-sm" />
+                              <span className="text-slate-300">#FFFFFF</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Live Mini Preview Box */}
+                        <div className="mt-4 p-3.5 rounded-2xl bg-[#0B0F19] border border-white/10 space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[9px] font-mono text-slate-400 uppercase tracking-wider">UI Preview</span>
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#00A0DF]/15 text-[#00A0DF] border border-[#00A0DF]/30 font-bold">
+                              88% Off Special
+                            </span>
+                          </div>
+                          <div className="text-xs font-bold text-white leading-tight">
+                            Shopify Dropshipping in <span className="text-[#00A0DF]">UAE &amp; KSA</span>
+                          </div>
+                          <div className="w-full py-1.5 rounded-lg bg-[#00A0DF] text-white text-[10px] font-black text-center uppercase tracking-wider shadow-sm">
+                            Enroll Now • PKR 3,799
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Action Button */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCmsData(prev => ({ ...prev, theme: { active_theme: 'default' } }));
+                          document.documentElement.setAttribute('data-theme', 'default');
+                          try {
+                            localStorage.setItem('sami_active_theme', 'default');
+                            document.cookie = 'sami_active_theme=default; path=/; max-age=31536000; SameSite=Lax';
+                          } catch (e) {}
+                        }}
+                        className={`w-full py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                          isSelected
+                            ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/30'
+                            : 'bg-[#1E293B] hover:bg-[#00A0DF] text-slate-200 hover:text-white border border-white/10'
+                        }`}
+                      >
+                        {isSelected ? <><Check size={14} /> Current Active Theme</> : 'Select & Apply Theme'}
+                      </button>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* THEME 2: Royal Sunset Orange (Requested: Orange, White & Black) */}
+              {(() => {
+                const isSelected = cmsData.theme?.active_theme === 'sunset-orange';
+                return (
+                  <div className={`bg-[#111827] rounded-2xl sm:rounded-3xl border-2 transition-all flex flex-col overflow-hidden shadow-2xl ${
+                    isSelected ? 'border-[#FF6B00] ring-4 ring-[#FF6B00]/15 shadow-[#FF6B00]/10' : 'border-white/10 hover:border-white/20'
+                  }`}>
+                    {/* Visual Theme Banner */}
+                    <div className="h-28 bg-gradient-to-r from-[#FF6B00] via-[#FFA043] to-[#08090C] p-4 flex items-start justify-between relative overflow-hidden">
+                      <div className="absolute -right-4 -bottom-6 w-24 h-24 rounded-full bg-white/15 blur-xl pointer-events-none" />
+                      <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-black/40 text-white backdrop-blur-sm border border-white/15">
+                        <Sparkles size={11} className="text-[#FF6B00]" />
+                        <span>High-Conversion Ecom</span>
+                      </span>
+                      {isSelected && (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-emerald-500 text-white shadow-md">
+                          <Check size={12} />
+                          <span>Active</span>
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
+                      <div>
+                        <h3 className="text-base sm:text-lg font-black text-white flex items-center gap-2">
+                          <span>Royal Sunset Orange</span>
+                        </h3>
+                        <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                          Vibrant electric sunset orange with crisp white text and deep obsidian black contrast. Super punchy, modern high-converting Shopify aesthetic.
+                        </p>
+
+                        {/* Color Chips Palette */}
+                        <div className="mt-3.5 pt-3 border-t border-white/5 space-y-2">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Color Palette:</span>
+                          <div className="grid grid-cols-4 gap-2 text-center text-[10px] font-mono">
+                            <div className="p-2 rounded-xl bg-[#0B0F19] border border-white/10 flex flex-col items-center gap-1">
+                              <span className="w-5 h-5 rounded-lg bg-[#FF6B00] shadow-sm" />
+                              <span className="text-slate-300">#FF6B00</span>
+                            </div>
+                            <div className="p-2 rounded-xl bg-[#0B0F19] border border-white/10 flex flex-col items-center gap-1">
+                              <span className="w-5 h-5 rounded-lg bg-[#FFA043] shadow-sm" />
+                              <span className="text-slate-300">#FFA043</span>
+                            </div>
+                            <div className="p-2 rounded-xl bg-[#0B0F19] border border-white/10 flex flex-col items-center gap-1">
+                              <span className="w-5 h-5 rounded-lg bg-[#121318] shadow-sm border border-white/20" />
+                              <span className="text-slate-300">#121318</span>
+                            </div>
+                            <div className="p-2 rounded-xl bg-[#0B0F19] border border-white/10 flex flex-col items-center gap-1">
+                              <span className="w-5 h-5 rounded-lg bg-white shadow-sm" />
+                              <span className="text-slate-300">#FFFFFF</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Live Mini Preview Box */}
+                        <div className="mt-4 p-3.5 rounded-2xl bg-[#08090C] border border-[#FF6B00]/25 space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[9px] font-mono text-slate-400 uppercase tracking-wider">UI Preview</span>
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#FF6B00]/15 text-[#FF6B00] border border-[#FF6B00]/30 font-bold">
+                              88% Off Special
+                            </span>
+                          </div>
+                          <div className="text-xs font-bold text-white leading-tight">
+                            Shopify Dropshipping in <span className="text-[#FF6B00]">UAE &amp; KSA</span>
+                          </div>
+                          <div className="w-full py-1.5 rounded-lg bg-[#FF6B00] text-white text-[10px] font-black text-center uppercase tracking-wider shadow-sm shadow-[#FF6B00]/30">
+                            Enroll Now • PKR 3,799
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Action Button */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCmsData(prev => ({ ...prev, theme: { active_theme: 'sunset-orange' } }));
+                          document.documentElement.setAttribute('data-theme', 'sunset-orange');
+                          try {
+                            localStorage.setItem('sami_active_theme', 'sunset-orange');
+                            document.cookie = 'sami_active_theme=sunset-orange; path=/; max-age=31536000; SameSite=Lax';
+                          } catch (e) {}
+                        }}
+                        className={`w-full py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                          isSelected
+                            ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/30'
+                            : 'bg-[#1E293B] hover:bg-[#FF6B00] text-slate-200 hover:text-white border border-white/10'
+                        }`}
+                      >
+                        {isSelected ? <><Check size={14} /> Current Active Theme</> : 'Select & Apply Theme'}
+                      </button>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* THEME 3: Dubai Emerald & Gold */}
+              {(() => {
+                const isSelected = cmsData.theme?.active_theme === 'emerald-luxury';
+                return (
+                  <div className={`bg-[#111827] rounded-2xl sm:rounded-3xl border-2 transition-all flex flex-col overflow-hidden shadow-2xl ${
+                    isSelected ? 'border-[#10B981] ring-4 ring-[#10B981]/15 shadow-[#10B981]/10' : 'border-white/10 hover:border-white/20'
+                  }`}>
+                    {/* Visual Theme Banner */}
+                    <div className="h-28 bg-gradient-to-r from-[#10B981] via-[#059669] to-[#F59E0B] p-4 flex items-start justify-between relative overflow-hidden">
+                      <div className="absolute -right-4 -bottom-6 w-24 h-24 rounded-full bg-white/15 blur-xl pointer-events-none" />
+                      <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-black/40 text-white backdrop-blur-sm border border-white/15">
+                        <Sparkles size={11} className="text-[#F59E0B]" />
+                        <span>GCC Wealth &amp; Luxury</span>
+                      </span>
+                      {isSelected && (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-emerald-500 text-white shadow-md">
+                          <Check size={12} />
+                          <span>Active</span>
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
+                      <div>
+                        <h3 className="text-base sm:text-lg font-black text-white flex items-center gap-2">
+                          <span>Dubai Emerald &amp; Gold</span>
+                        </h3>
+                        <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                          Prestige GCC wealth aesthetic featuring vibrant mint emerald green, warm Dubai gold badges, and midnight charcoal background tones.
+                        </p>
+
+                        {/* Color Chips Palette */}
+                        <div className="mt-3.5 pt-3 border-t border-white/5 space-y-2">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Color Palette:</span>
+                          <div className="grid grid-cols-4 gap-2 text-center text-[10px] font-mono">
+                            <div className="p-2 rounded-xl bg-[#0B0F19] border border-white/10 flex flex-col items-center gap-1">
+                              <span className="w-5 h-5 rounded-lg bg-[#10B981] shadow-sm" />
+                              <span className="text-slate-300">#10B981</span>
+                            </div>
+                            <div className="p-2 rounded-xl bg-[#0B0F19] border border-white/10 flex flex-col items-center gap-1">
+                              <span className="w-5 h-5 rounded-lg bg-[#F59E0B] shadow-sm" />
+                              <span className="text-slate-300">#F59E0B</span>
+                            </div>
+                            <div className="p-2 rounded-xl bg-[#0B0F19] border border-white/10 flex flex-col items-center gap-1">
+                              <span className="w-5 h-5 rounded-lg bg-[#0C1A14] shadow-sm border border-white/20" />
+                              <span className="text-slate-300">#0C1A14</span>
+                            </div>
+                            <div className="p-2 rounded-xl bg-[#0B0F19] border border-white/10 flex flex-col items-center gap-1">
+                              <span className="w-5 h-5 rounded-lg bg-white shadow-sm" />
+                              <span className="text-slate-300">#FFFFFF</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Live Mini Preview Box */}
+                        <div className="mt-4 p-3.5 rounded-2xl bg-[#06120E] border border-[#10B981]/25 space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[9px] font-mono text-slate-400 uppercase tracking-wider">UI Preview</span>
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#F59E0B]/15 text-[#F59E0B] border border-[#F59E0B]/30 font-bold">
+                              88% Off Special
+                            </span>
+                          </div>
+                          <div className="text-xs font-bold text-white leading-tight">
+                            Shopify Dropshipping in <span className="text-[#10B981]">UAE &amp; KSA</span>
+                          </div>
+                          <div className="w-full py-1.5 rounded-lg bg-[#10B981] text-white text-[10px] font-black text-center uppercase tracking-wider shadow-sm shadow-[#10B981]/30">
+                            Enroll Now • PKR 3,799
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Action Button */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCmsData(prev => ({ ...prev, theme: { active_theme: 'emerald-luxury' } }));
+                          document.documentElement.setAttribute('data-theme', 'emerald-luxury');
+                          try {
+                            localStorage.setItem('sami_active_theme', 'emerald-luxury');
+                            document.cookie = 'sami_active_theme=emerald-luxury; path=/; max-age=31536000; SameSite=Lax';
+                          } catch (e) {}
+                        }}
+                        className={`w-full py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                          isSelected
+                            ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/30'
+                            : 'bg-[#1E293B] hover:bg-[#10B981] text-slate-200 hover:text-white border border-white/10'
+                        }`}
+                      >
+                        {isSelected ? <><Check size={14} /> Current Active Theme</> : 'Select & Apply Theme'}
+                      </button>
+                    </div>
+                  </div>
+                );
+              })()}
+
             </div>
           </div>
         )}

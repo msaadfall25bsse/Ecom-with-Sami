@@ -101,6 +101,9 @@ export interface CmsContentSchema {
     snapchat_pixel_id: string;
     custom_head_code: string;
   };
+  theme?: {
+    active_theme: 'default' | 'sunset-orange' | 'emerald-luxury';
+  };
 }
 
 export const defaultCmsContent: CmsContentSchema = {
@@ -332,6 +335,9 @@ export const defaultCmsContent: CmsContentSchema = {
     ga4_measurement_id: '',
     snapchat_pixel_id: '',
     custom_head_code: ''
+  },
+  theme: {
+    active_theme: 'default'
   }
 };
 

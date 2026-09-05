@@ -1,12 +1,14 @@
 @import "tailwindcss";
 
-:root {
+:root,
+[data-theme="default"] {
   --background: #ffffff;
   --foreground: #0b0f19;
   --primary: #00a0df;
   --primary-hover: #008ac2;
   --primary-dark: #0074a6;
   --primary-glow: rgba(0, 160, 223, 0.45);
+  --primary-rgb: 0, 160, 223;
   --accent-green: #16a34a;
   --accent-emerald: #10b981;
   --accent-amber: #f5a623;
@@ -14,6 +16,157 @@
   --dark-bg: #0b0f19;
   --dark-card: #111827;
   --dark-card-hover: #1e293b;
+}
+
+/* Theme 2: Royal Sunset Orange (Vibrant Orange, Pure White & Obsidian Black) */
+[data-theme="sunset-orange"] {
+  --background: #ffffff;
+  --foreground: #08090c;
+  --primary: #FF6B00;
+  --primary-hover: #e05e00;
+  --primary-dark: #c24f00;
+  --primary-glow: rgba(255, 107, 0, 0.45);
+  --primary-rgb: 255, 107, 0;
+  --accent-green: #16a34a;
+  --accent-emerald: #10b981;
+  --accent-amber: #f5a623;
+  --accent-red: #e94b4b;
+  --dark-bg: #08090c;
+  --dark-card: #121318;
+  --dark-card-hover: #1c1e24;
+}
+
+/* Theme 3: Dubai Emerald & Gold (Wealth Mint Emerald & Rich Gold) */
+[data-theme="emerald-luxury"] {
+  --background: #ffffff;
+  --foreground: #06120e;
+  --primary: #10B981;
+  --primary-hover: #059669;
+  --primary-dark: #047857;
+  --primary-glow: rgba(16, 185, 129, 0.45);
+  --primary-rgb: 16, 185, 129;
+  --accent-green: #10b981;
+  --accent-emerald: #10b981;
+  --accent-amber: #f59e0b;
+  --accent-red: #e94b4b;
+  --dark-bg: #06120e;
+  --dark-card: #0c1a14;
+  --dark-card-hover: #142820;
+}
+
+/* Dynamic CSS Variable Remappings for Non-Default Themes */
+[data-theme="sunset-orange"] .text-\[\#00A0DF\],
+[data-theme="sunset-orange"] .text-\[\#00a0df\],
+[data-theme="emerald-luxury"] .text-\[\#00A0DF\],
+[data-theme="emerald-luxury"] .text-\[\#00a0df\] {
+  color: var(--primary) !important;
+}
+
+[data-theme="sunset-orange"] .bg-\[\#00A0DF\],
+[data-theme="sunset-orange"] .bg-\[\#00a0df\],
+[data-theme="emerald-luxury"] .bg-\[\#00A0DF\],
+[data-theme="emerald-luxury"] .bg-\[\#00a0df\] {
+  background-color: var(--primary) !important;
+}
+
+[data-theme="sunset-orange"] .hover\:bg-\[\#008ac2\]:hover,
+[data-theme="sunset-orange"] .hover\:bg-\[\#008ec7\]:hover,
+[data-theme="sunset-orange"] .hover\:bg-\[\#008bc2\]:hover,
+[data-theme="emerald-luxury"] .hover\:bg-\[\#008ac2\]:hover,
+[data-theme="emerald-luxury"] .hover\:bg-\[\#008ec7\]:hover,
+[data-theme="emerald-luxury"] .hover\:bg-\[\#008bc2\]:hover {
+  background-color: var(--primary-hover) !important;
+}
+
+[data-theme="sunset-orange"] .hover\:text-\[\#00A0DF\]:hover,
+[data-theme="sunset-orange"] .hover\:text-\[\#00a0df\]:hover,
+[data-theme="emerald-luxury"] .hover\:text-\[\#00A0DF\]:hover,
+[data-theme="emerald-luxury"] .hover\:text-\[\#00a0df\]:hover {
+  color: var(--primary) !important;
+}
+
+[data-theme="sunset-orange"] .border-\[\#00A0DF\],
+[data-theme="sunset-orange"] .border-\[\#00a0df\],
+[data-theme="emerald-luxury"] .border-\[\#00A0DF\],
+[data-theme="emerald-luxury"] .border-\[\#00a0df\] {
+  border-color: var(--primary) !important;
+}
+
+[data-theme="sunset-orange"] .hover\:border-\[\#00A0DF\]:hover,
+[data-theme="sunset-orange"] .hover\:border-\[\#00a0df\]:hover,
+[data-theme="emerald-luxury"] .hover\:border-\[\#00A0DF\]:hover,
+[data-theme="emerald-luxury"] .hover\:border-\[\#00a0df\]:hover {
+  border-color: var(--primary) !important;
+}
+
+[data-theme="sunset-orange"] .fill-\[\#00A0DF\],
+[data-theme="sunset-orange"] .fill-\[\#00a0df\],
+[data-theme="emerald-luxury"] .fill-\[\#00A0DF\],
+[data-theme="emerald-luxury"] .fill-\[\#00a0df\] {
+  fill: var(--primary) !important;
+}
+
+[data-theme="sunset-orange"] [class*="bg-\[\#00A0DF\]\/"],
+[data-theme="sunset-orange"] [class*="bg-\[\#00a0df\]\/"] {
+  background-color: rgba(255, 107, 0, 0.15) !important;
+}
+[data-theme="emerald-luxury"] [class*="bg-\[\#00A0DF\]\/"],
+[data-theme="emerald-luxury"] [class*="bg-\[\#00a0df\]\/"] {
+  background-color: rgba(16, 185, 129, 0.15) !important;
+}
+
+[data-theme="sunset-orange"] [class*="border-\[\#00A0DF\]\/"],
+[data-theme="sunset-orange"] [class*="border-\[\#00a0df\]\/"] {
+  border-color: rgba(255, 107, 0, 0.3) !important;
+}
+[data-theme="emerald-luxury"] [class*="border-\[\#00A0DF\]\/"],
+[data-theme="emerald-luxury"] [class*="border-\[\#00a0df\]\/"] {
+  border-color: rgba(16, 185, 129, 0.3) !important;
+}
+
+[data-theme="sunset-orange"] [class*="text-\[\#00A0DF\]\/"],
+[data-theme="sunset-orange"] [class*="text-\[\#00a0df\]\/"] {
+  color: rgba(255, 107, 0, 0.85) !important;
+}
+[data-theme="emerald-luxury"] [class*="text-\[\#00A0DF\]\/"],
+[data-theme="emerald-luxury"] [class*="text-\[\#00a0df\]\/"] {
+  color: rgba(16, 185, 129, 0.85) !important;
+}
+
+[data-theme="sunset-orange"] [class*="shadow-\[\#00A0DF\]"],
+[data-theme="sunset-orange"] [class*="shadow-\[\#00a0df\]"] {
+  --tw-shadow-color: rgba(255, 107, 0, 0.35) !important;
+}
+[data-theme="emerald-luxury"] [class*="shadow-\[\#00A0DF\]"],
+[data-theme="emerald-luxury"] [class*="shadow-\[\#00a0df\]"] {
+  --tw-shadow-color: rgba(16, 185, 129, 0.35) !important;
+}
+
+[data-theme="sunset-orange"] [class*="from-\[\#00A0DF\]"],
+[data-theme="sunset-orange"] [class*="from-\[\#00a0df\]"] {
+  --tw-gradient-from: #FF6B00 var(--tw-gradient-from-position) !important;
+}
+[data-theme="sunset-orange"] [class*="to-\[\#00A0DF\]"],
+[data-theme="sunset-orange"] [class*="to-\[\#00a0df\]"] {
+  --tw-gradient-to: #FFA043 var(--tw-gradient-to-position) !important;
+}
+
+[data-theme="emerald-luxury"] [class*="from-\[\#00A0DF\]"],
+[data-theme="emerald-luxury"] [class*="from-\[\#00a0df\]"] {
+  --tw-gradient-from: #10B981 var(--tw-gradient-from-position) !important;
+}
+[data-theme="emerald-luxury"] [class*="to-\[\#00A0DF\]"],
+[data-theme="emerald-luxury"] [class*="to-\[\#00a0df\]"] {
+  --tw-gradient-to: #F59E0B var(--tw-gradient-to-position) !important;
+}
+
+[data-theme="sunset-orange"] ::selection {
+  background-color: #FF6B00 !important;
+  color: #FFFFFF !important;
+}
+[data-theme="emerald-luxury"] ::selection {
+  background-color: #10B981 !important;
+  color: #FFFFFF !important;
 }
 
 html {

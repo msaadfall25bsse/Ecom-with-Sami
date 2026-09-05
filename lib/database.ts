@@ -49,7 +49,8 @@ export async function dbGetCmsSettings(): Promise<CmsContentSchema> {
             testimonials: Array.isArray(parsed.testimonials) ? parsed.testimonials : defaultCmsContent.testimonials,
             faqs: Array.isArray(parsed.faqs) ? parsed.faqs : defaultCmsContent.faqs,
             payment_methods: Array.isArray(parsed.payment_methods) ? parsed.payment_methods : defaultCmsContent.payment_methods,
-            pixels: Array.isArray(parsed.pixels) ? parsed.pixels : defaultCmsContent.pixels
+            pixels: Array.isArray(parsed.pixels) ? parsed.pixels : defaultCmsContent.pixels,
+            theme: parsed.theme && typeof parsed.theme.active_theme === 'string' ? parsed.theme : defaultCmsContent.theme
           };
         }
       }
@@ -78,7 +79,8 @@ export async function dbSaveCmsSettings(patch: Partial<CmsContentSchema>): Promi
     testimonials: patch.testimonials !== undefined ? patch.testimonials : existing.testimonials,
     faqs: patch.faqs !== undefined ? patch.faqs : existing.faqs,
     payment_methods: patch.payment_methods !== undefined ? patch.payment_methods : existing.payment_methods,
-    pixels: patch.pixels !== undefined ? patch.pixels : existing.pixels
+    pixels: patch.pixels !== undefined ? patch.pixels : existing.pixels,
+    theme: patch.theme !== undefined ? { ...existing.theme, ...patch.theme } : (existing.theme || defaultCmsContent.theme)
   };
 
   if (supabase) {
