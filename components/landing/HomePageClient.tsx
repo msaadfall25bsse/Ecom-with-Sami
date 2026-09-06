@@ -43,8 +43,7 @@ import {
   LayoutGrid,
   Pause,
   Volume2,
-  VolumeX,
-  Maximize2
+  VolumeX
 } from 'lucide-react';
 import { defaultCmsContent, CmsContentSchema } from '@/utils/cmsStore';
 import { Module } from '@/utils/db';
@@ -145,7 +144,8 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
 
   const handleHeroUnmute = () => {
     setIsHeroMuted(false);
-    if (heroVideoRef.current) {
+    setIsHeroPlaying(true);
+    if (isDirectVideo && heroVideoRef.current) {
       heroVideoRef.current.muted = false;
       heroVideoRef.current.volume = 1;
       heroVideoRef.current.play().catch(() => {});
@@ -161,35 +161,83 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
           '*'
         );
         heroIframeRef.current.contentWindow?.postMessage(
+          JSON.stringify({ event: 'command', func: 'playVideo' }),
+          '*'
+        );
+        heroIframeRef.current.contentWindow?.postMessage(
           JSON.stringify({ method: 'unmute' }),
+          '*'
+        );
+        heroIframeRef.current.contentWindow?.postMessage(
+          JSON.stringify({ method: 'play' }),
           '*'
         );
       } catch (e) {}
     }
   };
 
-  const toggleHeroPlay = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (heroVideoRef.current) {
-      if (heroVideoRef.current.paused) {
+  const toggleHeroPlay = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    const nextPlaying = !isHeroPlaying;
+    setIsHeroPlaying(nextPlaying);
+
+    if (isDirectVideo && heroVideoRef.current) {
+      if (nextPlaying) {
         heroVideoRef.current.play().catch(() => {});
-        setIsHeroPlaying(true);
       } else {
         heroVideoRef.current.pause();
-        setIsHeroPlaying(false);
       }
+    } else if (heroIframeRef.current) {
+      try {
+        // YouTube API command
+        heroIframeRef.current.contentWindow?.postMessage(
+          JSON.stringify({
+            event: 'command',
+            func: nextPlaying ? 'playVideo' : 'pauseVideo'
+          }),
+          '*'
+        );
+        // Bunny.net PlayerJS command
+        heroIframeRef.current.contentWindow?.postMessage(
+          JSON.stringify({
+            method: nextPlaying ? 'play' : 'pause'
+          }),
+          '*'
+        );
+      } catch (e) {}
     }
   };
 
   const toggleHeroMute = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (heroVideoRef.current) {
-      const nextMuted = !heroVideoRef.current.muted;
+    const nextMuted = !isHeroMuted;
+    setIsHeroMuted(nextMuted);
+
+    if (isDirectVideo && heroVideoRef.current) {
       heroVideoRef.current.muted = nextMuted;
-      setIsHeroMuted(nextMuted);
       if (!nextMuted) heroVideoRef.current.volume = 1;
-    } else {
-      setIsHeroMuted(prev => !prev);
+    } else if (heroIframeRef.current) {
+      try {
+        heroIframeRef.current.contentWindow?.postMessage(
+          JSON.stringify({
+            event: 'command',
+            func: nextMuted ? 'mute' : 'unMute'
+          }),
+          '*'
+        );
+        if (!nextMuted) {
+          heroIframeRef.current.contentWindow?.postMessage(
+            JSON.stringify({ event: 'command', func: 'setVolume', args: [100] }),
+            '*'
+          );
+        }
+        heroIframeRef.current.contentWindow?.postMessage(
+          JSON.stringify({
+            method: nextMuted ? 'mute' : 'unmute'
+          }),
+          '*'
+        );
+      } catch (e) {}
     }
   };
 
@@ -206,6 +254,16 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
     hero.video_url?.includes('mediadelivery.net') || hero.video_url?.includes('bunny')
   );
   const isDirectVideo = !isYouTubeVideo && !isBunnyVideo;
+
+  // Auto increment counter when playing if video is an embed iframe
+  useEffect(() => {
+    if (!isDirectVideo && isHeroPlaying) {
+      const interval = setInterval(() => {
+        setHeroCurrentTime(prev => (prev >= heroDuration ? 0 : prev + 1));
+      }, 1000);
+      return () => clearInterval(interval);
+    }
+  }, [isDirectVideo, isHeroPlaying, heroDuration]);
 
   const getYouTubeEmbedUrl = (url: string, muted: boolean) => {
     let vId = 'dQw4w9WgXcQ';
@@ -404,7 +462,14 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
 
                 {/* 16:9 Video Canvas Frame */}
                 <div 
-                  className="relative aspect-video w-full rounded-xl sm:rounded-2xl overflow-hidden bg-slate-950 border border-black/10 shadow-lg group select-none"
+                  onClick={() => {
+                    if (isHeroMuted) {
+                      handleHeroUnmute();
+                    } else {
+                      toggleHeroPlay();
+                    }
+                  }}
+                  className="relative aspect-video w-full rounded-xl sm:rounded-2xl overflow-hidden bg-slate-950 border border-black/10 shadow-lg group select-none cursor-pointer"
                   onMouseEnter={() => setIsHeroControlsHovered(true)}
                   onMouseLeave={() => setIsHeroControlsHovered(false)}
                 >
@@ -448,7 +513,10 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
                   {/* Frosted Glassmorphic "Click To Unmute" Center Overlay */}
                   {isHeroMuted && (
                     <div 
-                      onClick={handleHeroUnmute}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleHeroUnmute();
+                      }}
                       className="absolute inset-0 z-20 flex items-center justify-center bg-black/20 backdrop-blur-[2px] cursor-pointer p-3 transition-opacity duration-300"
                     >
                       <div className="bg-white/20 hover:bg-white/30 border-2 border-white/60 backdrop-blur-md rounded-2xl sm:rounded-3xl p-4 sm:p-6 text-center text-white shadow-2xl transition-transform hover:scale-105 active:scale-95 max-w-[260px] sm:max-w-[290px] group/card">
@@ -465,14 +533,14 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
                     </div>
                   )}
 
-                  {/* Bottom Sleek Control Bar (Afaq style) */}
+                  {/* Bottom Sleek Control Bar (Afaq style - No Zoom Button) */}
                   <div className={`absolute bottom-0 inset-x-0 z-30 bg-gradient-to-t from-black/80 via-black/40 to-transparent px-3 py-2 flex items-center justify-between gap-2.5 transition-opacity duration-200 ${isHeroMuted && !isHeroControlsHovered ? 'opacity-80' : 'opacity-100'}`}>
                     <div className="flex items-center gap-2">
                       <button
                         type="button"
                         onClick={toggleHeroPlay}
                         className="text-white hover:text-[#00A0DF] transition-colors p-1"
-                        title={isHeroPlaying ? 'Pause' : 'Play'}
+                        title={isHeroPlaying ? 'Pause Video' : 'Play Video'}
                       >
                         {isHeroPlaying ? <Pause size={15} /> : <Play size={15} className="fill-current" />}
                       </button>
@@ -480,7 +548,7 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
                         type="button"
                         onClick={toggleHeroMute}
                         className="text-white hover:text-[#00A0DF] transition-colors p-1"
-                        title={isHeroMuted ? 'Unmute' : 'Mute'}
+                        title={isHeroMuted ? 'Unmute Sound' : 'Mute Sound'}
                       >
                         {isHeroMuted ? <VolumeX size={15} /> : <Volume2 size={15} />}
                       </button>
@@ -490,27 +558,12 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
                     </div>
 
                     {/* Progress Bar Track */}
-                    <div className="flex-1 mx-2 bg-white/30 rounded-full h-1 sm:h-1.5 overflow-hidden">
+                    <div className="flex-1 ml-2 bg-white/30 rounded-full h-1 sm:h-1.5 overflow-hidden">
                       <div 
                         className="bg-[#00A0DF] h-full rounded-full transition-all duration-300"
                         style={{ width: `${Math.min(100, (heroCurrentTime / Math.max(1, heroDuration)) * 100)}%` }}
                       />
                     </div>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (heroVideoRef.current?.requestFullscreen) {
-                          heroVideoRef.current.requestFullscreen();
-                        } else {
-                          openMainVideo();
-                        }
-                      }}
-                      className="text-white hover:text-[#00A0DF] transition-colors p-1"
-                      title="Fullscreen"
-                    >
-                      <Maximize2 size={14} />
-                    </button>
                   </div>
 
                 </div>
