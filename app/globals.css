@@ -515,8 +515,54 @@ body {
 }
 
 /* ========================================================================= */
-/* Marquee & Continuous Moving Track Animations (Hardware Accelerated) */
 /* ========================================================================= */
+/* Marquee & Continuous Moving Track Animations (Hardware Accelerated & Safari iOS Fixed) */
+/* ========================================================================= */
+
+/* Safari / iOS-Hardened Marquee Container */
+.safari-marquee-container {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  isolation: isolate;
+  contain: paint;
+  -webkit-mask-image: -webkit-radial-gradient(white, black);
+  mask-image: -webkit-radial-gradient(white, black);
+}
+
+/* Dual-Track Seamless Marquee (Safari & iPhone Safe) */
+@-webkit-keyframes marqueeTrackScroll {
+  0% {
+    -webkit-transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    -webkit-transform: translate3d(-100%, 0, 0);
+    transform: translate3d(-100%, 0, 0);
+  }
+}
+
+@keyframes marqueeTrackScroll {
+  0% {
+    -webkit-transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    -webkit-transform: translate3d(-100%, 0, 0);
+    transform: translate3d(-100%, 0, 0);
+  }
+}
+
+.animate-marquee-track {
+  display: flex !important;
+  flex-shrink: 0 !important;
+  min-width: 100% !important;
+  -webkit-animation: marqueeTrackScroll 28s linear infinite !important;
+  animation: marqueeTrackScroll 28s linear infinite !important;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
 @-webkit-keyframes marqueeLeft {
   0% { -webkit-transform: translate3d(0, 0, 0); transform: translate3d(0, 0, 0); }
   100% { -webkit-transform: translate3d(-50%, 0, 0); transform: translate3d(-50%, 0, 0); }
@@ -542,11 +588,8 @@ body {
   width: max-content !important;
   -webkit-animation: marqueeLeft 26s linear infinite !important;
   animation: marqueeLeft 26s linear infinite !important;
-  will-change: transform;
-  backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
-  transform: translateZ(0);
-  -webkit-transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 .animate-marquee-slow {
@@ -554,11 +597,8 @@ body {
   width: max-content !important;
   -webkit-animation: marqueeLeft 32s linear infinite !important;
   animation: marqueeLeft 32s linear infinite !important;
-  will-change: transform;
-  backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
-  transform: translateZ(0);
-  -webkit-transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 .animate-marquee-reverse {
@@ -566,15 +606,13 @@ body {
   width: max-content !important;
   -webkit-animation: marqueeRight 30s linear infinite !important;
   animation: marqueeRight 30s linear infinite !important;
-  will-change: transform;
-  backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
-  transform: translateZ(0);
-  -webkit-transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 /* Only pause on desktop pointer hover, never on mobile touch */
 @media (hover: hover) and (pointer: fine) {
+  .animate-marquee-track:hover,
   .animate-marquee:hover,
   .animate-marquee-slow:hover,
   .animate-marquee-reverse:hover {
@@ -678,20 +716,35 @@ body {
 }
 
 /* LMS Announcement Bar Continuous Marquee Ticker */
-@keyframes lmsMarquee {
+@-webkit-keyframes lmsMarquee {
   0% {
-    transform: translateX(0%);
+    -webkit-transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0);
   }
   100% {
-    transform: translateX(-50%);
+    -webkit-transform: translate3d(-50%, 0, 0);
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+@keyframes lmsMarquee {
+  0% {
+    -webkit-transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    -webkit-transform: translate3d(-50%, 0, 0);
+    transform: translate3d(-50%, 0, 0);
   }
 }
 
 .animate-lms-marquee {
   display: inline-flex;
   white-space: nowrap;
+  -webkit-animation: lmsMarquee 35s linear infinite;
   animation: lmsMarquee 35s linear infinite;
-  will-change: transform;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
 }
 
 .animate-lms-marquee:hover {
