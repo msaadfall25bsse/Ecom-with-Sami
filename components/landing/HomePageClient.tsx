@@ -40,7 +40,11 @@ import {
   Award,
   DollarSign,
   MoveHorizontal,
-  LayoutGrid
+  LayoutGrid,
+  Pause,
+  Volume2,
+  VolumeX,
+  Maximize2
 } from 'lucide-react';
 import { defaultCmsContent, CmsContentSchema } from '@/utils/cmsStore';
 import { Module } from '@/utils/db';
@@ -57,6 +61,15 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
   const [activeVideoTitle, setActiveVideoTitle] = useState('');
   const [content, setContent] = useState<CmsContentSchema>(initialContent || defaultCmsContent);
   const [videoReviewMode, setVideoReviewMode] = useState<'moving' | 'grid'>('moving');
+
+  // Hero Autoplay Video & Sound States (LearnWithAfaq Style)
+  const [isHeroMuted, setIsHeroMuted] = useState(true);
+  const [isHeroPlaying, setIsHeroPlaying] = useState(true);
+  const [heroCurrentTime, setHeroCurrentTime] = useState(1);
+  const [heroDuration, setHeroDuration] = useState(128);
+  const [isHeroControlsHovered, setIsHeroControlsHovered] = useState(false);
+  const heroVideoRef = useRef<HTMLVideoElement>(null);
+  const heroIframeRef = useRef<HTMLIFrameElement>(null);
 
   useEffect(() => {
     const syncData = async () => {
@@ -128,6 +141,82 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
     setActiveVideoTitle(title);
     setActiveVideoUrl(url);
     setIsVideoOpen(true);
+  };
+
+  const handleHeroUnmute = () => {
+    setIsHeroMuted(false);
+    if (heroVideoRef.current) {
+      heroVideoRef.current.muted = false;
+      heroVideoRef.current.volume = 1;
+      heroVideoRef.current.play().catch(() => {});
+    }
+    if (heroIframeRef.current) {
+      try {
+        heroIframeRef.current.contentWindow?.postMessage(
+          JSON.stringify({ event: 'command', func: 'unMute' }),
+          '*'
+        );
+        heroIframeRef.current.contentWindow?.postMessage(
+          JSON.stringify({ event: 'command', func: 'setVolume', args: [100] }),
+          '*'
+        );
+        heroIframeRef.current.contentWindow?.postMessage(
+          JSON.stringify({ method: 'unmute' }),
+          '*'
+        );
+      } catch (e) {}
+    }
+  };
+
+  const toggleHeroPlay = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (heroVideoRef.current) {
+      if (heroVideoRef.current.paused) {
+        heroVideoRef.current.play().catch(() => {});
+        setIsHeroPlaying(true);
+      } else {
+        heroVideoRef.current.pause();
+        setIsHeroPlaying(false);
+      }
+    }
+  };
+
+  const toggleHeroMute = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (heroVideoRef.current) {
+      const nextMuted = !heroVideoRef.current.muted;
+      heroVideoRef.current.muted = nextMuted;
+      setIsHeroMuted(nextMuted);
+      if (!nextMuted) heroVideoRef.current.volume = 1;
+    } else {
+      setIsHeroMuted(prev => !prev);
+    }
+  };
+
+  const formatHeroTime = (secs: number) => {
+    const m = Math.floor(secs / 60);
+    const s = Math.floor(secs % 60);
+    return `${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
+  };
+
+  const isYouTubeVideo = Boolean(
+    hero.video_url?.includes('youtube.com') || hero.video_url?.includes('youtu.be')
+  );
+  const isBunnyVideo = Boolean(
+    hero.video_url?.includes('mediadelivery.net') || hero.video_url?.includes('bunny')
+  );
+  const isDirectVideo = !isYouTubeVideo && !isBunnyVideo;
+
+  const getYouTubeEmbedUrl = (url: string, muted: boolean) => {
+    let vId = 'dQw4w9WgXcQ';
+    const match = url?.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/);
+    if (match && match[1]) vId = match[1];
+    return `https://www.youtube.com/embed/${vId}?autoplay=1&mute=${muted ? 1 : 0}&loop=1&playlist=${vId}&controls=0&modestbranding=1&rel=0&playsinline=1&enablejsapi=1`;
+  };
+
+  const getBunnyEmbedUrl = (url: string, muted: boolean) => {
+    const base = url.split('?')[0];
+    return `${base}?autoplay=true&muted=${muted ? 'true' : 'false'}&loop=true&playsinline=true`;
   };
 
   const videoReviews = [
@@ -215,97 +304,249 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
       />
 
       {/* ========================================================================= */}
-      {/* 1. HERO SECTION (LEARNWITHAFAQ STYLE) */}
+      {/* 1. HERO SECTION (LEARNWITHAFAQ 2-COLUMN DESKTOP + COMPACT MOBILE)        */}
       {/* ========================================================================= */}
-      <section className="relative pt-6 pb-12 sm:pt-14 sm:pb-20 md:pt-16 md:pb-24 overflow-hidden bg-gradient-to-b from-[#f0f9ff]/40 via-white to-white">
-        {/* Soft Background Blur Orbs */}
+      <section className="relative pt-4 pb-10 sm:pt-10 sm:pb-16 md:pt-14 md:pb-20 overflow-hidden bg-gradient-to-b from-[#f0f9ff]/50 via-white to-white">
+        {/* Soft Background Ambient Blur Orbs */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[550px] pointer-events-none overflow-hidden -z-10">
-          <div className="absolute top-[-80px] left-[15%] w-[350px] sm:w-[450px] h-[350px] sm:h-[450px] bg-[#00A0DF]/12 rounded-full blur-3xl animate-pulse-glow" />
-          <div className="absolute top-[40px] right-[10%] w-[300px] sm:w-[400px] h-[300px] sm:h-[400px] bg-emerald-400/10 rounded-full blur-3xl animate-pulse-glow" style={{ animationDelay: '2.5s' }} />
+          <div className="absolute top-[-80px] left-[15%] w-[350px] sm:w-[450px] h-[350px] sm:h-[450px] bg-[#00A0DF]/10 rounded-full blur-3xl" />
+          <div className="absolute top-[40px] right-[10%] w-[300px] sm:w-[400px] h-[300px] sm:h-[400px] bg-sky-400/10 rounded-full blur-3xl" />
         </div>
 
-        <div className="max-w-6xl mx-auto px-3.5 sm:px-6 lg:px-8">
-          <div className="flex flex-col items-center text-center max-w-4xl mx-auto">
+        <div className="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8">
+          {/* Main 2-Column Grid on Desktop, Stacked on Mobile */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 xl:gap-14 items-center">
             
-            {/* Top Pill Badge */}
-            <div className="dropshipping-badge mb-4 sm:mb-5 cursor-pointer animate-float">
-              <span className="badge-dot" />
-              <span className="badge-blue">PAKISTAN’S #1</span>
-              <span className="badge-dark">{hero.badge || "UAE/KSA DROPSHIPPING TRAINING"}</span>
-            </div>
-
-            {/* Main Bold Headline */}
-            <h1 className="text-2xl xs:text-3xl sm:text-5xl md:text-6xl font-black text-slate-900 tracking-tight leading-[1.18] sm:leading-[1.15] mb-3.5 sm:mb-4 px-1">
-              {hero.title_line1 || 'Learn How to Start Online Dropshipping Store in UAE & KSA'}{' '}
-              <span className="text-[#00A0DF] drop-shadow-xs">
-                {hero.title_highlight || 'Step-by-Step Training'}
-              </span>
-            </h1>
-
-            {/* Sub-headline */}
-            <p className="text-xs xs:text-sm sm:text-lg md:text-xl text-slate-600 font-semibold max-w-2xl mx-auto mb-6 sm:mb-8 px-2">
-              {hero.subtitle || 'Beginner Friendly Training from Basics — Zero Experience Required'}
-            </p>
-
-            {/* Video Preview Card Container */}
-            <div className="w-full max-w-3xl relative">
-              {/* Mini Pill Tag over Video */}
-              <div className="inline-flex items-center gap-1.5 bg-[#00A0DF] text-white px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-black uppercase tracking-wider mb-2.5 sm:mb-3 shadow-md">
-                <Sparkles size={12} className="text-amber-300 animate-spin" style={{ animationDuration: '6s' }} />
-                <span>Ecommstory Masterclass</span>
+            {/* ------------------------------------------------------------- */}
+            {/* LEFT COLUMN: Headings, Subtitle, Desktop CTA & Social Proof   */}
+            {/* ------------------------------------------------------------- */}
+            <div className="lg:col-span-6 xl:col-span-7 flex flex-col items-center lg:items-start text-center lg:text-left">
+              
+              {/* Top Pill Badge */}
+              <div className="dropshipping-badge mb-3.5 sm:mb-4 cursor-pointer">
+                <span className="badge-dot" />
+                <span className="badge-blue">PAKISTAN’S #1</span>
+                <span className="text-slate-400 font-bold">•</span>
+                <span className="badge-dark">{hero.badge || "UAE/KSA DROPSHIPPING TRAINING"}</span>
               </div>
 
-              <h2 className="text-xs sm:text-base font-bold text-slate-700 mb-2.5 sm:mb-3">
-                Watch this 128 seconds of video to learn how easy it is
-              </h2>
+              {/* Main Headline (All Bold Uppercase with Italic Cyan Highlight) */}
+              <h1 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl xl:text-[54px] font-black text-slate-900 tracking-tight leading-[1.12] sm:leading-[1.1] mb-3 sm:mb-4">
+                {hero.title_line1 || 'LEARN HOW TO START ONLINE DROPSHIPPING STORE IN UAE & KSA'}{' '}
+                <span className="text-[#00A0DF] italic font-black block mt-0.5 sm:mt-1">
+                  {hero.title_highlight || 'STEP-BY-STEP TRAINING'}
+                </span>
+              </h1>
 
-              {/* Video Player Card with Glowing Radar Pulse */}
-              <div 
-                onClick={openMainVideo}
-                className="relative cursor-pointer rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl border-2 border-[#00A0DF]/40 bg-slate-950 aspect-video flex items-center justify-center group transition-all duration-300 hover:border-[#00A0DF] hover:scale-[1.01]"
-              >
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-                
-                {/* Radiant Play Button */}
-                <div className="relative z-10 flex flex-col items-center gap-2 sm:gap-3 p-2 text-center">
-                  <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-full bg-[#00A0DF] text-white flex items-center justify-center shadow-2xl shadow-[#00A0DF]/70 group-hover:scale-115 transition-transform duration-300 animate-radar">
-                    <Play className="fill-current ml-1" size={22} />
-                  </div>
-                  <span className="text-white font-extrabold text-[10px] xs:text-xs sm:text-sm tracking-wide bg-black/75 px-3 sm:px-4 py-1 sm:py-1.5 rounded-full border border-white/20 backdrop-blur-md max-w-[90%] truncate">
-                    {hero.video_title || 'Click to Watch Free Blueprint Overview'}
-                  </span>
-                </div>
-              </div>
+              {/* Subtitle */}
+              <p className="text-sm xs:text-base sm:text-lg md:text-xl text-slate-600 font-semibold max-w-xl mb-5 sm:mb-7 leading-relaxed">
+                {hero.subtitle || 'Beginner Friendly Training from Basics — Zero Experience Required'}
+              </p>
 
-              {/* Strikethrough Pricing Box */}
-              <div className="mt-5 sm:mt-6 bg-white border border-gray-200 rounded-xl px-4 sm:px-5 py-3 sm:py-3.5 shadow-sm inline-block card-hover-lift max-w-full">
-                <p className="text-xs sm:text-sm md:text-base font-semibold text-gray-800 leading-snug">
-                  Originally{' '}
-                  <span className="line-through font-extrabold text-red-500">
-                    {hero.original_price || '32,500 PKR'}
-                  </span>{' '}
-                  — Get Instant Access Today for Just{' '}
-                  <span className="font-extrabold text-[#00A0DF] block xs:inline">
-                    {hero.current_price || '3,799 PKR'}
-                  </span>
-                </p>
-              </div>
-
-              {/* Quick CTA & Social Proof (Placed Under Demo Video) */}
-              <div className="flex flex-col items-center gap-3 mt-5 sm:mt-6 w-full xs:w-auto px-2">
+              {/* Desktop-Only CTA Button & Social Proof */}
+              <div className="hidden lg:flex flex-col items-start gap-3.5">
                 <Link
                   href="/enrollment"
-                  className="lwa-btn w-full xs:w-auto px-8 sm:px-10 py-3.5 sm:py-4 text-xs xs:text-sm sm:text-base font-black rounded-xl hover:bg-[#008ac2] transition-all shadow-xl"
+                  className="lwa-btn px-8 sm:px-10 py-4 text-sm sm:text-base font-black rounded-xl hover:bg-[#008ac2] transition-all shadow-xl shadow-[#00A0DF]/30 hover:scale-[1.02] active:scale-95 uppercase tracking-wider"
                 >
                   {hero.cta_text || 'YES! I WANT TO LEARN THIS'}
                 </Link>
-                <div className="flex items-center gap-2 text-[11px] sm:text-xs font-bold text-slate-500">
+                
+                {/* Social Proof with Avatar Bubbles */}
+                <div className="flex items-center gap-2.5 text-xs font-bold text-slate-600 pt-1">
+                  <div className="flex -space-x-2">
+                    <img className="w-7 h-7 rounded-full border-2 border-white object-cover shadow-xs" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop" alt="Student" />
+                    <img className="w-7 h-7 rounded-full border-2 border-white object-cover shadow-xs" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop" alt="Student" />
+                    <img className="w-7 h-7 rounded-full border-2 border-white object-cover shadow-xs" src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop" alt="Student" />
+                    <img className="w-7 h-7 rounded-full border-2 border-white object-cover shadow-xs" src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=80&h=80&fit=crop" alt="Student" />
+                  </div>
+                  <span>Trusted by {mentor.students_count || '9,700+'} Students</span>
+                </div>
+              </div>
+
+            </div>
+
+            {/* ------------------------------------------------------------- */}
+            {/* RIGHT COLUMN: Curved Arrow, Pill & Autoplay Video Box         */}
+            {/* ------------------------------------------------------------- */}
+            <div className="lg:col-span-6 xl:col-span-5 flex flex-col items-center w-full max-w-lg mx-auto lg:max-w-none">
+              
+              {/* Hand-drawn curved arrow & Program pill (Afaq style) */}
+              <div className="w-full flex items-center justify-end pr-4 sm:pr-8 mb-1.5 sm:mb-2 pointer-events-none select-none">
+                <div className="flex items-center gap-2">
+                  <svg 
+                    className="w-10 h-8 sm:w-12 sm:h-9 text-slate-800 transform -rotate-6" 
+                    viewBox="0 0 54 44" 
+                    fill="none" 
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path 
+                      d="M2 10C16 4 38 6 46 26M46 26L39 19M46 26L50 17" 
+                      stroke="currentColor" 
+                      strokeWidth="2.5" 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round" 
+                    />
+                  </svg>
+                  <div className="inline-flex items-center gap-1.5 px-3.5 sm:px-4 py-1 sm:py-1.5 rounded-full bg-[#E0F2FE] border border-[#00A0DF]/40 text-[#00A0DF] text-[11px] sm:text-xs font-black uppercase tracking-wider shadow-sm">
+                    <span>Ecommstory Program</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Video Outer Curved Container Box (Transparent/Light tinted glass) */}
+              <div className="w-full rounded-2xl sm:rounded-3xl p-2.5 sm:p-3.5 bg-[#EBF7FC]/90 sm:bg-[#EBF7FC] border-2 border-[#00A0DF]/30 shadow-xl sm:shadow-2xl">
+                
+                {/* Header text inside video box */}
+                <h2 className="text-[11px] sm:text-xs font-black text-slate-700 uppercase tracking-wider text-center mb-2 sm:mb-2.5 px-1">
+                  Watch this 128 seconds of video to learn how easy it is
+                </h2>
+
+                {/* 16:9 Video Canvas Frame */}
+                <div 
+                  className="relative aspect-video w-full rounded-xl sm:rounded-2xl overflow-hidden bg-slate-950 border border-black/10 shadow-lg group select-none"
+                  onMouseEnter={() => setIsHeroControlsHovered(true)}
+                  onMouseLeave={() => setIsHeroControlsHovered(false)}
+                >
+                  {/* Embedded / HTML5 Autoplaying Video */}
+                  {isDirectVideo ? (
+                    <video
+                      ref={heroVideoRef}
+                      src={hero.video_url || 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'}
+                      autoPlay
+                      muted={isHeroMuted}
+                      loop
+                      playsInline
+                      onTimeUpdate={() => {
+                        if (heroVideoRef.current) {
+                          setHeroCurrentTime(Math.floor(heroVideoRef.current.currentTime));
+                          if (heroVideoRef.current.duration) {
+                            setHeroDuration(Math.floor(heroVideoRef.current.duration));
+                          }
+                        }
+                      }}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : isYouTubeVideo ? (
+                    <iframe
+                      ref={heroIframeRef}
+                      src={getYouTubeEmbedUrl(hero.video_url, isHeroMuted)}
+                      title="Hero Overview Video"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      className="w-full h-full pointer-events-none scale-[1.02]"
+                    />
+                  ) : (
+                    <iframe
+                      ref={heroIframeRef}
+                      src={getBunnyEmbedUrl(hero.video_url, isHeroMuted)}
+                      title="Hero Overview Video"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      className="w-full h-full pointer-events-none scale-[1.02]"
+                    />
+                  )}
+
+                  {/* Frosted Glassmorphic "Click To Unmute" Center Overlay */}
+                  {isHeroMuted && (
+                    <div 
+                      onClick={handleHeroUnmute}
+                      className="absolute inset-0 z-20 flex items-center justify-center bg-black/20 backdrop-blur-[2px] cursor-pointer p-3 transition-opacity duration-300"
+                    >
+                      <div className="bg-white/20 hover:bg-white/30 border-2 border-white/60 backdrop-blur-md rounded-2xl sm:rounded-3xl p-4 sm:p-6 text-center text-white shadow-2xl transition-transform hover:scale-105 active:scale-95 max-w-[260px] sm:max-w-[290px] group/card">
+                        <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-2 sm:mb-2.5 rounded-full bg-white/25 flex items-center justify-center border border-white/60 shadow-inner group-hover/card:scale-110 transition-transform">
+                          <Volume2 size={28} className="text-white animate-pulse" />
+                        </div>
+                        <h4 className="text-sm sm:text-base font-extrabold text-white tracking-tight drop-shadow-sm">
+                          Your Video Is Playing
+                        </h4>
+                        <div className="mt-1.5 sm:mt-2 text-xs sm:text-sm font-black text-white bg-[#00A0DF] hover:bg-[#008ac2] px-3.5 py-1 sm:py-1.5 rounded-full shadow-md inline-block uppercase tracking-wider">
+                          Click To Unmute
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Bottom Sleek Control Bar (Afaq style) */}
+                  <div className={`absolute bottom-0 inset-x-0 z-30 bg-gradient-to-t from-black/80 via-black/40 to-transparent px-3 py-2 flex items-center justify-between gap-2.5 transition-opacity duration-200 ${isHeroMuted && !isHeroControlsHovered ? 'opacity-80' : 'opacity-100'}`}>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={toggleHeroPlay}
+                        className="text-white hover:text-[#00A0DF] transition-colors p-1"
+                        title={isHeroPlaying ? 'Pause' : 'Play'}
+                      >
+                        {isHeroPlaying ? <Pause size={15} /> : <Play size={15} className="fill-current" />}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={toggleHeroMute}
+                        className="text-white hover:text-[#00A0DF] transition-colors p-1"
+                        title={isHeroMuted ? 'Unmute' : 'Mute'}
+                      >
+                        {isHeroMuted ? <VolumeX size={15} /> : <Volume2 size={15} />}
+                      </button>
+                      <span className="text-[10px] sm:text-xs font-mono font-bold text-white">
+                        {formatHeroTime(heroCurrentTime)}
+                      </span>
+                    </div>
+
+                    {/* Progress Bar Track */}
+                    <div className="flex-1 mx-2 bg-white/30 rounded-full h-1 sm:h-1.5 overflow-hidden">
+                      <div 
+                        className="bg-[#00A0DF] h-full rounded-full transition-all duration-300"
+                        style={{ width: `${Math.min(100, (heroCurrentTime / Math.max(1, heroDuration)) * 100)}%` }}
+                      />
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (heroVideoRef.current?.requestFullscreen) {
+                          heroVideoRef.current.requestFullscreen();
+                        } else {
+                          openMainVideo();
+                        }
+                      }}
+                      className="text-white hover:text-[#00A0DF] transition-colors p-1"
+                      title="Fullscreen"
+                    >
+                      <Maximize2 size={14} />
+                    </button>
+                  </div>
+
+                </div>
+              </div>
+
+              {/* Mobile-Only CTA Button, Strikethrough Price & Trust Badge (Directly Under Video) */}
+              <div className="lg:hidden flex flex-col items-center w-full mt-4 sm:mt-5 px-1">
+                <Link
+                  href="/enrollment"
+                  className="lwa-btn w-full py-3.5 sm:py-4 text-xs xs:text-sm font-black rounded-xl hover:bg-[#008ac2] transition-all shadow-xl shadow-[#00A0DF]/30 text-center uppercase tracking-wider"
+                >
+                  {hero.cta_text || 'YES! I WANT TO LEARN THIS'}
+                </Link>
+
+                {/* Strikethrough Pricing line */}
+                <div className="mt-3 text-center">
+                  <p className="text-xs sm:text-sm font-bold text-slate-700">
+                    Originally{' '}
+                    <span className="line-through font-extrabold text-red-500">
+                      {hero.original_price || '32,500 PKR'}
+                    </span>{' '}
+                    — Get Instant Access Today for Just{' '}
+                    <span className="font-extrabold text-[#00A0DF]">
+                      {hero.current_price || '3,799 PKR'}
+                    </span>
+                  </p>
+                </div>
+
+                {/* Mobile Social Proof */}
+                <div className="flex items-center justify-center gap-2 text-[11px] sm:text-xs font-bold text-slate-500 mt-2.5">
                   <div className="flex text-amber-400">
                     {[...Array(5)].map((_, i) => (
-                      <Star key={i} size={13} className="fill-amber-400 text-amber-400 animate-star-twinkle" />
+                      <Star key={i} size={12} className="fill-amber-400 text-amber-400" />
                     ))}
                   </div>
-                  <span>Trusted by 350+ Students</span>
+                  <span>Trusted by {mentor.students_count || '9,700+'} Students</span>
                 </div>
               </div>
 
