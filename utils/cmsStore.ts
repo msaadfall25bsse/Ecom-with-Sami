@@ -16,6 +16,10 @@ export interface CmsContentSchema {
     current_price: string;
     seats_left: number;
     cta_text: string;
+    top_pill_badge?: string;
+    program_badge?: string;
+    video_header?: string;
+    trusted_text?: string;
   };
   stats: {
     training_hours: string;
@@ -63,20 +67,73 @@ export interface CmsContentSchema {
       desc: string;
     }[];
   };
+  what_you_get: {
+    badge: string;
+    title: string;
+    subtitle: string;
+    items: {
+      title: string;
+      desc: string;
+    }[];
+  };
+  who_is_this_for: {
+    badge: string;
+    title: string;
+    subtitle: string;
+    items: {
+      title: string;
+      highlight?: string;
+      desc: string;
+    }[];
+  };
+  video_reviews: {
+    badge: string;
+    title: string;
+    subtitle: string;
+    items: {
+      headline: string;
+      author: string;
+      result: string;
+      market: string;
+      videoUrl: string;
+      stars: number;
+    }[];
+  };
   options_comparison: {
+    badge?: string;
+    title?: string;
+    subtitle?: string;
+    diy_badge?: string;
     diy_title: string;
+    diy_subtitle?: string;
     diy_points: string[];
+    sami_badge?: string;
     sami_title: string;
+    sami_subtitle?: string;
     sami_points: string[];
   };
   cost_of_waiting: {
+    badge?: string;
     title: string;
     subtitle: string;
+    banner_text?: string;
     cards: {
       label: string;
       title: string;
       desc: string;
     }[];
+  };
+  final_cta: {
+    badge: string;
+    title: string;
+    title_highlight: string;
+    subtitle: string;
+    cta_text: string;
+    guarantee_text: string;
+  };
+  footer: {
+    disclaimer: string;
+    copyright: string;
   };
   faqs: {
     q: string;
@@ -289,11 +346,15 @@ export const defaultCmsContent: CmsContentSchema = {
   },
   hero: {
     badge: '2026 UPDATED DUBAI & SAUDI ARABIA DROPSHIPPING BLUEPRINT',
+    top_pill_badge: 'PAKISTAN’S #1 • UAE/KSA DROPSHIPPING TRAINING',
     title_line1: 'Learn How to Start Online Shopify',
     title_highlight: 'Dropshipping Store in UAE & KSA',
     subtitle: 'A proven step-by-step masterclass taking you from zero to your first AED 10,000+ per month with verified local GCC wholesale suppliers, winning products & high-ROI TikTok ads.',
     video_url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
     video_title: 'Watch Sami Explain the Entire UAE & KSA Dropshipping Model (10 Mins Overview)',
+    program_badge: 'Ecommstory Program',
+    video_header: 'Watch this 128 seconds of video to learn how easy it is',
+    trusted_text: 'Trusted by 9,700+ Students',
     original_price: 'PKR 32,500',
     current_price: 'PKR 3,799',
     seats_left: 12,
@@ -391,42 +452,201 @@ export const defaultCmsContent: CmsContentSchema = {
       }
     ]
   },
+  what_you_get: {
+    badge: 'WHAT YOU GET',
+    title: 'Here’s What You’ll Get Access To',
+    subtitle: 'No prior experience required — learn step by step how to build and manage your own online store.',
+    items: [
+      {
+        title: 'Start & Manage Your Own Store',
+        desc: 'Using the Ecommestry Program framework, build and grow your own dropshipping business. Student, job holder, or beginner — all you need is a mobile or laptop.'
+      },
+      {
+        title: 'Develop 8 Practical Skills',
+        desc: 'Design stunning Shopify stores, find winning products, and source top UAE & KSA suppliers. Master Facebook and TikTok ads — from pixel to scaling.'
+      },
+      {
+        title: 'Lifetime WhatsApp Support',
+        desc: 'Stuck during the course? Ask your questions directly on WhatsApp from 9AM to 5PM. We make sure your learning journey stays smooth with lifetime support.'
+      },
+      {
+        title: 'Private Community Access',
+        desc: 'Get into private Facebook and WhatsApp communities. Network with like-minded people, share wins, and solve problems by learning from active dropshippers.'
+      }
+    ]
+  },
+  who_is_this_for: {
+    badge: 'PERFECT FOR YOU IF…',
+    title: 'Who Is This For?',
+    subtitle: 'No matter where you’re starting from, this program meets you there.',
+    items: [
+      {
+        title: 'If You’re a Complete',
+        highlight: 'Beginner',
+        desc: 'No idea how to start? I’ll guide you step by step. By the end, you’ll have a fully working Shopify store and a clear roadmap to your first sale.'
+      },
+      {
+        title: 'If You’re',
+        highlight: 'Struggling With Ads',
+        desc: 'Confused by Facebook or TikTok ads? Learn to create high-converting campaigns, target the right audience, and scale your sales the right way.'
+      },
+      {
+        title: 'If You’re a',
+        highlight: 'Business Owner',
+        desc: 'Want to add a profitable eCommerce stream? Learn to find winning products, source reliable UAE & KSA suppliers, and automate your store.'
+      },
+      {
+        title: 'Ready to',
+        highlight: 'Master Store Management',
+        desc: 'Start dropshipping with minimal investment while getting lifetime mentorship and proven strategies to grow your online business skills.'
+      },
+      {
+        title: 'If You’re Already',
+        highlight: 'Running a Store',
+        desc: 'Struggling to scale or manage campaigns? Learn advanced scaling techniques, automation tools, and ad strategies to reach the next level.'
+      },
+      {
+        title: 'If You’re a',
+        highlight: 'Freelancer or Side Hustler',
+        desc: 'Add dropshipping to your skillset and earn extra income online. Learn product research, ad mastery, and store management to start fast.'
+      }
+    ]
+  },
+  video_reviews: {
+    badge: 'REAL STUDENT RESULTS',
+    title: 'Hear What Our Students Are Saying',
+    subtitle: 'Real student video reviews sharing their experience, support, and results after joining Ecom With Sami.',
+    items: [
+      {
+        stars: 5,
+        headline: '“Total beginners are now getting AED 1,000–1,500 in daily sales.”',
+        author: 'Ali Raza — Lahore',
+        result: 'AED 1,500 / Day',
+        market: 'UAE Market',
+        videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ'
+      },
+      {
+        stars: 5,
+        headline: '“After getting mentorship and watching the course, I made €662 in sales within 6 days.”',
+        author: 'Raza Ali — Karachi',
+        result: '€662 in 6 Days',
+        market: 'GCC & Global',
+        videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ'
+      },
+      {
+        stars: 5,
+        headline: '“AED 5,000 in sales and 56 orders within 5 days with supplier help.”',
+        author: 'Hamza Tariq — Islamabad',
+        result: 'AED 5,000 / Week',
+        market: 'UAE Dropship',
+        videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ'
+      },
+      {
+        stars: 5,
+        headline: '“Students say the course is very easy to understand and follow on mobile.”',
+        author: 'Zainab Bibi — Faisalabad',
+        result: 'PKR 480,000 / Mo',
+        market: 'Saudi & UAE',
+        videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ'
+      },
+      {
+        stars: 5,
+        headline: '“26 orders and AED 2,500 in sales with the direct help of Mentor Sami.”',
+        author: 'Usman Ghani — Rawalpindi',
+        result: 'AED 2,500 Sales',
+        market: 'UAE Market',
+        videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ'
+      },
+      {
+        stars: 5,
+        headline: '“AED 1,485 in sales in just 3 days while working from home.”',
+        author: 'Bilal Farooq — Multan',
+        result: 'SAR 3,485 Profit',
+        market: 'Saudi Market',
+        videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ'
+      },
+      {
+        stars: 5,
+        headline: '“I tried many courses before, but Sami’s practical GCC supplier list made all the difference.”',
+        author: 'Farhan Sheikh — Peshawar',
+        result: 'SAR 6,100 / 10 Days',
+        market: 'KSA Market',
+        videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ'
+      }
+    ]
+  },
   options_comparison: {
-    diy_title: 'Option A: Figuring It Out Yourself',
+    badge: 'YOUR CHOICE',
+    title: 'Now You Have 2 Options Left',
+    subtitle: 'One keeps you stuck. The other moves you forward.',
+    diy_badge: 'OPTION 01',
+    diy_title: 'Do It Yourself',
+    diy_subtitle: 'The slow, frustrating road',
     diy_points: [
-      'Wasting Rs 50,000+ on banned TikTok & Meta ad accounts',
-      'Working with fake or scam suppliers who steal deposits',
-      'Selling saturated products with 70%+ return rates',
-      'Months of frustration with zero mentorship or guidance'
+      'Keep guessing what works and what doesn’t',
+      'Watch others grow while you’re still “figuring it out”',
+      'Waste months testing random tips',
+      'Lose motivation before you see any results'
     ],
-    sami_title: 'Option B: The Ecom With Sami Shortcut',
+    sami_badge: 'OPTION 02',
+    sami_title: 'Join the Ecommestry Program',
+    sami_subtitle: 'The proven, guided shortcut',
     sami_points: [
-      'Proven step-by-step roadmap tested on 9,700+ students',
-      'Direct WhatsApp directory of verified GCC wholesale suppliers',
-      'Copy-paste winning ad scripts and product selection criteria',
-      'Direct WhatsApp access to mentor Sami for fast answers'
+      'Learn what truly drives profitable stores — step by step',
+      'Follow a tested system instead of guesswork',
+      'Get structured guidance that reduces costly mistakes',
+      'Lifetime support to guide you the whole journey'
     ]
   },
   cost_of_waiting: {
-    title: 'The Real Cost of Waiting Another Month',
-    subtitle: 'Every day you delay starting is another day of potential Dirhams and Riyals made by someone else.',
+    badge: '⏳ BEFORE YOU CLOSE THIS PAGE',
+    title: 'What Does Waiting Really Cost You?',
+    subtitle: 'The price isn\'t just the course fee. It\'s everything that stays exactly the same if nothing changes today.',
+    banner_text: '🎯 This isn\'t just a course decision. It\'s a decision about where you\'ll be 6 months from now.',
     cards: [
       {
-        label: 'Delaying 30 Days',
-        title: 'Lost Time & Momentum',
-        desc: 'Watching others post screenshot proofs while you stay stuck in the same position.'
+        label: '3 MONTHS FROM NOW',
+        title: 'Still Stuck at "Someday"',
+        desc: 'You\'re still watching free videos, still saving posts, still telling yourself you\'ll start next month. Same questions, zero progress.'
       },
       {
-        label: 'Price Increase',
-        title: 'Paying Rs 32,500 Full Price Later',
-        desc: 'This special 88% discounted fee (PKR 3,799) is strictly for this limited batch.'
+        label: '1 YEAR FROM NOW',
+        title: 'Watching Others Move Ahead',
+        desc: 'People who started today will already have a live store and real experience. You\'ll be watching their wins thinking "I could have done that too."'
       },
       {
-        label: 'Market Opportunity',
-        title: 'Rising Ad Costs in Q4',
-        desc: 'Taking advantage of early market arbitrage in UAE & Saudi before competition grows.'
+        label: 'EXPENSIVE GUESSING',
+        title: 'Money Lost to Trial & Error',
+        desc: 'Most beginners burn a big chunk of ad budget testing blindly — with little to show for it. A proven system saves you from paying that "tuition".'
+      },
+      {
+        label: 'RISING COMPETITION',
+        title: 'Late Entry = Harder Game',
+        desc: 'E-commerce grows every year. The longer you wait, the more crowded the market gets — and the harder it is to stand out as a beginner.'
+      },
+      {
+        label: 'WASTED MONTHS',
+        title: 'The Slow, Lonely Route',
+        desc: 'Figuring it all out alone can take 6–12 months of confusion. With a clear step-by-step roadmap, you skip the guesswork and move with confidence.'
+      },
+      {
+        label: 'THE REAL MATH',
+        title: 'Course Fee vs. The Cost',
+        desc: 'The course costs less than what most beginners waste on a single failed ad test. The real question isn\'t "can I afford it?" — it\'s "can I afford another year of standing still?"'
       }
     ]
+  },
+  final_cta: {
+    badge: 'JOIN 9,700+ STUDENTS',
+    title: 'Take the First Step Toward a',
+    title_highlight: 'Profitable Dropshipping Business',
+    subtitle: 'Thousands of beginners across UAE & KSA markets have already started. Today it\'s your turn.',
+    cta_text: 'YES! I WANT TO LEARN THIS',
+    guarantee_text: '14-day money-back guarantee • Lifetime access & support'
+  },
+  footer: {
+    disclaimer: 'Results are not guaranteed and will vary based on individual effort, market conditions, and other factors. Every person is different, and your level of success depends on your experience, dedication, and hard work.',
+    copyright: 'Ecom With Sami. All rights reserved.'
   },
   faqs: [
     {

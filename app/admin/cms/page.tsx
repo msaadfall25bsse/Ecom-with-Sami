@@ -55,7 +55,9 @@ import { supabase } from '@/lib/supabase';
 export default function AdminCmsPage() {
   const router = useRouter();
   const [authChecking, setAuthChecking] = useState(true);
-  const [activeTab, setActiveTab] = useState<'lms' | 'hero' | 'mentor' | 'stats' | 'bonuses' | 'reviews' | 'faqs' | 'payments' | 'contact' | 'pixels' | 'themes'>('lms');
+  const [activeTab, setActiveTab] = useState<
+    'marquee' | 'hero' | 'stats' | 'why' | 'what' | 'mentor' | 'video_reviews' | 'who' | 'lms' | 'bonuses' | 'reviews' | 'options' | 'cost' | 'faqs' | 'cta' | 'contact' | 'payments' | 'themes' | 'pixels'
+  >('hero');
   const [cmsData, setCmsData] = useState<CmsContentSchema>(defaultCmsContent);
   const [modules, setModules] = useState<Module[]>(initialModules);
   const [suppliers, setSuppliers] = useState<Supplier[]>(initialSuppliers);
@@ -1249,17 +1251,25 @@ export default function AdminCmsPage() {
       <div className="bg-[#111827] border-b border-white/10 px-3 sm:px-8">
         <div className="max-w-7xl mx-auto flex items-center gap-1.5 sm:gap-2 overflow-x-auto py-2.5 no-scrollbar text-xs font-bold">
           {[
-            { id: 'lms', label: '📚 LMS Modules', icon: BookOpen },
-            { id: 'themes', label: '🎨 Themes', icon: Palette },
-            { id: 'hero', label: '📣 Hero Section', icon: Sparkles },
-            { id: 'mentor', label: '👤 Mentor Profile', icon: Award },
-            { id: 'stats', label: '⏱ Urgency Stats', icon: Clock },
-            { id: 'bonuses', label: '🎁 6 Bonuses', icon: Gift },
-            { id: 'reviews', label: '🏆 Reviews', icon: Award },
-            { id: 'faqs', label: '❓ FAQs', icon: HelpCircle },
-            { id: 'payments', label: '💳 Accounts', icon: CreditCard },
-            { id: 'contact', label: '📱 Contact', icon: Globe2 },
-            { id: 'pixels', label: '🎯 Pixels', icon: Settings }
+            { id: 'marquee', label: '1. 📢 Marquee', icon: Sparkles },
+            { id: 'hero', label: '2. 📣 Hero & Video', icon: Video },
+            { id: 'stats', label: '3. ⏱ Stats Bar', icon: Clock },
+            { id: 'why', label: '4. 💡 Why Dropship', icon: Globe2 },
+            { id: 'what', label: '5. 📦 What You Get', icon: Gift },
+            { id: 'mentor', label: '6. 👤 Mentor Profile', icon: Award },
+            { id: 'video_reviews', label: '7. 🎥 Video Reviews', icon: FileVideo },
+            { id: 'who', label: '8. 🎯 Who Is This For', icon: ShieldCheck },
+            { id: 'lms', label: '9. 📚 Curriculum LMS', icon: BookOpen },
+            { id: 'bonuses', label: '10. 🎁 6 Bonuses', icon: Gift },
+            { id: 'reviews', label: '11. 🏆 Proof Wall', icon: Award },
+            { id: 'options', label: '12. ⚖️ 2 Options Left', icon: SlidersHorizontal },
+            { id: 'cost', label: '13. ⏳ Cost of Waiting', icon: Clock },
+            { id: 'faqs', label: '14. ❓ FAQs', icon: HelpCircle },
+            { id: 'cta', label: '15. 🚀 Final CTA', icon: Sparkles },
+            { id: 'contact', label: '16. 📱 Contact & Footer', icon: Globe2 },
+            { id: 'payments', label: '17. 💳 Bank Accounts', icon: CreditCard },
+            { id: 'themes', label: '18. 🎨 Theme Colors', icon: Palette },
+            { id: 'pixels', label: '19. 🎯 Pixels & Code', icon: Settings }
           ].map((t) => {
             const Icon = t.icon;
             return (
@@ -1936,12 +1946,105 @@ export default function AdminCmsPage() {
         )}
 
         {/* ========================================================================= */}
-        {/* TAB 1: ANNOUNCEMENTS & HERO SECTION */}
+        {/* TAB 1: 1. MARQUEE ANNOUNCEMENT TICKER */}
+        {/* ========================================================================= */}
+        {activeTab === 'marquee' && (
+          <div className="bg-[#111827] border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-8 space-y-6 shadow-xl">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h3 className="text-sm sm:text-lg font-bold text-white flex items-center gap-2">
+                  <Sparkles size={18} className="text-[#00A0DF]" />
+                  <span>Top Announcement Marquee Ticker</span>
+                </h3>
+                <p className="text-xs text-slate-400 mt-1">
+                  Edit the moving ticker items displayed at the very top of the landing page.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  const current = cmsData.marquee?.items || defaultCmsContent.marquee.items;
+                  setCmsData({
+                    ...cmsData,
+                    marquee: {
+                      ...cmsData.marquee,
+                      items: [...current, 'New Announcement Ticker Item']
+                    }
+                  });
+                }}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#00A0DF] hover:bg-[#008ec7] text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-95"
+              >
+                <Plus size={14} />
+                <span>Add Ticker Item</span>
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              {(cmsData.marquee?.items && cmsData.marquee.items.length > 0 ? cmsData.marquee.items : defaultCmsContent.marquee.items).map((item, idx) => (
+                <div key={idx} className="flex items-center gap-2 bg-[#0B0F19] p-2.5 rounded-xl border border-white/5">
+                  <span className="text-xs font-mono text-slate-400 w-6 text-center">{idx + 1}.</span>
+                  <input
+                    type="text"
+                    value={item}
+                    onChange={(e) => {
+                      const current = [...(cmsData.marquee?.items || defaultCmsContent.marquee.items)];
+                      current[idx] = e.target.value;
+                      setCmsData({
+                        ...cmsData,
+                        marquee: { ...cmsData.marquee, items: current }
+                      });
+                    }}
+                    className="flex-1 px-3 py-2 rounded-lg bg-[#111827] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF]"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const current = (cmsData.marquee?.items || defaultCmsContent.marquee.items).filter((_, i) => i !== idx);
+                      setCmsData({
+                        ...cmsData,
+                        marquee: { ...cmsData.marquee, items: current }
+                      });
+                    }}
+                    className="p-2 text-slate-500 hover:text-red-400 transition-colors"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ========================================================================= */}
+        {/* TAB 2: HERO SECTION & VIDEO */}
         {/* ========================================================================= */}
         {activeTab === 'hero' && (
           <div className="space-y-6">
             <div className="bg-[#111827] border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-8 space-y-4 sm:space-y-6">
-              <h3 className="text-sm sm:text-lg font-bold text-white">Hero Headings &amp; Video</h3>
+              <h3 className="text-sm sm:text-lg font-bold text-white">Hero Headings, Badges &amp; Video</h3>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 mb-1">Top Urgent Pill Badge (Very Top)</label>
+                  <input
+                    type="text"
+                    value={cmsData.hero?.top_pill_badge ?? defaultCmsContent.hero.top_pill_badge}
+                    onChange={(e) => setCmsData({ ...cmsData, hero: { ...cmsData.hero, top_pill_badge: e.target.value } })}
+                    placeholder="🔥 2026 LIVE BATCH REGISTRATION CLOSING SOON"
+                    className="w-full px-3 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-amber-400 font-bold focus:outline-none focus:border-[#00A0DF]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 mb-1">Program Badge (Above Headline)</label>
+                  <input
+                    type="text"
+                    value={cmsData.hero?.program_badge ?? defaultCmsContent.hero.program_badge}
+                    onChange={(e) => setCmsData({ ...cmsData, hero: { ...cmsData.hero, program_badge: e.target.value } })}
+                    placeholder="Pakistan's #1 Dropshipping Launchpad"
+                    className="w-full px-3 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF]"
+                  />
+                </div>
+              </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
@@ -1981,6 +2084,17 @@ export default function AdminCmsPage() {
                   value={cmsData.hero?.subtitle ?? ''}
                   onChange={(e) => setCmsData({ ...cmsData, hero: { ...cmsData.hero, subtitle: e.target.value } })}
                   className="w-full px-3 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF] resize-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-400 mb-1">Video Box Header Label</label>
+                <input
+                  type="text"
+                  value={cmsData.hero?.video_header ?? defaultCmsContent.hero.video_header}
+                  onChange={(e) => setCmsData({ ...cmsData, hero: { ...cmsData.hero, video_header: e.target.value } })}
+                  placeholder="Watch Sami explain the entire 2026 dropshipping blueprint"
+                  className="w-full px-3 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF]"
                 />
               </div>
 
@@ -2156,6 +2270,17 @@ export default function AdminCmsPage() {
                     className="w-full px-3 py-2 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF]"
                   />
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-400 mb-1">Trusted By Social Proof Text (Under CTA Button)</label>
+                <input
+                  type="text"
+                  value={cmsData.hero?.trusted_text ?? defaultCmsContent.hero.trusted_text}
+                  onChange={(e) => setCmsData({ ...cmsData, hero: { ...cmsData.hero, trusted_text: e.target.value } })}
+                  placeholder="Join 2,500+ successful Pakistani students earning in PKR & USD"
+                  className="w-full px-3 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF]"
+                />
               </div>
 
             </div>
@@ -2624,6 +2749,587 @@ export default function AdminCmsPage() {
         )}
 
         {/* ========================================================================= */}
+        {/* TAB 4: 4. WHY DROPSHIPPING 2026 */}
+        {/* ========================================================================= */}
+        {activeTab === 'why' && (
+          <div className="bg-[#111827] border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-8 space-y-6 shadow-xl">
+            <div>
+              <h3 className="text-sm sm:text-lg font-bold text-white flex items-center gap-2">
+                <Globe2 size={18} className="text-[#00A0DF]" />
+                <span>Why Dropshipping in 2026 Section</span>
+              </h3>
+              <p className="text-xs text-slate-400 mt-1">Manage header, badge, and the 3 core advantages cards.</p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-400 mb-1">Section Badge</label>
+                <input
+                  type="text"
+                  value={cmsData.why_dropshipping?.badge ?? defaultCmsContent.why_dropshipping.badge}
+                  onChange={(e) => setCmsData({
+                    ...cmsData,
+                    why_dropshipping: { ...(cmsData.why_dropshipping || defaultCmsContent.why_dropshipping), badge: e.target.value }
+                  })}
+                  className="w-full px-3 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF]"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-400 mb-1">Section Title</label>
+                <input
+                  type="text"
+                  value={cmsData.why_dropshipping?.title ?? defaultCmsContent.why_dropshipping.title}
+                  onChange={(e) => setCmsData({
+                    ...cmsData,
+                    why_dropshipping: { ...(cmsData.why_dropshipping || defaultCmsContent.why_dropshipping), title: e.target.value }
+                  })}
+                  className="w-full px-3 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF]"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-400 mb-1">Section Subtitle</label>
+              <textarea
+                rows={2}
+                value={cmsData.why_dropshipping?.subtitle ?? defaultCmsContent.why_dropshipping.subtitle}
+                onChange={(e) => setCmsData({
+                  ...cmsData,
+                  why_dropshipping: { ...(cmsData.why_dropshipping || defaultCmsContent.why_dropshipping), subtitle: e.target.value }
+                })}
+                className="w-full px-3 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF] resize-none"
+              />
+            </div>
+
+            <div className="space-y-4 pt-2">
+              <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider">3 Value Cards</h4>
+              {(cmsData.why_dropshipping?.items || defaultCmsContent.why_dropshipping.items).map((item, idx) => (
+                <div key={idx} className="bg-[#0B0F19] p-4 rounded-xl border border-white/10 space-y-3">
+                  <div className="text-xs font-bold text-[#00A0DF]">Card {idx + 1}</div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-400 mb-1">Card Title</label>
+                    <input
+                      type="text"
+                      value={item.title}
+                      onChange={(e) => {
+                        const current = [...(cmsData.why_dropshipping?.items || defaultCmsContent.why_dropshipping.items)];
+                        current[idx] = { ...current[idx], title: e.target.value };
+                        setCmsData({
+                          ...cmsData,
+                          why_dropshipping: { ...(cmsData.why_dropshipping || defaultCmsContent.why_dropshipping), items: current }
+                        });
+                      }}
+                      className="w-full px-3 py-2 rounded-lg bg-[#111827] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-400 mb-1">Card Description</label>
+                    <textarea
+                      rows={2}
+                      value={item.desc}
+                      onChange={(e) => {
+                        const current = [...(cmsData.why_dropshipping?.items || defaultCmsContent.why_dropshipping.items)];
+                        current[idx] = { ...current[idx], desc: e.target.value };
+                        setCmsData({
+                          ...cmsData,
+                          why_dropshipping: { ...(cmsData.why_dropshipping || defaultCmsContent.why_dropshipping), items: current }
+                        });
+                      }}
+                      className="w-full px-3 py-2 rounded-lg bg-[#111827] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF] resize-none"
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ========================================================================= */}
+        {/* TAB 5: 5. WHAT YOU GET IN THE PROGRAM */}
+        {/* ========================================================================= */}
+        {activeTab === 'what' && (
+          <div className="bg-[#111827] border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-8 space-y-6 shadow-xl">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h3 className="text-sm sm:text-lg font-bold text-white flex items-center gap-2">
+                  <Gift size={18} className="text-[#00A0DF]" />
+                  <span>What You Get in the Program</span>
+                </h3>
+                <p className="text-xs text-slate-400 mt-1">Manage header, badge, and the core benefits/deliverables list.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  const current = cmsData.what_you_get?.items || defaultCmsContent.what_you_get.items;
+                  setCmsData({
+                    ...cmsData,
+                    what_you_get: {
+                      ...(cmsData.what_you_get || defaultCmsContent.what_you_get),
+                      items: [...current, { title: 'New Deliverable Feature', desc: 'Detailed explanation of what the student receives.' }]
+                    }
+                  });
+                }}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#00A0DF] hover:bg-[#008ec7] text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-95"
+              >
+                <Plus size={14} />
+                <span>Add Item</span>
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-400 mb-1">Section Badge</label>
+                <input
+                  type="text"
+                  value={cmsData.what_you_get?.badge ?? defaultCmsContent.what_you_get.badge}
+                  onChange={(e) => setCmsData({
+                    ...cmsData,
+                    what_you_get: { ...(cmsData.what_you_get || defaultCmsContent.what_you_get), badge: e.target.value }
+                  })}
+                  className="w-full px-3 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF]"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-400 mb-1">Section Title</label>
+                <input
+                  type="text"
+                  value={cmsData.what_you_get?.title ?? defaultCmsContent.what_you_get.title}
+                  onChange={(e) => setCmsData({
+                    ...cmsData,
+                    what_you_get: { ...(cmsData.what_you_get || defaultCmsContent.what_you_get), title: e.target.value }
+                  })}
+                  className="w-full px-3 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF]"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-400 mb-1">Section Subtitle</label>
+              <textarea
+                rows={2}
+                value={cmsData.what_you_get?.subtitle ?? defaultCmsContent.what_you_get.subtitle}
+                onChange={(e) => setCmsData({
+                  ...cmsData,
+                  what_you_get: { ...(cmsData.what_you_get || defaultCmsContent.what_you_get), subtitle: e.target.value }
+                })}
+                className="w-full px-3 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF] resize-none"
+              />
+            </div>
+
+            <div className="space-y-4 pt-2">
+              <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider">Program Deliverables</h4>
+              {(cmsData.what_you_get?.items || defaultCmsContent.what_you_get.items).map((item, idx) => (
+                <div key={idx} className="bg-[#0B0F19] p-4 rounded-xl border border-white/10 space-y-3 relative">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-[#00A0DF]">Deliverable #{idx + 1}</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const current = (cmsData.what_you_get?.items || defaultCmsContent.what_you_get.items).filter((_, i) => i !== idx);
+                        setCmsData({
+                          ...cmsData,
+                          what_you_get: { ...(cmsData.what_you_get || defaultCmsContent.what_you_get), items: current }
+                        });
+                      }}
+                      className="text-slate-500 hover:text-red-400 transition-colors p-1"
+                    >
+                      <Trash2 size={15} />
+                    </button>
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-400 mb-1">Title</label>
+                    <input
+                      type="text"
+                      value={item.title}
+                      onChange={(e) => {
+                        const current = [...(cmsData.what_you_get?.items || defaultCmsContent.what_you_get.items)];
+                        current[idx] = { ...current[idx], title: e.target.value };
+                        setCmsData({
+                          ...cmsData,
+                          what_you_get: { ...(cmsData.what_you_get || defaultCmsContent.what_you_get), items: current }
+                        });
+                      }}
+                      className="w-full px-3 py-2 rounded-lg bg-[#111827] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-400 mb-1">Description</label>
+                    <textarea
+                      rows={2}
+                      value={item.desc}
+                      onChange={(e) => {
+                        const current = [...(cmsData.what_you_get?.items || defaultCmsContent.what_you_get.items)];
+                        current[idx] = { ...current[idx], desc: e.target.value };
+                        setCmsData({
+                          ...cmsData,
+                          what_you_get: { ...(cmsData.what_you_get || defaultCmsContent.what_you_get), items: current }
+                        });
+                      }}
+                      className="w-full px-3 py-2 rounded-lg bg-[#111827] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF] resize-none"
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ========================================================================= */}
+        {/* TAB 7: 7. VIDEO REVIEWS (CONTINUOUS STREAM) */}
+        {/* ========================================================================= */}
+        {activeTab === 'video_reviews' && (
+          <div className="bg-[#111827] border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-8 space-y-6 shadow-xl">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h3 className="text-sm sm:text-lg font-bold text-white flex items-center gap-2">
+                  <FileVideo size={18} className="text-[#00A0DF]" />
+                  <span>Student Video Reviews (Continuous Stream)</span>
+                </h3>
+                <p className="text-xs text-slate-400 mt-1">
+                  Manage the moving video review cards displayed on the landing page stream.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  const current = cmsData.video_reviews?.items || defaultCmsContent.video_reviews.items;
+                  setCmsData({
+                    ...cmsData,
+                    video_reviews: {
+                      ...(cmsData.video_reviews || defaultCmsContent.video_reviews),
+                      items: [
+                        ...current,
+                        {
+                          headline: 'New Student Success Story',
+                          author: 'Student Name',
+                          result: 'Rs. 500,000+ Revenue',
+                          market: '🇵🇰 Pakistan Local Dropship',
+                          videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+                          stars: 5
+                        }
+                      ]
+                    }
+                  });
+                }}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#00A0DF] hover:bg-[#008ec7] text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-95"
+              >
+                <Plus size={14} />
+                <span>Add Video Review</span>
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-400 mb-1">Section Badge</label>
+                <input
+                  type="text"
+                  value={cmsData.video_reviews?.badge ?? defaultCmsContent.video_reviews.badge}
+                  onChange={(e) => setCmsData({
+                    ...cmsData,
+                    video_reviews: { ...(cmsData.video_reviews || defaultCmsContent.video_reviews), badge: e.target.value }
+                  })}
+                  className="w-full px-3 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF]"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-400 mb-1">Section Title</label>
+                <input
+                  type="text"
+                  value={cmsData.video_reviews?.title ?? defaultCmsContent.video_reviews.title}
+                  onChange={(e) => setCmsData({
+                    ...cmsData,
+                    video_reviews: { ...(cmsData.video_reviews || defaultCmsContent.video_reviews), title: e.target.value }
+                  })}
+                  className="w-full px-3 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF]"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-400 mb-1">Section Subtitle</label>
+              <textarea
+                rows={2}
+                value={cmsData.video_reviews?.subtitle ?? defaultCmsContent.video_reviews.subtitle}
+                onChange={(e) => setCmsData({
+                  ...cmsData,
+                  video_reviews: { ...(cmsData.video_reviews || defaultCmsContent.video_reviews), subtitle: e.target.value }
+                })}
+                className="w-full px-3 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF] resize-none"
+              />
+            </div>
+
+            <div className="space-y-4 pt-2">
+              <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider">Video Review Cards</h4>
+              {(cmsData.video_reviews?.items || defaultCmsContent.video_reviews.items).map((item, idx) => (
+                <div key={idx} className="bg-[#0B0F19] p-4 rounded-xl border border-white/10 space-y-3 relative">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-[#00A0DF]">Video #{idx + 1} — {item.author}</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const current = (cmsData.video_reviews?.items || defaultCmsContent.video_reviews.items).filter((_, i) => i !== idx);
+                        setCmsData({
+                          ...cmsData,
+                          video_reviews: { ...(cmsData.video_reviews || defaultCmsContent.video_reviews), items: current }
+                        });
+                      }}
+                      className="text-slate-500 hover:text-red-400 transition-colors p-1"
+                    >
+                      <Trash2 size={15} />
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-400 mb-1">Headline Result</label>
+                      <input
+                        type="text"
+                        value={item.headline}
+                        onChange={(e) => {
+                          const current = [...(cmsData.video_reviews?.items || defaultCmsContent.video_reviews.items)];
+                          current[idx] = { ...current[idx], headline: e.target.value };
+                          setCmsData({
+                            ...cmsData,
+                            video_reviews: { ...(cmsData.video_reviews || defaultCmsContent.video_reviews), items: current }
+                          });
+                        }}
+                        className="w-full px-3 py-2 rounded-lg bg-[#111827] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF]"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-400 mb-1">Author Name</label>
+                      <input
+                        type="text"
+                        value={item.author}
+                        onChange={(e) => {
+                          const current = [...(cmsData.video_reviews?.items || defaultCmsContent.video_reviews.items)];
+                          current[idx] = { ...current[idx], author: e.target.value };
+                          setCmsData({
+                            ...cmsData,
+                            video_reviews: { ...(cmsData.video_reviews || defaultCmsContent.video_reviews), items: current }
+                          });
+                        }}
+                        className="w-full px-3 py-2 rounded-lg bg-[#111827] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF]"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-400 mb-1">Sales Stat / Result</label>
+                      <input
+                        type="text"
+                        value={item.result}
+                        onChange={(e) => {
+                          const current = [...(cmsData.video_reviews?.items || defaultCmsContent.video_reviews.items)];
+                          current[idx] = { ...current[idx], result: e.target.value };
+                          setCmsData({
+                            ...cmsData,
+                            video_reviews: { ...(cmsData.video_reviews || defaultCmsContent.video_reviews), items: current }
+                          });
+                        }}
+                        className="w-full px-3 py-2 rounded-lg bg-[#111827] border border-white/10 text-xs text-emerald-400 font-bold focus:outline-none focus:border-[#00A0DF]"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-400 mb-1">Market Tag</label>
+                      <input
+                        type="text"
+                        value={item.market}
+                        onChange={(e) => {
+                          const current = [...(cmsData.video_reviews?.items || defaultCmsContent.video_reviews.items)];
+                          current[idx] = { ...current[idx], market: e.target.value };
+                          setCmsData({
+                            ...cmsData,
+                            video_reviews: { ...(cmsData.video_reviews || defaultCmsContent.video_reviews), items: current }
+                          });
+                        }}
+                        className="w-full px-3 py-2 rounded-lg bg-[#111827] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF]"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-400 mb-1">Embed Video URL</label>
+                      <input
+                        type="text"
+                        value={item.videoUrl}
+                        onChange={(e) => {
+                          const current = [...(cmsData.video_reviews?.items || defaultCmsContent.video_reviews.items)];
+                          current[idx] = { ...current[idx], videoUrl: e.target.value };
+                          setCmsData({
+                            ...cmsData,
+                            video_reviews: { ...(cmsData.video_reviews || defaultCmsContent.video_reviews), items: current }
+                          });
+                        }}
+                        className="w-full px-3 py-2 rounded-lg bg-[#111827] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF] font-mono"
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ========================================================================= */}
+        {/* TAB 8: 8. WHO IS THIS FOR */}
+        {/* ========================================================================= */}
+        {activeTab === 'who' && (
+          <div className="bg-[#111827] border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-8 space-y-6 shadow-xl">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h3 className="text-sm sm:text-lg font-bold text-white flex items-center gap-2">
+                  <ShieldCheck size={18} className="text-[#00A0DF]" />
+                  <span>Who Is This Program For Section</span>
+                </h3>
+                <p className="text-xs text-slate-400 mt-1">
+                  Manage section header, badge, and the target audience qualification cards.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  const current = cmsData.who_is_this_for?.items || defaultCmsContent.who_is_this_for.items;
+                  setCmsData({
+                    ...cmsData,
+                    who_is_this_for: {
+                      ...(cmsData.who_is_this_for || defaultCmsContent.who_is_this_for),
+                      items: [
+                        ...current,
+                        {
+                          title: 'New Audience Category',
+                          highlight: 'Best For Ambition',
+                          desc: 'Description of why this training is ideal for this specific background.'
+                        }
+                      ]
+                    }
+                  });
+                }}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#00A0DF] hover:bg-[#008ec7] text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-95"
+              >
+                <Plus size={14} />
+                <span>Add Category</span>
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-400 mb-1">Section Badge</label>
+                <input
+                  type="text"
+                  value={cmsData.who_is_this_for?.badge ?? defaultCmsContent.who_is_this_for.badge}
+                  onChange={(e) => setCmsData({
+                    ...cmsData,
+                    who_is_this_for: { ...(cmsData.who_is_this_for || defaultCmsContent.who_is_this_for), badge: e.target.value }
+                  })}
+                  className="w-full px-3 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF]"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-400 mb-1">Section Title</label>
+                <input
+                  type="text"
+                  value={cmsData.who_is_this_for?.title ?? defaultCmsContent.who_is_this_for.title}
+                  onChange={(e) => setCmsData({
+                    ...cmsData,
+                    who_is_this_for: { ...(cmsData.who_is_this_for || defaultCmsContent.who_is_this_for), title: e.target.value }
+                  })}
+                  className="w-full px-3 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF]"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-400 mb-1">Section Subtitle</label>
+              <textarea
+                rows={2}
+                value={cmsData.who_is_this_for?.subtitle ?? defaultCmsContent.who_is_this_for.subtitle}
+                onChange={(e) => setCmsData({
+                  ...cmsData,
+                  who_is_this_for: { ...(cmsData.who_is_this_for || defaultCmsContent.who_is_this_for), subtitle: e.target.value }
+                })}
+                className="w-full px-3 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF] resize-none"
+              />
+            </div>
+
+            <div className="space-y-4 pt-2">
+              <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider">Audience Cards</h4>
+              {(cmsData.who_is_this_for?.items || defaultCmsContent.who_is_this_for.items).map((item, idx) => (
+                <div key={idx} className="bg-[#0B0F19] p-4 rounded-xl border border-white/10 space-y-3 relative">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-[#00A0DF]">Card #{idx + 1} — {item.title}</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const current = (cmsData.who_is_this_for?.items || defaultCmsContent.who_is_this_for.items).filter((_, i) => i !== idx);
+                        setCmsData({
+                          ...cmsData,
+                          who_is_this_for: { ...(cmsData.who_is_this_for || defaultCmsContent.who_is_this_for), items: current }
+                        });
+                      }}
+                      className="text-slate-500 hover:text-red-400 transition-colors p-1"
+                    >
+                      <Trash2 size={15} />
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-400 mb-1">Target Title (e.g. Job Holders &amp; 9-to-5)</label>
+                      <input
+                        type="text"
+                        value={item.title}
+                        onChange={(e) => {
+                          const current = [...(cmsData.who_is_this_for?.items || defaultCmsContent.who_is_this_for.items)];
+                          current[idx] = { ...current[idx], title: e.target.value };
+                          setCmsData({
+                            ...cmsData,
+                            who_is_this_for: { ...(cmsData.who_is_this_for || defaultCmsContent.who_is_this_for), items: current }
+                          });
+                        }}
+                        className="w-full px-3 py-2 rounded-lg bg-[#111827] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF]"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-400 mb-1">Highlight Badge (e.g. Low Risk)</label>
+                      <input
+                        type="text"
+                        value={item.highlight}
+                        onChange={(e) => {
+                          const current = [...(cmsData.who_is_this_for?.items || defaultCmsContent.who_is_this_for.items)];
+                          current[idx] = { ...current[idx], highlight: e.target.value };
+                          setCmsData({
+                            ...cmsData,
+                            who_is_this_for: { ...(cmsData.who_is_this_for || defaultCmsContent.who_is_this_for), items: current }
+                          });
+                        }}
+                        className="w-full px-3 py-2 rounded-lg bg-[#111827] border border-white/10 text-xs text-emerald-400 font-bold focus:outline-none focus:border-[#00A0DF]"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-400 mb-1">Description</label>
+                    <textarea
+                      rows={2}
+                      value={item.desc}
+                      onChange={(e) => {
+                        const current = [...(cmsData.who_is_this_for?.items || defaultCmsContent.who_is_this_for.items)];
+                        current[idx] = { ...current[idx], desc: e.target.value };
+                        setCmsData({
+                          ...cmsData,
+                          who_is_this_for: { ...(cmsData.who_is_this_for || defaultCmsContent.who_is_this_for), items: current }
+                        });
+                      }}
+                      className="w-full px-3 py-2 rounded-lg bg-[#111827] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF] resize-none"
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ========================================================================= */}
         {/* TAB 3: BONUSES */}
         {/* ========================================================================= */}
         {activeTab === 'bonuses' && (
@@ -3035,6 +3741,360 @@ export default function AdminCmsPage() {
         )}
 
         {/* ========================================================================= */}
+        {/* TAB 12: 12. 2 OPTIONS LEFT (DIY VS SAMI SHORTCUT) */}
+        {/* ========================================================================= */}
+        {activeTab === 'options' && (
+          <div className="bg-[#111827] border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-8 space-y-6 shadow-xl">
+            <div>
+              <h3 className="text-sm sm:text-lg font-bold text-white flex items-center gap-2">
+                <SlidersHorizontal size={18} className="text-[#00A0DF]" />
+                <span>2 Options Comparison Section</span>
+              </h3>
+              <p className="text-xs text-slate-400 mt-1">
+                Manage the side-by-side comparison between DIY trial &amp; error and Sami's direct mentorship shortcut.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-400 mb-1">Section Badge</label>
+                <input
+                  type="text"
+                  value={cmsData.options_comparison?.badge ?? defaultCmsContent.options_comparison.badge}
+                  onChange={(e) => setCmsData({
+                    ...cmsData,
+                    options_comparison: { ...(cmsData.options_comparison || defaultCmsContent.options_comparison), badge: e.target.value }
+                  })}
+                  className="w-full px-3 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF]"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-400 mb-1">Section Title</label>
+                <input
+                  type="text"
+                  value={cmsData.options_comparison?.title ?? defaultCmsContent.options_comparison.title}
+                  onChange={(e) => setCmsData({
+                    ...cmsData,
+                    options_comparison: { ...(cmsData.options_comparison || defaultCmsContent.options_comparison), title: e.target.value }
+                  })}
+                  className="w-full px-3 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF]"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-400 mb-1">Section Subtitle</label>
+              <textarea
+                rows={2}
+                value={cmsData.options_comparison?.subtitle ?? defaultCmsContent.options_comparison.subtitle}
+                onChange={(e) => setCmsData({
+                  ...cmsData,
+                  options_comparison: { ...(cmsData.options_comparison || defaultCmsContent.options_comparison), subtitle: e.target.value }
+                })}
+                className="w-full px-3 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF] resize-none"
+              />
+            </div>
+
+            {/* Column Headers */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 rounded-xl bg-[#0B0F19] border border-white/5">
+              <div className="space-y-2">
+                <div className="text-xs font-bold text-red-400 flex items-center gap-1.5">
+                  <span>❌ Column 1: DIY / Hard Road</span>
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-400 mb-1">Badge Title</label>
+                  <input
+                    type="text"
+                    value={cmsData.options_comparison?.diy_badge ?? defaultCmsContent.options_comparison.diy_badge}
+                    onChange={(e) => setCmsData({
+                      ...cmsData,
+                      options_comparison: { ...(cmsData.options_comparison || defaultCmsContent.options_comparison), diy_badge: e.target.value }
+                    })}
+                    className="w-full px-3 py-2 rounded-lg bg-[#111827] border border-white/10 text-xs text-white focus:outline-none focus:border-red-400"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-400 mb-1">Subtitle</label>
+                  <input
+                    type="text"
+                    value={cmsData.options_comparison?.diy_subtitle ?? defaultCmsContent.options_comparison.diy_subtitle}
+                    onChange={(e) => setCmsData({
+                      ...cmsData,
+                      options_comparison: { ...(cmsData.options_comparison || defaultCmsContent.options_comparison), diy_subtitle: e.target.value }
+                    })}
+                    className="w-full px-3 py-2 rounded-lg bg-[#111827] border border-white/10 text-xs text-white focus:outline-none focus:border-red-400"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <div className="text-xs font-bold text-[#00A0DF] flex items-center gap-1.5">
+                  <span>✅ Column 2: Fast-Track / With Sami</span>
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-400 mb-1">Badge Title</label>
+                  <input
+                    type="text"
+                    value={cmsData.options_comparison?.sami_badge ?? defaultCmsContent.options_comparison.sami_badge}
+                    onChange={(e) => setCmsData({
+                      ...cmsData,
+                      options_comparison: { ...(cmsData.options_comparison || defaultCmsContent.options_comparison), sami_badge: e.target.value }
+                    })}
+                    className="w-full px-3 py-2 rounded-lg bg-[#111827] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-400 mb-1">Subtitle</label>
+                  <input
+                    type="text"
+                    value={cmsData.options_comparison?.sami_subtitle ?? defaultCmsContent.options_comparison.sami_subtitle}
+                    onChange={(e) => setCmsData({
+                      ...cmsData,
+                      options_comparison: { ...(cmsData.options_comparison || defaultCmsContent.options_comparison), sami_subtitle: e.target.value }
+                    })}
+                    className="w-full px-3 py-2 rounded-lg bg-[#111827] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF]"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Points Editors */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+              {/* DIY Points */}
+              <div className="space-y-3 bg-[#0B0F19] p-4 rounded-xl border border-red-500/20">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-bold text-red-400">❌ DIY Road Bullet Points</h4>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const current = cmsData.options_comparison?.diy_points || defaultCmsContent.options_comparison.diy_points;
+                      setCmsData({
+                        ...cmsData,
+                        options_comparison: {
+                          ...(cmsData.options_comparison || defaultCmsContent.options_comparison),
+                          diy_points: [...current, 'New DIY struggle point']
+                        }
+                      });
+                    }}
+                    className="px-2.5 py-1 bg-red-500/20 hover:bg-red-500/30 text-red-300 rounded-lg text-xs font-bold"
+                  >
+                    + Add Point
+                  </button>
+                </div>
+                {(cmsData.options_comparison?.diy_points || defaultCmsContent.options_comparison.diy_points).map((pt: string, idx: number) => (
+                  <div key={idx} className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={pt}
+                      onChange={(e) => {
+                        const current = [...(cmsData.options_comparison?.diy_points || defaultCmsContent.options_comparison.diy_points)];
+                        current[idx] = e.target.value;
+                        setCmsData({
+                          ...cmsData,
+                          options_comparison: {
+                            ...(cmsData.options_comparison || defaultCmsContent.options_comparison),
+                            diy_points: current
+                          }
+                        });
+                      }}
+                      className="flex-1 px-3 py-2 rounded-lg bg-[#111827] border border-white/10 text-xs text-white focus:outline-none focus:border-red-400"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const current = (cmsData.options_comparison?.diy_points || defaultCmsContent.options_comparison.diy_points).filter((_: string, i: number) => i !== idx);
+                        setCmsData({
+                          ...cmsData,
+                          options_comparison: {
+                            ...(cmsData.options_comparison || defaultCmsContent.options_comparison),
+                            diy_points: current
+                          }
+                        });
+                      }}
+                      className="text-slate-500 hover:text-red-400 p-1"
+                    >
+                      <Trash2 size={15} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              {/* Sami Shortcut Points */}
+              <div className="space-y-3 bg-[#0B0F19] p-4 rounded-xl border border-[#00A0DF]/30">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-bold text-[#00A0DF]">✅ Sami Program Shortcut Bullet Points</h4>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const current = cmsData.options_comparison?.sami_points || defaultCmsContent.options_comparison.sami_points;
+                      setCmsData({
+                        ...cmsData,
+                        options_comparison: {
+                          ...(cmsData.options_comparison || defaultCmsContent.options_comparison),
+                          sami_points: [...current, 'New Sami shortcut benefit']
+                        }
+                      });
+                    }}
+                    className="px-2.5 py-1 bg-[#00A0DF]/20 hover:bg-[#008ec7] text-white rounded-lg text-xs font-bold"
+                  >
+                    + Add Point
+                  </button>
+                </div>
+                {(cmsData.options_comparison?.sami_points || defaultCmsContent.options_comparison.sami_points).map((pt: string, idx: number) => (
+                  <div key={idx} className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={pt}
+                      onChange={(e) => {
+                        const current = [...(cmsData.options_comparison?.sami_points || defaultCmsContent.options_comparison.sami_points)];
+                        current[idx] = e.target.value;
+                        setCmsData({
+                          ...cmsData,
+                          options_comparison: {
+                            ...(cmsData.options_comparison || defaultCmsContent.options_comparison),
+                            sami_points: current
+                          }
+                        });
+                      }}
+                      className="flex-1 px-3 py-2 rounded-lg bg-[#111827] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF]"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const current = (cmsData.options_comparison?.sami_points || defaultCmsContent.options_comparison.sami_points).filter((_: string, i: number) => i !== idx);
+                        setCmsData({
+                          ...cmsData,
+                          options_comparison: {
+                            ...(cmsData.options_comparison || defaultCmsContent.options_comparison),
+                            sami_points: current
+                          }
+                        });
+                      }}
+                      className="text-slate-500 hover:text-red-400 p-1"
+                    >
+                      <Trash2 size={15} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ========================================================================= */}
+        {/* TAB 13: 13. COST OF WAITING */}
+        {/* ========================================================================= */}
+        {activeTab === 'cost' && (
+          <div className="bg-[#111827] border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-8 space-y-6 shadow-xl">
+            <div>
+              <h3 className="text-sm sm:text-lg font-bold text-white flex items-center gap-2">
+                <Clock size={18} className="text-[#00A0DF]" />
+                <span>The Real Cost of Waiting Section</span>
+              </h3>
+              <p className="text-xs text-slate-400 mt-1">
+                Manage urgency headline, badge, bottom urgency banner, and 6 reason cards.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-400 mb-1">Section Badge</label>
+                <input
+                  type="text"
+                  value={cmsData.cost_of_waiting?.badge ?? defaultCmsContent.cost_of_waiting.badge}
+                  onChange={(e) => setCmsData({
+                    ...cmsData,
+                    cost_of_waiting: { ...(cmsData.cost_of_waiting || defaultCmsContent.cost_of_waiting), badge: e.target.value }
+                  })}
+                  className="w-full px-3 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF]"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-400 mb-1">Section Title</label>
+                <input
+                  type="text"
+                  value={cmsData.cost_of_waiting?.title ?? defaultCmsContent.cost_of_waiting.title}
+                  onChange={(e) => setCmsData({
+                    ...cmsData,
+                    cost_of_waiting: { ...(cmsData.cost_of_waiting || defaultCmsContent.cost_of_waiting), title: e.target.value }
+                  })}
+                  className="w-full px-3 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF]"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-400 mb-1">Section Subtitle</label>
+              <textarea
+                rows={2}
+                value={cmsData.cost_of_waiting?.subtitle ?? defaultCmsContent.cost_of_waiting.subtitle}
+                onChange={(e) => setCmsData({
+                  ...cmsData,
+                  cost_of_waiting: { ...(cmsData.cost_of_waiting || defaultCmsContent.cost_of_waiting), subtitle: e.target.value }
+                })}
+                className="w-full px-3 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF] resize-none"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-amber-400 mb-1">Bottom Urgent Banner Bar Text</label>
+              <input
+                type="text"
+                value={cmsData.cost_of_waiting?.banner_text ?? defaultCmsContent.cost_of_waiting.banner_text}
+                onChange={(e) => setCmsData({
+                  ...cmsData,
+                  cost_of_waiting: { ...(cmsData.cost_of_waiting || defaultCmsContent.cost_of_waiting), banner_text: e.target.value }
+                })}
+                className="w-full px-3 py-2.5 rounded-xl bg-[#0B0F19] border border-amber-500/30 text-xs sm:text-sm text-amber-300 font-bold focus:outline-none focus:border-amber-400"
+              />
+            </div>
+
+            <div className="space-y-4 pt-2">
+              <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider">6 Waiting Cost Cards</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+                {(cmsData.cost_of_waiting?.cards || defaultCmsContent.cost_of_waiting.cards).map((item, idx) => (
+                  <div key={idx} className="bg-[#0B0F19] p-4 rounded-xl border border-white/10 space-y-2">
+                    <span className="text-xs font-bold text-red-400">Warning #{idx + 1}</span>
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-400 mb-1">Title</label>
+                      <input
+                        type="text"
+                        value={item.title}
+                        onChange={(e) => {
+                          const current = [...(cmsData.cost_of_waiting?.cards || defaultCmsContent.cost_of_waiting.cards)];
+                          current[idx] = { ...current[idx], title: e.target.value };
+                          setCmsData({
+                            ...cmsData,
+                            cost_of_waiting: { ...(cmsData.cost_of_waiting || defaultCmsContent.cost_of_waiting), cards: current }
+                          });
+                        }}
+                        className="w-full px-3 py-2 rounded-lg bg-[#111827] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF]"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-400 mb-1">Description</label>
+                      <textarea
+                        rows={2}
+                        value={item.desc}
+                        onChange={(e) => {
+                          const current = [...(cmsData.cost_of_waiting?.cards || defaultCmsContent.cost_of_waiting.cards)];
+                          current[idx] = { ...current[idx], desc: e.target.value };
+                          setCmsData({
+                            ...cmsData,
+                            cost_of_waiting: { ...(cmsData.cost_of_waiting || defaultCmsContent.cost_of_waiting), cards: current }
+                          });
+                        }}
+                        className="w-full px-3 py-2 rounded-lg bg-[#111827] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF] resize-none"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ========================================================================= */}
         {/* TAB 5: FAQS */}
         {/* ========================================================================= */}
         {activeTab === 'faqs' && (
@@ -3075,6 +4135,103 @@ export default function AdminCmsPage() {
                   </button>
                 </div>
               ))}
+            </div>
+          </div>
+        )}
+
+        {/* ========================================================================= */}
+        {/* TAB 15: 15. FINAL CALL TO ACTION (CTA) */}
+        {/* ========================================================================= */}
+        {activeTab === 'cta' && (
+          <div className="bg-[#111827] border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-8 space-y-6 shadow-xl">
+            <div>
+              <h3 className="text-sm sm:text-lg font-bold text-white flex items-center gap-2">
+                <Sparkles size={18} className="text-[#00A0DF]" />
+                <span>Final Call To Action (Bottom CTA)</span>
+              </h3>
+              <p className="text-xs text-slate-400 mt-1">
+                Customize the high-converting final bottom banner shown right before the footer.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-400 mb-1">Badge Text</label>
+                <input
+                  type="text"
+                  value={cmsData.final_cta?.badge ?? defaultCmsContent.final_cta.badge}
+                  onChange={(e) => setCmsData({
+                    ...cmsData,
+                    final_cta: { ...(cmsData.final_cta || defaultCmsContent.final_cta), badge: e.target.value }
+                  })}
+                  className="w-full px-3 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF]"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-400 mb-1">Title Highlight (Blue Text)</label>
+                <input
+                  type="text"
+                  value={cmsData.final_cta?.title_highlight ?? defaultCmsContent.final_cta.title_highlight}
+                  onChange={(e) => setCmsData({
+                    ...cmsData,
+                    final_cta: { ...(cmsData.final_cta || defaultCmsContent.final_cta), title_highlight: e.target.value }
+                  })}
+                  className="w-full px-3 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF]"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-400 mb-1">Main Headline</label>
+              <input
+                type="text"
+                value={cmsData.final_cta?.title ?? defaultCmsContent.final_cta.title}
+                onChange={(e) => setCmsData({
+                  ...cmsData,
+                  final_cta: { ...(cmsData.final_cta || defaultCmsContent.final_cta), title: e.target.value }
+                })}
+                className="w-full px-3 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF]"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-400 mb-1">Subtitle / Urgency Text</label>
+              <textarea
+                rows={2}
+                value={cmsData.final_cta?.subtitle ?? defaultCmsContent.final_cta.subtitle}
+                onChange={(e) => setCmsData({
+                  ...cmsData,
+                  final_cta: { ...(cmsData.final_cta || defaultCmsContent.final_cta), subtitle: e.target.value }
+                })}
+                className="w-full px-3 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF] resize-none"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-400 mb-1">Button CTA Text</label>
+                <input
+                  type="text"
+                  value={cmsData.final_cta?.cta_text ?? defaultCmsContent.final_cta.cta_text}
+                  onChange={(e) => setCmsData({
+                    ...cmsData,
+                    final_cta: { ...(cmsData.final_cta || defaultCmsContent.final_cta), cta_text: e.target.value }
+                  })}
+                  className="w-full px-3 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-emerald-400 font-bold focus:outline-none focus:border-[#00A0DF]"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-400 mb-1">Guarantee Badge Text</label>
+                <input
+                  type="text"
+                  value={cmsData.final_cta?.guarantee_text ?? defaultCmsContent.final_cta.guarantee_text}
+                  onChange={(e) => setCmsData({
+                    ...cmsData,
+                    final_cta: { ...(cmsData.final_cta || defaultCmsContent.final_cta), guarantee_text: e.target.value }
+                  })}
+                  className="w-full px-3 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-slate-300 focus:outline-none focus:border-[#00A0DF]"
+                />
+              </div>
             </div>
           </div>
         )}
@@ -3169,27 +4326,102 @@ export default function AdminCmsPage() {
         )}
 
         {/* ========================================================================= */}
-        {/* TAB 7: CONTACT */}
+        {/* TAB 16: CONTACT & FOOTER */}
         {/* ========================================================================= */}
         {activeTab === 'contact' && (
-          <div className="bg-[#111827] border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-8 space-y-4">
-            <h3 className="text-sm sm:text-lg font-bold text-white">Contact &amp; WhatsApp</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="bg-[#111827] border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-8 space-y-6 shadow-xl">
+            <div>
+              <h3 className="text-sm sm:text-lg font-bold text-white flex items-center gap-2">
+                <Globe2 size={18} className="text-[#00A0DF]" />
+                <span>Contact Details, Offices &amp; Footer Disclaimer</span>
+              </h3>
+              <p className="text-xs text-slate-400 mt-1">
+                Manage contact WhatsApp numbers, offices, WhatsApp greeting, and bottom footer legal disclaimers.
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider">Contact &amp; WhatsApp Support</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 mb-1">WhatsApp Phone (International Format)</label>
+                  <input
+                    type="text"
+                    value={cmsData.contact?.phone ?? ''}
+                    onChange={(e) => setCmsData({ ...cmsData, contact: { ...cmsData.contact, phone: e.target.value } })}
+                    placeholder="+92 300 1234567"
+                    className="w-full px-3 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-emerald-400 font-bold focus:outline-none focus:border-[#00A0DF]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 mb-1">Official Support Email</label>
+                  <input
+                    type="email"
+                    value={cmsData.contact?.email ?? ''}
+                    onChange={(e) => setCmsData({ ...cmsData, contact: { ...cmsData.contact, email: e.target.value } })}
+                    placeholder="support@ecomwithsami.com"
+                    className="w-full px-3 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF]"
+                  />
+                </div>
+              </div>
+
               <div>
-                <label className="block text-xs font-bold text-slate-400 mb-1">WhatsApp Phone</label>
+                <label className="block text-xs font-bold text-slate-400 mb-1">WhatsApp Pre-filled Greeting Message</label>
                 <input
                   type="text"
-                  value={cmsData.contact?.phone ?? ''}
-                  onChange={(e) => setCmsData({ ...cmsData, contact: { ...cmsData.contact, phone: e.target.value } })}
-                  className="w-full px-3 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-emerald-400 font-bold focus:outline-none focus:border-[#00A0DF]"
+                  value={cmsData.contact?.whatsappGreeting ?? 'Salam Sami! I am interested in joining the 2026 Dropshipping Masterclass. Please share details.'}
+                  onChange={(e) => setCmsData({ ...cmsData, contact: { ...cmsData.contact, whatsappGreeting: e.target.value } })}
+                  placeholder="Salam Sami! I am interested in joining the 2026 Dropshipping Masterclass..."
+                  className="w-full px-3 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF]"
                 />
               </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 mb-1">Head Office Location</label>
+                  <input
+                    type="text"
+                    value={cmsData.contact?.headOffice ?? 'Office #402, 4th Floor, Executive Heights, Gulberg III, Lahore, Pakistan'}
+                    onChange={(e) => setCmsData({ ...cmsData, contact: { ...cmsData.contact, headOffice: e.target.value } })}
+                    className="w-full px-3 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 mb-1">Regional Office Location</label>
+                  <input
+                    type="text"
+                    value={cmsData.contact?.regionalOffice ?? 'DHA Phase 6, Karachi, Pakistan'}
+                    onChange={(e) => setCmsData({ ...cmsData, contact: { ...cmsData.contact, regionalOffice: e.target.value } })}
+                    className="w-full px-3 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF]"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-4 pt-4 border-t border-white/10">
+              <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider">Footer Disclaimer &amp; Copyright</h4>
               <div>
-                <label className="block text-xs font-bold text-slate-400 mb-1">Support Email</label>
+                <label className="block text-xs font-bold text-slate-400 mb-1">Legal Earnings Disclaimer</label>
+                <textarea
+                  rows={3}
+                  value={cmsData.footer?.disclaimer ?? defaultCmsContent.footer.disclaimer}
+                  onChange={(e) => setCmsData({
+                    ...cmsData,
+                    footer: { ...(cmsData.footer || defaultCmsContent.footer), disclaimer: e.target.value }
+                  })}
+                  className="w-full px-3 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF] resize-none leading-relaxed"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-400 mb-1">Copyright Notice Text</label>
                 <input
-                  type="email"
-                  value={cmsData.contact?.email ?? ''}
-                  onChange={(e) => setCmsData({ ...cmsData, contact: { ...cmsData.contact, email: e.target.value } })}
+                  type="text"
+                  value={cmsData.footer?.copyright ?? defaultCmsContent.footer.copyright}
+                  onChange={(e) => setCmsData({
+                    ...cmsData,
+                    footer: { ...(cmsData.footer || defaultCmsContent.footer), copyright: e.target.value }
+                  })}
                   className="w-full px-3 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF]"
                 />
               </div>

@@ -59,7 +59,6 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
   const [activeVideoUrl, setActiveVideoUrl] = useState('');
   const [activeVideoTitle, setActiveVideoTitle] = useState('');
   const [content, setContent] = useState<CmsContentSchema>(initialContent || defaultCmsContent);
-  const [videoReviewMode, setVideoReviewMode] = useState<'moving' | 'grid'>('moving');
   const [isReviewTouchPaused, setIsReviewTouchPaused] = useState(false);
 
   // Hero Autoplay Video & Sound States (LearnWithAfaq Style)
@@ -396,9 +395,17 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
               {/* Top Pill Badge */}
               <div className="dropshipping-badge mb-3.5 sm:mb-4 cursor-pointer">
                 <span className="badge-dot" />
-                <span className="badge-blue">PAKISTAN’S #1</span>
+                <span className="badge-blue">
+                  {hero.top_pill_badge 
+                    ? (hero.top_pill_badge.includes('•') ? hero.top_pill_badge.split('•')[0].trim() : hero.top_pill_badge)
+                    : 'PAKISTAN’S #1'}
+                </span>
                 <span className="text-slate-400 font-bold">•</span>
-                <span className="badge-dark">{hero.badge || "UAE/KSA DROPSHIPPING TRAINING"}</span>
+                <span className="badge-dark">
+                  {hero.top_pill_badge && hero.top_pill_badge.includes('•')
+                    ? hero.top_pill_badge.split('•').slice(1).join('•').trim()
+                    : (hero.badge || "UAE/KSA DROPSHIPPING TRAINING")}
+                </span>
               </div>
 
               {/* Main Headline (All Bold Uppercase with Italic Cyan Highlight) */}
@@ -431,7 +438,7 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
                     <img className="w-7 h-7 rounded-full border-2 border-white object-cover shadow-xs" src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop" alt="Student" />
                     <img className="w-7 h-7 rounded-full border-2 border-white object-cover shadow-xs" src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=80&h=80&fit=crop" alt="Student" />
                   </div>
-                  <span>Trusted by {mentor.students_count || '9,700+'} Students</span>
+                  <span>{hero.trusted_text || `Trusted by ${mentor.students_count || '9,700+'} Students`}</span>
                 </div>
               </div>
 
@@ -460,7 +467,7 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
                     />
                   </svg>
                   <div className="inline-flex items-center gap-1.5 px-3.5 sm:px-4 py-1 sm:py-1.5 rounded-full bg-[#E0F2FE] border border-[#00A0DF]/40 text-[#00A0DF] text-[11px] sm:text-xs font-black uppercase tracking-wider shadow-sm">
-                    <span>Ecommstory Program</span>
+                    <span>{hero.program_badge || 'Ecommstory Program'}</span>
                   </div>
                 </div>
               </div>
@@ -470,7 +477,7 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
                 
                 {/* Header text inside video box */}
                 <h2 className="text-[11px] sm:text-xs font-black text-slate-700 uppercase tracking-wider text-center mb-2 sm:mb-2.5 px-1">
-                  Watch this 128 seconds of video to learn how easy it is
+                  {hero.video_header || 'Watch this 128 seconds of video to learn how easy it is'}
                 </h2>
 
                 {/* 16:9 Video Canvas Frame */}
@@ -646,7 +653,7 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
                       <Star key={i} size={12} className="fill-amber-400 text-amber-400" />
                     ))}
                   </div>
-                  <span>Trusted by {mentor.students_count || '9,700+'} Students</span>
+                  <span>{hero.trusted_text || `Trusted by ${mentor.students_count || '9,700+'} Students`}</span>
                 </div>
               </div>
 
@@ -698,81 +705,56 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           
           <div className="text-center max-w-3xl mx-auto mb-12 sm:mb-16">
-            <span className="section-tag-pill">THE BEST OPPORTUNITY IN 2026</span>
+            <span className="section-tag-pill">{content.why_dropshipping?.badge || 'THE BEST OPPORTUNITY IN 2026'}</span>
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 tracking-tight mb-3">
-              Why Dropshipping Is the <span className="text-[#00A0DF]">Smartest</span> Online Business Right Now
+              {content.why_dropshipping?.title || (
+                <>Why Dropshipping Is the <span className="text-[#00A0DF]">Smartest</span> Online Business Right Now</>
+              )}
             </h2>
             <p className="text-xs sm:text-sm md:text-base text-slate-600 font-medium">
-              No big investment, no office, no risk. Start with just <strong>PKR 15,000</strong> — from home, right on your phone.
+              {content.why_dropshipping?.subtitle || 'No big investment, no office, no risk. Start with just PKR 15,000 — from home, right on your phone.'}
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-10">
-            
-            <div className="bg-white border border-gray-200 rounded-2xl p-6 sm:p-7 card-hover-lift">
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-xl bg-[#00A0DF] text-white flex items-center justify-center flex-shrink-0 shadow-md">
-                  <Globe2 size={22} />
+            {(content.why_dropshipping?.items && content.why_dropshipping.items.length > 0 ? content.why_dropshipping.items : [
+              {
+                title: 'Work From Anywhere',
+                desc: 'Run your store from your bedroom, a cafe, or even another country with just internet and mobile.'
+              },
+              {
+                title: 'No Company or Registration',
+                desc: 'No paperwork, trade licenses, or legal setup needed — just a laptop and internet to start selling.'
+              },
+              {
+                title: 'Zero Inventory, Zero Risk',
+                desc: 'You never buy stock upfront. Your supplier ships only after a customer places an order on your store.'
+              },
+              {
+                title: 'Get Paid in Your Local Bank',
+                desc: 'Withdraw your Dirhams and Riyals earnings straight to your Pakistani bank account — simple and direct.'
+              }
+            ]).map((item, idx) => {
+              const icons = [Globe2, Building2, TrendingUp, WalletCards];
+              const IconComp = icons[idx % icons.length];
+              return (
+                <div key={idx} className="bg-white border border-gray-200 rounded-2xl p-6 sm:p-7 card-hover-lift">
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-[#00A0DF] text-white flex items-center justify-center flex-shrink-0 shadow-md">
+                      <IconComp size={22} />
+                    </div>
+                    <div>
+                      <h3 className="text-base sm:text-lg font-black text-slate-900 mb-1.5">
+                        {item.title}
+                      </h3>
+                      <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-medium">
+                        {item.desc}
+                      </p>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="text-base sm:text-lg font-black text-slate-900 mb-1.5">
-                    Work From Anywhere
-                  </h3>
-                  <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-medium">
-                    Run your store from your bedroom, a cafe, or even another country with just internet and mobile.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white border border-gray-200 rounded-2xl p-6 sm:p-7 card-hover-lift">
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-xl bg-[#00A0DF] text-white flex items-center justify-center flex-shrink-0 shadow-md">
-                  <Building2 size={22} />
-                </div>
-                <div>
-                  <h3 className="text-base sm:text-lg font-black text-slate-900 mb-1.5">
-                    No Company or Registration
-                  </h3>
-                  <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-medium">
-                    No paperwork, trade licenses, or legal setup needed — just a laptop and internet to start selling.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white border border-gray-200 rounded-2xl p-6 sm:p-7 card-hover-lift">
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-xl bg-[#00A0DF] text-white flex items-center justify-center flex-shrink-0 shadow-md">
-                  <TrendingUp size={22} />
-                </div>
-                <div>
-                  <h3 className="text-base sm:text-lg font-black text-slate-900 mb-1.5">
-                    Zero Inventory, Zero Risk
-                  </h3>
-                  <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-medium">
-                    You never buy stock upfront. Your supplier ships only after a customer places an order on your store.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white border border-gray-200 rounded-2xl p-6 sm:p-7 card-hover-lift">
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-xl bg-[#00A0DF] text-white flex items-center justify-center flex-shrink-0 shadow-md">
-                  <WalletCards size={22} />
-                </div>
-                <div>
-                  <h3 className="text-base sm:text-lg font-black text-slate-900 mb-1.5">
-                    Get Paid in Your Local Bank
-                  </h3>
-                  <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-medium">
-                    Withdraw your Dirhams and Riyals earnings straight to your Pakistani bank account — simple and direct.
-                  </p>
-                </div>
-              </div>
-            </div>
-
+              );
+            })}
           </div>
 
           <div className="text-center">
@@ -797,65 +779,39 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           
           <div className="text-center max-w-3xl mx-auto mb-12 sm:mb-16">
-            <span className="section-tag-pill">WHAT YOU GET</span>
+            <span className="section-tag-pill">{content.what_you_get?.badge || 'WHAT YOU GET'}</span>
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 tracking-tight mb-3">
-              Here’s What You’ll Get Access To
+              {content.what_you_get?.title || 'Here’s What You’ll Get Access To'}
             </h2>
             <p className="text-xs sm:text-sm md:text-base text-slate-600 font-medium">
-              No prior experience required — learn step by step how to build and manage your own online store.
+              {content.what_you_get?.subtitle || 'No prior experience required — learn step by step how to build and manage your own online store.'}
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-10">
-            
-            <div className="bg-white border border-gray-200 rounded-2xl p-6 sm:p-7 shadow-sm card-hover-lift">
-              <div className="w-10 h-10 rounded-xl bg-[#00A0DF]/10 text-[#00A0DF] flex items-center justify-center mb-4">
-                <Globe2 size={20} />
-              </div>
-              <h3 className="text-base sm:text-lg font-black text-slate-900 mb-2">
-                Start &amp; Manage Your Own Store
-              </h3>
-              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-medium">
-                Using the Ecommestry Program framework, build and grow your own dropshipping business. Student, job holder, or beginner — all you need is a mobile or laptop.
-              </p>
-            </div>
-
-            <div className="bg-white border border-gray-200 rounded-2xl p-6 sm:p-7 shadow-sm card-hover-lift">
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center mb-4">
-                <Sparkles size={20} />
-              </div>
-              <h3 className="text-base sm:text-lg font-black text-slate-900 mb-2">
-                Develop 8 Practical Skills
-              </h3>
-              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-medium">
-                Design stunning Shopify stores, find winning products, and source top UAE &amp; KSA suppliers. Master Facebook and TikTok ads — from pixel to scaling.
-              </p>
-            </div>
-
-            <div className="bg-white border border-gray-200 rounded-2xl p-6 sm:p-7 shadow-sm card-hover-lift">
-              <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center mb-4">
-                <Zap size={20} />
-              </div>
-              <h3 className="text-base sm:text-lg font-black text-slate-900 mb-2">
-                Lifetime WhatsApp Support
-              </h3>
-              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-medium">
-                Stuck during the course? Ask your questions directly on WhatsApp from 9AM to 5PM. We make sure your learning journey stays smooth with lifetime support.
-              </p>
-            </div>
-
-            <div className="bg-white border border-gray-200 rounded-2xl p-6 sm:p-7 shadow-sm card-hover-lift">
-              <div className="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-600 flex items-center justify-center mb-4">
-                <Users size={20} />
-              </div>
-              <h3 className="text-base sm:text-lg font-black text-slate-900 mb-2">
-                Private Community Access
-              </h3>
-              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-medium">
-                Get into private Facebook and WhatsApp communities. Network with like-minded people, share wins, and solve problems by learning from active dropshippers.
-              </p>
-            </div>
-
+            {(content.what_you_get?.items || defaultCmsContent.what_you_get!.items).map((card, idx) => {
+              const styles = [
+                { icon: Globe2, bg: 'bg-[#00A0DF]/10 text-[#00A0DF]' },
+                { icon: Sparkles, bg: 'bg-emerald-500/10 text-emerald-600' },
+                { icon: Zap, bg: 'bg-amber-500/10 text-amber-600' },
+                { icon: Users, bg: 'bg-purple-500/10 text-purple-600' }
+              ];
+              const s = styles[idx % styles.length];
+              const IconComp = s.icon;
+              return (
+                <div key={idx} className="bg-white border border-gray-200 rounded-2xl p-6 sm:p-7 shadow-sm card-hover-lift">
+                  <div className={`w-10 h-10 rounded-xl ${s.bg} flex items-center justify-center mb-4`}>
+                    <IconComp size={20} />
+                  </div>
+                  <h3 className="text-base sm:text-lg font-black text-slate-900 mb-2">
+                    {card.title}
+                  </h3>
+                  <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-medium">
+                    {card.desc}
+                  </p>
+                </div>
+              );
+            })}
           </div>
 
           <div className="text-center">
@@ -863,7 +819,7 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
               href="/enrollment"
               className="lwa-btn px-10 py-4 text-sm sm:text-base font-black rounded-xl"
             >
-              YES! I WANT TO LEARN THIS
+              {hero.cta_text || 'YES! I WANT TO LEARN THIS'}
             </Link>
           </div>
 
@@ -963,124 +919,55 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
         <div className="max-w-6xl mx-auto px-3 sm:px-6 lg:px-8">
           
           <div className="text-center max-w-3xl mx-auto mb-6 sm:mb-10">
-            <span className="section-tag-pill">REAL STUDENT RESULTS</span>
+            <span className="section-tag-pill">{content.video_reviews?.badge || 'REAL STUDENT RESULTS'}</span>
             <h2 className="text-2xl xs:text-3xl sm:text-4xl font-black text-slate-900 tracking-tight mb-2 sm:mb-3">
-              Hear What Our Students Are Saying
+              {content.video_reviews?.title || 'Hear What Our Students Are Saying'}
             </h2>
             <p className="text-xs sm:text-sm md:text-base text-slate-600 font-medium px-2">
-              Real student video reviews sharing their experience, support, and results after joining Ecom With Sami.
+              {content.video_reviews?.subtitle || 'Real student video reviews sharing their experience, support, and results after joining Ecom With Sami.'}
             </p>
           </div>
 
-          {/* Interactive Mode Switcher & Status Indicator */}
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 max-w-5xl mx-auto mb-5 px-2">
-            <div className="flex items-center gap-2 text-[11px] sm:text-xs font-bold text-slate-500">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#00A0DF] animate-ping flex-shrink-0" />
-              <span>Auto-moving video reviews &bull; Hover or tap to pause &amp; watch</span>
-            </div>
-
-            <div className="flex items-center bg-gray-100 p-1 rounded-xl border border-gray-200 text-xs font-bold shadow-inner">
-              <button
-                onClick={() => setVideoReviewMode('moving')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all text-xs ${
-                  videoReviewMode === 'moving'
-                    ? 'bg-white text-[#00A0DF] shadow-sm font-black'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                <MoveHorizontal size={14} />
-                <span>Moving Stream</span>
-              </button>
-              <button
-                onClick={() => setVideoReviewMode('grid')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all text-xs ${
-                  videoReviewMode === 'grid'
-                    ? 'bg-white text-[#00A0DF] shadow-sm font-black'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                <LayoutGrid size={14} />
-                <span>Grid View</span>
-              </button>
-            </div>
+          {/* Status Indicator */}
+          <div className="flex items-center justify-center gap-2 max-w-5xl mx-auto mb-5 px-2 text-[11px] sm:text-xs font-bold text-slate-500">
+            <span className="w-2.5 h-2.5 rounded-full bg-[#00A0DF] animate-ping flex-shrink-0" />
+            <span>Continuous student review stream &bull; Hover or tap to pause &amp; watch</span>
           </div>
 
-          {/* 1. CONTINUOUS MOVING STREAM (HARDWARE ACCELERATED MARQUEE WITH ZERO-DELAY TOUCH) */}
-          {videoReviewMode === 'moving' ? (
+          {/* CONTINUOUS MOVING STREAM */}
+          <div 
+            className="space-y-4 overflow-hidden py-2 marquee-fade-mask relative touch-pan-x"
+            onTouchStart={() => setIsReviewTouchPaused(true)}
+            onTouchEnd={() => {
+              setTimeout(() => setIsReviewTouchPaused(false), 1200);
+            }}
+          >
             <div 
-              className="space-y-4 overflow-hidden py-2 marquee-fade-mask relative touch-pan-x"
-              onTouchStart={() => setIsReviewTouchPaused(true)}
-              onTouchEnd={() => {
-                setTimeout(() => setIsReviewTouchPaused(false), 1200);
-              }}
+              className="animate-marquee-slow flex items-stretch gap-3.5 sm:gap-5"
+              style={{ animationPlayState: isReviewTouchPaused ? 'paused' : undefined }}
             >
-              <div 
-                className="animate-marquee-slow flex items-stretch gap-3.5 sm:gap-5"
-                style={{ animationPlayState: isReviewTouchPaused ? 'paused' : undefined }}
-              >
-                {[...videoReviews, ...videoReviews, ...videoReviews, ...videoReviews].map((rev, idx) => (
-                  <div
-                    key={idx}
-                    role="button"
-                    tabIndex={0}
-                    style={{ touchAction: 'manipulation' }}
-                    onClick={() => openReviewVideo(rev.headline, rev.videoUrl)}
-                    onTouchEnd={(e) => {
-                      e.stopPropagation();
-                      openReviewVideo(rev.headline, rev.videoUrl);
-                    }}
-                    className="w-[265px] xs:w-[295px] sm:w-[340px] bg-white border border-gray-200 rounded-2xl p-4 sm:p-5 shadow-sm hover:shadow-2xl hover:border-[#00A0DF] transition-all flex flex-col justify-between flex-shrink-0 cursor-pointer card-hover-lift group select-none active:border-[#00A0DF]"
-                  >
-                    <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex gap-0.5 sm:gap-1 text-amber-400">
-                          {[...Array(rev.stars)].map((_, i) => (
-                            <Star key={i} size={13} className="fill-amber-400 text-amber-400 animate-star-twinkle" />
-                          ))}
-                        </div>
-                        <span className="text-[9px] sm:text-[10px] font-extrabold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
-                          {rev.result}
-                        </span>
-                      </div>
-
-                      <h3 className="text-xs sm:text-sm md:text-base font-bold text-slate-900 mb-3 min-h-[44px] leading-snug group-hover:text-[#00A0DF] transition-colors">
-                        {rev.headline}
-                      </h3>
-                    </div>
-
-                    <div>
-                      <div className="relative cursor-pointer rounded-xl overflow-hidden bg-slate-950 aspect-video flex items-center justify-center group-hover:border-[#00A0DF] mb-2.5 shadow-inner">
-                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-[#00A0DF] text-white flex items-center justify-center group-hover:scale-115 transition-transform shadow-lg shadow-[#00A0DF]/50">
-                          <Play size={18} className="fill-current ml-0.5" />
-                        </div>
-                        <span className="absolute bottom-2 left-2 text-[9px] sm:text-[10px] font-bold text-white bg-black/75 px-2 py-0.5 rounded backdrop-blur-sm">
-                          ▶ Watch Video
-                        </span>
-                      </div>
-
-                      <div className="flex items-center justify-between text-[10px] sm:text-[11px] text-slate-500 font-semibold">
-                        <span>{rev.author}</span>
-                        <span className="text-[#00A0DF] font-bold">{rev.market}</span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ) : (
-            /* 2. GRID VIEW */
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 max-w-6xl mx-auto px-2">
-              {videoReviews.map((rev, idx) => (
+              {[
+                ...(content.video_reviews?.items && content.video_reviews.items.length > 0 ? content.video_reviews.items : videoReviews),
+                ...(content.video_reviews?.items && content.video_reviews.items.length > 0 ? content.video_reviews.items : videoReviews),
+                ...(content.video_reviews?.items && content.video_reviews.items.length > 0 ? content.video_reviews.items : videoReviews)
+              ].map((rev, idx) => (
                 <div
                   key={idx}
-                  onClick={() => openReviewVideo(rev.headline, rev.videoUrl)}
-                  className="bg-white border border-gray-200 rounded-2xl p-4 sm:p-5 shadow-sm hover:shadow-xl hover:border-[#00A0DF] transition-all flex flex-col justify-between cursor-pointer card-hover-lift group"
+                  role="button"
+                  tabIndex={0}
+                  style={{ touchAction: 'manipulation' }}
+                  onClick={() => openReviewVideo(rev.headline, rev.videoUrl || hero.video_url)}
+                  onTouchEnd={(e) => {
+                    e.stopPropagation();
+                    openReviewVideo(rev.headline, rev.videoUrl || hero.video_url);
+                  }}
+                  className="w-[265px] xs:w-[295px] sm:w-[340px] bg-white border border-gray-200 rounded-2xl p-4 sm:p-5 shadow-sm hover:shadow-2xl hover:border-[#00A0DF] transition-all flex flex-col justify-between flex-shrink-0 cursor-pointer card-hover-lift group select-none active:border-[#00A0DF]"
                 >
                   <div>
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex gap-0.5 sm:gap-1 text-amber-400">
-                        {[...Array(rev.stars)].map((_, i) => (
-                          <Star key={i} size={13} className="fill-amber-400 text-amber-400" />
+                        {[...Array(rev.stars || 5)].map((_, i) => (
+                          <Star key={i} size={13} className="fill-amber-400 text-amber-400 animate-star-twinkle" />
                         ))}
                       </div>
                       <span className="text-[9px] sm:text-[10px] font-extrabold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
@@ -1088,13 +975,13 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
                       </span>
                     </div>
 
-                    <h3 className="text-xs sm:text-sm font-bold text-slate-900 mb-3 min-h-[44px] leading-snug group-hover:text-[#00A0DF] transition-colors">
+                    <h3 className="text-xs sm:text-sm md:text-base font-bold text-slate-900 mb-3 min-h-[44px] leading-snug group-hover:text-[#00A0DF] transition-colors">
                       {rev.headline}
                     </h3>
                   </div>
 
                   <div>
-                    <div className="relative rounded-xl overflow-hidden bg-slate-950 aspect-video flex items-center justify-center mb-2.5 shadow-inner">
+                    <div className="relative cursor-pointer rounded-xl overflow-hidden bg-slate-950 aspect-video flex items-center justify-center group-hover:border-[#00A0DF] mb-2.5 shadow-inner">
                       <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-[#00A0DF] text-white flex items-center justify-center group-hover:scale-115 transition-transform shadow-lg shadow-[#00A0DF]/50">
                         <Play size={18} className="fill-current ml-0.5" />
                       </div>
@@ -1111,7 +998,7 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
                 </div>
               ))}
             </div>
-          )}
+          </div>
 
           <div className="text-center mt-8">
             <Link
@@ -1135,77 +1022,39 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           
           <div className="text-center max-w-3xl mx-auto mb-12 sm:mb-16">
-            <span className="section-tag-pill">PERFECT FOR YOU IF…</span>
+            <span className="section-tag-pill">{content.who_is_this_for?.badge || 'PERFECT FOR YOU IF…'}</span>
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 tracking-tight mb-3">
-              Who Is This For?
+              {content.who_is_this_for?.title || 'Who Is This For?'}
             </h2>
             <p className="text-xs sm:text-sm md:text-base text-slate-600 font-medium">
-              No matter where you’re starting from, this program meets you there.
+              {content.who_is_this_for?.subtitle || 'No matter where you’re starting from, this program meets you there.'}
             </p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-10">
-            
-            <div className="bg-[#FFF4E0] border border-amber-200/80 rounded-2xl p-6 shadow-sm card-hover-lift">
-              <div className="text-3xl mb-3">🌱</div>
-              <h3 className="text-base font-black text-slate-900 mb-2">
-                If You’re a Complete <span className="text-amber-700">Beginner</span>
-              </h3>
-              <p className="text-xs sm:text-sm text-slate-700 leading-relaxed font-medium">
-                No idea how to start? I’ll guide you step by step. By the end, you’ll have a fully working Shopify store and a clear roadmap to your first sale.
-              </p>
-            </div>
-
-            <div className="bg-[#E7F0FF] border border-blue-200/80 rounded-2xl p-6 shadow-sm card-hover-lift">
-              <div className="text-3xl mb-3">📣</div>
-              <h3 className="text-base font-black text-slate-900 mb-2">
-                If You’re <span className="text-[#00A0DF]">Struggling With Ads</span>
-              </h3>
-              <p className="text-xs sm:text-sm text-slate-700 leading-relaxed font-medium">
-                Confused by Facebook or TikTok ads? Learn to create high-converting campaigns, target the right audience, and scale your sales the right way.
-              </p>
-            </div>
-
-            <div className="bg-[#EAF9EF] border border-emerald-200/80 rounded-2xl p-6 shadow-sm card-hover-lift">
-              <div className="text-3xl mb-3">💼</div>
-              <h3 className="text-base font-black text-slate-900 mb-2">
-                If You’re a <span className="text-emerald-700">Business Owner</span>
-              </h3>
-              <p className="text-xs sm:text-sm text-slate-700 leading-relaxed font-medium">
-                Want to add a profitable eCommerce stream? Learn to find winning products, source reliable UAE &amp; KSA suppliers, and automate your store.
-              </p>
-            </div>
-
-            <div className="bg-[#FDEAF1] border border-rose-200/80 rounded-2xl p-6 shadow-sm card-hover-lift">
-              <div className="text-3xl mb-3">🚀</div>
-              <h3 className="text-base font-black text-slate-900 mb-2">
-                Ready to <span className="text-rose-700">Master Store Management</span>
-              </h3>
-              <p className="text-xs sm:text-sm text-slate-700 leading-relaxed font-medium">
-                Start dropshipping with minimal investment while getting lifetime mentorship and proven strategies to grow your online business skills.
-              </p>
-            </div>
-
-            <div className="bg-[#EDEAFE] border border-purple-200/80 rounded-2xl p-6 shadow-sm card-hover-lift">
-              <div className="text-3xl mb-3">📈</div>
-              <h3 className="text-base font-black text-slate-900 mb-2">
-                If You’re Already <span className="text-purple-700">Running a Store</span>
-              </h3>
-              <p className="text-xs sm:text-sm text-slate-700 leading-relaxed font-medium">
-                Struggling to scale or manage campaigns? Learn advanced scaling techniques, automation tools, and ad strategies to reach the next level.
-              </p>
-            </div>
-
-            <div className="bg-[#E0F7F6] border border-teal-200/80 rounded-2xl p-6 shadow-sm card-hover-lift">
-              <div className="text-3xl mb-3">💡</div>
-              <h3 className="text-base font-black text-slate-900 mb-2">
-                If You’re a <span className="text-teal-700">Freelancer or Side Hustler</span>
-              </h3>
-              <p className="text-xs sm:text-sm text-slate-700 leading-relaxed font-medium">
-                Add dropshipping to your skillset and earn extra income online. Learn product research, ad mastery, and store management to start fast.
-              </p>
-            </div>
-
+            {(content.who_is_this_for?.items || defaultCmsContent.who_is_this_for!.items).map((card, idx) => {
+              const cardStyles = [
+                { bg: 'bg-[#FFF4E0]', border: 'border-amber-200/80', emoji: '🌱', hlColor: 'text-amber-700' },
+                { bg: 'bg-[#E7F0FF]', border: 'border-blue-200/80', emoji: '📣', hlColor: 'text-[#00A0DF]' },
+                { bg: 'bg-[#EAF9EF]', border: 'border-emerald-200/80', emoji: '💼', hlColor: 'text-emerald-700' },
+                { bg: 'bg-[#FDEAF1]', border: 'border-rose-200/80', emoji: '🚀', hlColor: 'text-rose-700' },
+                { bg: 'bg-[#EDEAFE]', border: 'border-purple-200/80', emoji: '📈', hlColor: 'text-purple-700' },
+                { bg: 'bg-[#E0F7F6]', border: 'border-teal-200/80', emoji: '💡', hlColor: 'text-teal-700' }
+              ];
+              const s = cardStyles[idx % cardStyles.length];
+              return (
+                <div key={idx} className={`${s.bg} border ${s.border} rounded-2xl p-6 shadow-sm card-hover-lift`}>
+                  <div className="text-3xl mb-3">{s.emoji}</div>
+                  <h3 className="text-base font-black text-slate-900 mb-2">
+                    {card.title}{' '}
+                    {card.highlight && <span className={s.hlColor}>{card.highlight}</span>}
+                  </h3>
+                  <p className="text-xs sm:text-sm text-slate-700 leading-relaxed font-medium">
+                    {card.desc}
+                  </p>
+                </div>
+              );
+            })}
           </div>
 
           <div className="text-center">
@@ -1213,7 +1062,7 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
               href="/enrollment"
               className="lwa-btn px-10 py-4 text-sm sm:text-base font-black rounded-xl"
             >
-              YES! I WANT TO LEARN THIS
+              {hero.cta_text || 'YES! I WANT TO LEARN THIS'}
             </Link>
           </div>
 
@@ -1329,12 +1178,12 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           
           <div className="text-center max-w-3xl mx-auto mb-12 sm:mb-16">
-            <span className="section-tag-pill">YOUR CHOICE</span>
+            <span className="section-tag-pill">{content.options_comparison?.badge || 'YOUR CHOICE'}</span>
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 tracking-tight mb-3">
-              Now You Have 2 Options Left
+              {content.options_comparison?.title || 'Now You Have 2 Options Left'}
             </h2>
             <p className="text-xs sm:text-sm md:text-base text-slate-600 font-medium">
-              One keeps you stuck. The other moves you forward.
+              {content.options_comparison?.subtitle || 'One keeps you stuck. The other moves you forward.'}
             </p>
           </div>
 
@@ -1344,32 +1193,22 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
             <div className="bg-white border-2 border-red-200 rounded-3xl p-6 sm:p-8 flex flex-col justify-between shadow-sm card-hover-lift">
               <div>
                 <span className="inline-block bg-red-100 text-red-700 text-xs font-black px-3.5 py-1 rounded-full uppercase tracking-wider mb-4 border border-red-200">
-                  OPTION 01
+                  {content.options_comparison?.diy_badge || 'OPTION 01'}
                 </span>
                 <h3 className="text-xl font-black text-slate-900 mb-1">
-                  Do It Yourself
+                  {content.options_comparison?.diy_title || 'Do It Yourself'}
                 </h3>
                 <p className="text-xs text-slate-500 font-semibold mb-6">
-                  The slow, frustrating road
+                  {content.options_comparison?.diy_subtitle || 'The slow, frustrating road'}
                 </p>
 
                 <div className="space-y-4 text-xs sm:text-sm text-slate-700 font-medium">
-                  <div className="flex items-start gap-3">
-                    <XCircle size={18} className="text-red-500 flex-shrink-0 mt-0.5" />
-                    <span>Keep guessing what works and what doesn’t</span>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <XCircle size={18} className="text-red-500 flex-shrink-0 mt-0.5" />
-                    <span>Watch others grow while you’re still “figuring it out”</span>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <XCircle size={18} className="text-red-500 flex-shrink-0 mt-0.5" />
-                    <span>Waste months testing random tips</span>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <XCircle size={18} className="text-red-500 flex-shrink-0 mt-0.5" />
-                    <span>Lose motivation before you see any results</span>
-                  </div>
+                  {(content.options_comparison?.diy_points || defaultCmsContent.options_comparison.diy_points).map((pt, pIdx) => (
+                    <div key={pIdx} className="flex items-start gap-3">
+                      <XCircle size={18} className="text-red-500 flex-shrink-0 mt-0.5" />
+                      <span>{pt}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
@@ -1383,32 +1222,22 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
 
               <div>
                 <span className="inline-block bg-[#00A0DF]/20 text-[#00A0DF] text-xs font-black px-3.5 py-1 rounded-full uppercase tracking-wider mb-4 border border-[#00A0DF]/40">
-                  OPTION 02
+                  {content.options_comparison?.sami_badge || 'OPTION 02'}
                 </span>
                 <h3 className="text-xl font-black text-white mb-1">
-                  Join the Ecommestry Program
+                  {content.options_comparison?.sami_title || 'Join the Ecommestry Program'}
                 </h3>
                 <p className="text-xs text-slate-400 font-semibold mb-6">
-                  The proven, guided shortcut
+                  {content.options_comparison?.sami_subtitle || 'The proven, guided shortcut'}
                 </p>
 
                 <div className="space-y-4 text-xs sm:text-sm text-slate-200 font-medium mb-8">
-                  <div className="flex items-start gap-3">
-                    <CheckCircle2 size={18} className="text-emerald-400 flex-shrink-0 mt-0.5" />
-                    <span>Learn what truly drives profitable stores — step by step</span>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <CheckCircle2 size={18} className="text-emerald-400 flex-shrink-0 mt-0.5" />
-                    <span>Follow a tested system instead of guesswork</span>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <CheckCircle2 size={18} className="text-emerald-400 flex-shrink-0 mt-0.5" />
-                    <span>Get structured guidance that reduces costly mistakes</span>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <CheckCircle2 size={18} className="text-emerald-400 flex-shrink-0 mt-0.5" />
-                    <span>Lifetime support to guide you the whole journey</span>
-                  </div>
+                  {(content.options_comparison?.sami_points || defaultCmsContent.options_comparison.sami_points).map((pt, pIdx) => (
+                    <div key={pIdx} className="flex items-start gap-3">
+                      <CheckCircle2 size={18} className="text-emerald-400 flex-shrink-0 mt-0.5" />
+                      <span>{pt}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
 
@@ -1416,7 +1245,7 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
                 href="/enrollment"
                 className="lwa-btn w-full py-3.5 text-xs sm:text-sm font-black rounded-xl"
               >
-                YES! I WANT TO LEARN THIS
+                {hero.cta_text || 'YES! I WANT TO LEARN THIS'}
               </Link>
             </div>
 
@@ -1432,83 +1261,35 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           
           <div className="text-center max-w-3xl mx-auto mb-12 sm:mb-16">
-            <span className="section-tag-pill">⏳ BEFORE YOU CLOSE THIS PAGE</span>
+            <span className="section-tag-pill">{content.cost_of_waiting?.badge || '⏳ BEFORE YOU CLOSE THIS PAGE'}</span>
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 tracking-tight mb-3">
-              What Does Waiting <span className="text-[#00A0DF]">Really Cost</span> You?
+              {content.cost_of_waiting?.title || (
+                <>What Does Waiting <span className="text-[#00A0DF]">Really Cost</span> You?</>
+              )}
             </h2>
             <p className="text-xs sm:text-sm md:text-base text-slate-600 font-medium">
-              The price isn&apos;t just the course fee. It&apos;s everything that stays exactly the same if nothing changes today.
+              {content.cost_of_waiting?.subtitle || 'The price isn\'t just the course fee. It\'s everything that stays exactly the same if nothing changes today.'}
             </p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-10">
-            
-            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 card-hover-lift">
-              <span className="text-[11px] font-black uppercase text-slate-600 bg-slate-200/80 px-2.5 py-1 rounded-md inline-block mb-3">
-                3 MONTHS FROM NOW
-              </span>
-              <h3 className="text-base font-black text-slate-900 mb-2">Still Stuck at &ldquo;Someday&rdquo;</h3>
-              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-medium">
-                You&apos;re still watching free videos, still saving posts, still telling yourself you&apos;ll start next month. Same questions, zero progress.
-              </p>
-            </div>
-
-            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 card-hover-lift">
-              <span className="text-[11px] font-black uppercase text-slate-600 bg-slate-200/80 px-2.5 py-1 rounded-md inline-block mb-3">
-                1 YEAR FROM NOW
-              </span>
-              <h3 className="text-base font-black text-slate-900 mb-2">Watching Others Move Ahead</h3>
-              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-medium">
-                People who started today will already have a live store and real experience. You&apos;ll be watching their wins thinking <strong>&ldquo;I could have done that too.&rdquo;</strong>
-              </p>
-            </div>
-
-            <div className="bg-amber-50/70 border border-amber-200 rounded-2xl p-6 card-hover-lift">
-              <span className="text-[11px] font-black uppercase text-amber-800 bg-amber-200/80 px-2.5 py-1 rounded-md inline-block mb-3">
-                EXPENSIVE GUESSING
-              </span>
-              <h3 className="text-base font-black text-slate-900 mb-2">Money Lost to Trial &amp; Error</h3>
-              <p className="text-xs sm:text-sm text-slate-700 leading-relaxed font-medium">
-                Most beginners burn a big chunk of ad budget testing blindly — with little to show for it. A proven system saves you from paying that &ldquo;tuition&rdquo;.
-              </p>
-            </div>
-
-            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 card-hover-lift">
-              <span className="text-[11px] font-black uppercase text-slate-600 bg-slate-200/80 px-2.5 py-1 rounded-md inline-block mb-3">
-                RISING COMPETITION
-              </span>
-              <h3 className="text-base font-black text-slate-900 mb-2">Late Entry = Harder Game</h3>
-              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-medium">
-                E-commerce grows every year. The longer you wait, the more crowded the market gets — and the harder it is to stand out as a beginner.
-              </p>
-            </div>
-
-            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 card-hover-lift">
-              <span className="text-[11px] font-black uppercase text-slate-600 bg-slate-200/80 px-2.5 py-1 rounded-md inline-block mb-3">
-                WASTED MONTHS
-              </span>
-              <h3 className="text-base font-black text-slate-900 mb-2">The Slow, Lonely Route</h3>
-              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-medium">
-                Figuring it all out alone can take 6–12 months of confusion. With a clear step-by-step roadmap, you skip the guesswork and move with confidence.
-              </p>
-            </div>
-
-            <div className="bg-emerald-50/70 border border-emerald-200 rounded-2xl p-6 card-hover-lift">
-              <span className="text-[11px] font-black uppercase text-emerald-800 bg-emerald-200/80 px-2.5 py-1 rounded-md inline-block mb-3">
-                THE REAL MATH
-              </span>
-              <h3 className="text-base font-black text-slate-900 mb-2">Course Fee vs. The Cost</h3>
-              <p className="text-xs sm:text-sm text-slate-700 leading-relaxed font-medium">
-                The course costs less than what most beginners waste on a single failed ad test. The real question isn&apos;t &ldquo;can I afford it?&rdquo; — it&apos;s &ldquo;can I afford another year of standing still?&rdquo;
-              </p>
-            </div>
-
+            {(content.cost_of_waiting?.cards || defaultCmsContent.cost_of_waiting.cards).map((card, idx) => (
+              <div key={idx} className="bg-slate-50 border border-slate-200 rounded-2xl p-6 card-hover-lift">
+                <span className="text-[11px] font-black uppercase text-slate-600 bg-slate-200/80 px-2.5 py-1 rounded-md inline-block mb-3">
+                  {card.label}
+                </span>
+                <h3 className="text-base font-black text-slate-900 mb-2">{card.title}</h3>
+                <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-medium">
+                  {card.desc}
+                </p>
+              </div>
+            ))}
           </div>
 
           {/* Decision Banner */}
           <div className="bg-[#0B0F19] text-white rounded-2xl p-5 text-center mb-8 border border-slate-800 card-hover-lift">
             <span className="text-sm sm:text-base font-bold">
-              🎯 This isn&apos;t just a course decision. <strong>It&apos;s a decision about where you&apos;ll be 6 months from now.</strong>
+              {content.cost_of_waiting?.banner_text || '🎯 This isn\'t just a course decision. It\'s a decision about where you\'ll be 6 months from now.'}
             </span>
           </div>
 
@@ -1517,7 +1298,7 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
               href="/enrollment"
               className="lwa-btn px-10 py-4 text-sm sm:text-base font-black rounded-xl"
             >
-              YES! I WANT TO LEARN THIS
+              {hero.cta_text || 'YES! I WANT TO LEARN THIS'}
             </Link>
           </div>
 
@@ -1571,15 +1352,18 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           
           <span className="inline-block bg-[#00A0DF]/20 text-[#00A0DF] border border-[#00A0DF]/30 text-xs font-black uppercase tracking-wider px-4 py-1.5 rounded-full mb-4 animate-float">
-            JOIN 9,700+ STUDENTS
+            {content.final_cta?.badge || 'JOIN 9,700+ STUDENTS'}
           </span>
 
           <h2 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl font-black text-white tracking-tight mb-4 leading-tight">
-            Take the First Step Toward a <span className="text-[#00A0DF]">Profitable Dropshipping Business</span>
+            {content.final_cta?.title || 'Take the First Step Toward a'}{' '}
+            <span className="text-[#00A0DF]">
+              {content.final_cta?.title_highlight || 'Profitable Dropshipping Business'}
+            </span>
           </h2>
 
           <p className="text-xs sm:text-sm md:text-base text-slate-300 max-w-2xl mx-auto mb-8 font-medium">
-            Thousands of beginners across UAE &amp; KSA markets have already started. Today it&apos;s your turn.
+            {content.final_cta?.subtitle || 'Thousands of beginners across UAE & KSA markets have already started. Today it\'s your turn.'}
           </p>
 
           <div className="flex flex-col items-center justify-center gap-4 mb-6">
@@ -1587,10 +1371,10 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
               href="/enrollment"
               className="lwa-btn px-12 py-4.5 text-base sm:text-lg font-black rounded-xl shadow-2xl"
             >
-              YES! I WANT TO LEARN THIS
+              {content.final_cta?.cta_text || hero.cta_text || 'YES! I WANT TO LEARN THIS'}
             </Link>
             <p className="text-xs text-slate-400 font-semibold">
-              14-day money-back guarantee &bull; Lifetime access &amp; support
+              {content.final_cta?.guarantee_text || '14-day money-back guarantee • Lifetime access & support'}
             </p>
           </div>
 

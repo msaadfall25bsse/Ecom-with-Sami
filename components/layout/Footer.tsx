@@ -1,12 +1,40 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Mail, Phone, MapPin, Globe, ShieldCheck, ArrowUp } from 'lucide-react';
 import { useContactConfig } from '@/utils/contactConfig';
+import { defaultCmsContent, getCmsContent } from '@/utils/cmsStore';
 
-export function Footer() {
+interface FooterProps {
+  customFooter?: {
+    disclaimer?: string;
+    copyright?: string;
+  };
+}
+
+export function Footer({ customFooter }: FooterProps) {
   const { email, displayPhone, headOffice, regionalOffice, getWhatsAppUrl } = useContactConfig();
+  const [footerData, setFooterData] = useState<{ disclaimer: string; copyright: string }>({
+    disclaimer: customFooter?.disclaimer || defaultCmsContent.footer?.disclaimer || 'Results are not guaranteed and will vary based on individual effort, market conditions, and other factors. Every person is different, and your level of success depends on your experience, dedication, and hard work.',
+    copyright: customFooter?.copyright || defaultCmsContent.footer?.copyright || 'Ecom With Sami. All rights reserved.'
+  });
+
+  useEffect(() => {
+    const updateFooter = () => {
+      const cms = getCmsContent();
+      if (cms.footer) {
+        setFooterData({
+          disclaimer: cms.footer.disclaimer || defaultCmsContent.footer?.disclaimer || '',
+          copyright: cms.footer.copyright || defaultCmsContent.footer?.copyright || ''
+        });
+      }
+    };
+    updateFooter();
+    window.addEventListener('sami_cms_updated', updateFooter);
+    return () => window.removeEventListener('sami_cms_updated', updateFooter);
+  }, []);
+
   const whatsappUrl = getWhatsAppUrl('Hi Sami! I want to enroll in the UAE & KSA Dropshipping Course (PKR 3,799). Can you help me?');
 
   const scrollToTop = () => {
@@ -67,8 +95,12 @@ export function Footer() {
               Regional Presence
             </h4>
             <p className="text-xs sm:text-sm text-slate-400 leading-relaxed font-medium">
-              Dubai, UAE<br />
-              Riyadh, Saudi Arabia
+              {regionalOffice || (
+                <>
+                  Dubai, UAE<br />
+                  Riyadh, Saudi Arabia
+                </>
+              )}
             </p>
           </div>
 
@@ -90,7 +122,7 @@ export function Footer() {
         {/* Disclaimer & Copyright */}
         <div className="pt-8 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500 text-center sm:text-left">
           <p className="max-w-3xl leading-relaxed font-medium">
-            Results are not guaranteed and will vary based on individual effort, market conditions, and other factors. Every person is different, and your level of success depends on your experience, dedication, and hard work.
+            {footerData.disclaimer}
           </p>
           <button
             onClick={scrollToTop}
@@ -103,7 +135,7 @@ export function Footer() {
         </div>
 
         <div className="text-center text-xs text-slate-600 mt-6">
-          &copy; {new Date().getFullYear()} Ecom With Sami. All rights reserved.
+          &copy; {new Date().getFullYear()} {footerData.copyright}
         </div>
 
       </div>
