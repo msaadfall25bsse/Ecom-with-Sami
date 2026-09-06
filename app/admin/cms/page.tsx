@@ -46,7 +46,8 @@ import {
   THEME_PRESETS, 
   DEFAULT_THEME_COLORS, 
   ThemeCustomColors, 
-  generateThemeCss 
+  generateThemeCss,
+  updateCmsContent
 } from '@/utils/cmsStore';
 import { Module, Supplier, initialModules, initialSuppliers } from '@/utils/db';
 
@@ -422,6 +423,8 @@ export default function AdminCmsPage() {
     if (saved) {
       try {
         localStorage.setItem('sami_cms_payment_methods', JSON.stringify(cmsData.payment_methods));
+        localStorage.setItem('sami_cms_content', JSON.stringify(cmsData));
+        updateCmsContent(cmsData);
       } catch (e) {}
       setSavedSuccess(true);
       window.dispatchEvent(new Event('sami_cms_updated'));

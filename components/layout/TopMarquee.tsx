@@ -1,34 +1,47 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { getCmsContent, defaultCmsContent } from '@/utils/cmsStore';
 
-export function TopMarquee() {
-  const [items, setItems] = useState<string[]>([
-    '🔥 Shopify Dropshipping Course',
-    '88% OFF',
-    'PKR 3,799',
-    'Lifetime Access',
-    'WhatsApp Mentorship',
-    'UAE & KSA Training',
-    'Join Now'
-  ]);
-  const [isVisible, setIsVisible] = useState<boolean>(true);
+interface TopMarqueeProps {
+  items?: string[];
+  is_active?: boolean;
+}
+
+export function TopMarquee({ items: propItems, is_active: propIsActive }: TopMarqueeProps = {}) {
+  const [items, setItems] = useState<string[]>(
+    propItems && propItems.length > 0
+      ? propItems
+      : (getCmsContent()?.marquee?.items && getCmsContent().marquee.items!.length > 0
+          ? getCmsContent().marquee.items!
+          : defaultCmsContent.marquee.items)
+  );
+  const [isVisible, setIsVisible] = useState<boolean>(
+    propIsActive !== undefined ? propIsActive : true
+  );
 
   useEffect(() => {
-    fetch('/api/public/cms-content')
-      .then(res => res.json())
-      .then(data => {
-        if (data.success && data.sections?.marquee) {
-          const m = data.sections.marquee;
-          if (m.items && Array.isArray(m.items) && m.items.length > 0) {
-            setItems(m.items);
-          }
-          if (m.is_active !== undefined) {
-            setIsVisible(Boolean(m.is_active));
-          }
-        }
-      })
-      .catch(() => {});
+    if (propItems && propItems.length > 0) {
+      setItems(propItems);
+    }
+  }, [propItems]);
+
+  useEffect(() => {
+    if (propIsActive !== undefined) {
+      setIsVisible(propIsActive);
+    }
+  }, [propIsActive]);
+
+  useEffect(() => {
+    const syncMarquee = () => {
+      const cms = getCmsContent();
+      if (cms?.marquee?.items && Array.isArray(cms.marquee.items) && cms.marquee.items.length > 0) {
+        setItems(cms.marquee.items);
+      }
+    };
+
+    window.addEventListener('sami_cms_updated', syncMarquee);
+    return () => window.removeEventListener('sami_cms_updated', syncMarquee);
   }, []);
 
   if (!isVisible || items.length === 0) return null;

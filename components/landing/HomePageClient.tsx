@@ -45,7 +45,7 @@ import {
   Volume2,
   VolumeX
 } from 'lucide-react';
-import { defaultCmsContent, CmsContentSchema } from '@/utils/cmsStore';
+import { defaultCmsContent, CmsContentSchema, updateCmsContent } from '@/utils/cmsStore';
 import { Module } from '@/utils/db';
 import { supabase } from '@/lib/supabase';
 
@@ -71,6 +71,10 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
   const heroIframeRef = useRef<HTMLIFrameElement>(null);
 
   useEffect(() => {
+    if (initialContent) {
+      updateCmsContent(initialContent);
+    }
+
     const syncData = async () => {
       // 1. Local API Route
       try {
@@ -79,6 +83,7 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
           const data = await res.json();
           if (data.success && data.sections) {
             setContent(data.sections);
+            updateCmsContent(data.sections);
             return;
           }
         }
@@ -96,7 +101,9 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
           if (!error && data && data.value_json) {
             const parsed = typeof data.value_json === 'string' ? JSON.parse(data.value_json) : data.value_json;
             if (parsed && typeof parsed === 'object') {
-              setContent({ ...defaultCmsContent, ...parsed });
+              const merged = { ...defaultCmsContent, ...parsed };
+              setContent(merged);
+              updateCmsContent(merged);
             }
           }
         } catch (e) {}
@@ -360,7 +367,7 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
   return (
     <div className="relative min-h-screen bg-[#FAFCFF] text-slate-900 selection:bg-[#00A0DF] selection:text-white font-sans antialiased">
       {/* Top Marquee Bar */}
-      <TopMarquee />
+      <TopMarquee items={content.marquee?.items} />
 
       {/* Main Sticky Navbar */}
       <Navbar />
@@ -1386,7 +1393,7 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
       </section>
 
       {/* Main Footer */}
-      <Footer />
+      <Footer customContact={content.contact} customFooter={content.footer} />
     </div>
   );
 }

@@ -44,8 +44,37 @@ export async function dbGetCmsSettings(): Promise<CmsContentSchema> {
             contact: { ...defaultCmsContent.contact, ...(parsed.contact || {}) },
             bonuses: { ...defaultCmsContent.bonuses, ...(parsed.bonuses || {}) },
             why_dropshipping: { ...defaultCmsContent.why_dropshipping, ...(parsed.why_dropshipping || {}) },
+            what_you_get: parsed.what_you_get
+              ? {
+                  ...defaultCmsContent.what_you_get,
+                  ...parsed.what_you_get,
+                  items: Array.isArray(parsed.what_you_get.items) && parsed.what_you_get.items.length > 0
+                    ? parsed.what_you_get.items
+                    : defaultCmsContent.what_you_get.items
+                }
+              : defaultCmsContent.what_you_get,
+            who_is_this_for: parsed.who_is_this_for
+              ? {
+                  ...defaultCmsContent.who_is_this_for,
+                  ...parsed.who_is_this_for,
+                  items: Array.isArray(parsed.who_is_this_for.items) && parsed.who_is_this_for.items.length > 0
+                    ? parsed.who_is_this_for.items
+                    : defaultCmsContent.who_is_this_for.items
+                }
+              : defaultCmsContent.who_is_this_for,
+            video_reviews: parsed.video_reviews
+              ? {
+                  ...defaultCmsContent.video_reviews,
+                  ...parsed.video_reviews,
+                  items: Array.isArray(parsed.video_reviews.items) && parsed.video_reviews.items.length > 0
+                    ? parsed.video_reviews.items
+                    : defaultCmsContent.video_reviews.items
+                }
+              : defaultCmsContent.video_reviews,
             options_comparison: { ...defaultCmsContent.options_comparison, ...(parsed.options_comparison || {}) },
             cost_of_waiting: { ...defaultCmsContent.cost_of_waiting, ...(parsed.cost_of_waiting || {}) },
+            final_cta: { ...defaultCmsContent.final_cta, ...(parsed.final_cta || {}) },
+            footer: { ...defaultCmsContent.footer, ...(parsed.footer || {}) },
             testimonials: Array.isArray(parsed.testimonials) ? parsed.testimonials : defaultCmsContent.testimonials,
             faqs: Array.isArray(parsed.faqs) ? parsed.faqs : defaultCmsContent.faqs,
             payment_methods: Array.isArray(parsed.payment_methods) ? parsed.payment_methods : defaultCmsContent.payment_methods,
@@ -91,8 +120,13 @@ export async function dbSaveCmsSettings(patch: Partial<CmsContentSchema>): Promi
     contact: patch.contact !== undefined ? { ...existing.contact, ...patch.contact } : existing.contact,
     bonuses: patch.bonuses !== undefined ? patch.bonuses : existing.bonuses,
     why_dropshipping: patch.why_dropshipping !== undefined ? patch.why_dropshipping : existing.why_dropshipping,
+    what_you_get: patch.what_you_get !== undefined ? patch.what_you_get : existing.what_you_get,
+    who_is_this_for: patch.who_is_this_for !== undefined ? patch.who_is_this_for : existing.who_is_this_for,
+    video_reviews: patch.video_reviews !== undefined ? patch.video_reviews : existing.video_reviews,
     options_comparison: patch.options_comparison !== undefined ? patch.options_comparison : existing.options_comparison,
     cost_of_waiting: patch.cost_of_waiting !== undefined ? patch.cost_of_waiting : existing.cost_of_waiting,
+    final_cta: patch.final_cta !== undefined ? { ...existing.final_cta, ...patch.final_cta } : existing.final_cta,
+    footer: patch.footer !== undefined ? { ...existing.footer, ...patch.footer } : existing.footer,
     testimonials: patch.testimonials !== undefined ? patch.testimonials : existing.testimonials,
     faqs: patch.faqs !== undefined ? patch.faqs : existing.faqs,
     payment_methods: patch.payment_methods !== undefined ? patch.payment_methods : existing.payment_methods,

@@ -777,6 +777,17 @@ export const defaultCmsContent: CmsContentSchema = {
 let inMemoryCmsStore: CmsContentSchema = { ...defaultCmsContent };
 
 export function getCmsContent(): CmsContentSchema {
+  if (typeof window !== 'undefined') {
+    try {
+      const stored = localStorage.getItem('sami_cms_content');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed && typeof parsed === 'object') {
+          inMemoryCmsStore = { ...inMemoryCmsStore, ...parsed };
+        }
+      }
+    } catch (e) {}
+  }
   return inMemoryCmsStore;
 }
 
@@ -785,6 +796,11 @@ export function updateCmsContent(patch: Partial<CmsContentSchema>): CmsContentSc
     ...inMemoryCmsStore,
     ...patch
   };
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.setItem('sami_cms_content', JSON.stringify(inMemoryCmsStore));
+    } catch (e) {}
+  }
   return inMemoryCmsStore;
 }
 

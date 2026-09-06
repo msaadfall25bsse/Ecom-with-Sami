@@ -4,38 +4,63 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Mail, Phone, MapPin, Globe, ShieldCheck, ArrowUp } from 'lucide-react';
 import { useContactConfig } from '@/utils/contactConfig';
-import { defaultCmsContent, getCmsContent } from '@/utils/cmsStore';
+import { defaultCmsContent, getCmsContent, CmsContentSchema } from '@/utils/cmsStore';
 
 interface FooterProps {
-  customFooter?: {
-    disclaimer?: string;
-    copyright?: string;
-  };
+  customContact?: CmsContentSchema['contact'];
+  customFooter?: CmsContentSchema['footer'];
 }
 
-export function Footer({ customFooter }: FooterProps) {
-  const { email, displayPhone, headOffice, regionalOffice, getWhatsAppUrl } = useContactConfig();
-  const [footerData, setFooterData] = useState<{ disclaimer: string; copyright: string }>({
-    disclaimer: customFooter?.disclaimer || defaultCmsContent.footer?.disclaimer || 'Results are not guaranteed and will vary based on individual effort, market conditions, and other factors. Every person is different, and your level of success depends on your experience, dedication, and hard work.',
-    copyright: customFooter?.copyright || defaultCmsContent.footer?.copyright || 'Ecom With Sami. All rights reserved.'
+export function Footer({ customContact, customFooter }: FooterProps) {
+  const dynamicConfig = useContactConfig();
+  const [contactData, setContactData] = useState<CmsContentSchema['contact']>(
+    customContact || getCmsContent().contact || defaultCmsContent.contact
+  );
+  const [footerData, setFooterData] = useState<CmsContentSchema['footer']>({
+    disclaimer: customFooter?.disclaimer || getCmsContent().footer?.disclaimer || defaultCmsContent.footer.disclaimer,
+    copyright: customFooter?.copyright || getCmsContent().footer?.copyright || defaultCmsContent.footer.copyright
   });
 
   useEffect(() => {
-    const updateFooter = () => {
+    if (customContact) {
+      setContactData(customContact);
+    }
+  }, [customContact]);
+
+  useEffect(() => {
+    if (customFooter) {
+      setFooterData({
+        disclaimer: customFooter.disclaimer || defaultCmsContent.footer.disclaimer,
+        copyright: customFooter.copyright || defaultCmsContent.footer.copyright
+      });
+    }
+  }, [customFooter]);
+
+  useEffect(() => {
+    const updateFromStore = () => {
       const cms = getCmsContent();
+      if (cms.contact) {
+        setContactData(cms.contact);
+      }
       if (cms.footer) {
         setFooterData({
-          disclaimer: cms.footer.disclaimer || defaultCmsContent.footer?.disclaimer || '',
-          copyright: cms.footer.copyright || defaultCmsContent.footer?.copyright || ''
+          disclaimer: cms.footer.disclaimer || defaultCmsContent.footer.disclaimer,
+          copyright: cms.footer.copyright || defaultCmsContent.footer.copyright
         });
       }
     };
-    updateFooter();
-    window.addEventListener('sami_cms_updated', updateFooter);
-    return () => window.removeEventListener('sami_cms_updated', updateFooter);
+    updateFromStore();
+    window.addEventListener('sami_cms_updated', updateFromStore);
+    return () => window.removeEventListener('sami_cms_updated', updateFromStore);
   }, []);
 
-  const whatsappUrl = getWhatsAppUrl('Hi Sami! I want to enroll in the UAE & KSA Dropshipping Course (PKR 3,799). Can you help me?');
+  const email = contactData?.email || dynamicConfig.email || 'ecomwithsamiofficial@gmail.com';
+  const displayPhone = contactData?.phone || dynamicConfig.displayPhone || '+92 333 0093269';
+  const headOffice = contactData?.headOffice || dynamicConfig.headOffice || 'Office #402, 4th Floor, Executive Heights, Gulberg III, Lahore, Pakistan';
+  const regionalOffice = contactData?.regionalOffice || dynamicConfig.regionalOffice || 'DHA Phase 6, Karachi, Pakistan';
+  const whatsappUrl = dynamicConfig.getWhatsAppUrl(
+    contactData?.whatsappGreeting || 'Hi Sami! I want to enroll in the UAE & KSA Dropshipping Course (PKR 3,799). Can you help me?'
+  );
 
   const scrollToTop = () => {
     if (typeof window !== 'undefined') {
