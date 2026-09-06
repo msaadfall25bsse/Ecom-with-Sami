@@ -64,7 +64,6 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
   // Hero Autoplay Video & Sound States (LearnWithAfaq Style)
   const [isHeroMuted, setIsHeroMuted] = useState(true);
   const [isHeroPlaying, setIsHeroPlaying] = useState(true);
-  const [isVideoReady, setIsVideoReady] = useState(false);
   const [heroCurrentTime, setHeroCurrentTime] = useState(1);
   const [heroDuration, setHeroDuration] = useState(128);
   const [isHeroControlsHovered, setIsHeroControlsHovered] = useState(false);
@@ -262,11 +261,6 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
     return match && match[1] ? match[1] : 'dQw4w9WgXcQ';
   };
 
-  const ytVideoId = getYouTubeId(hero.video_url);
-  const heroPosterUrl = isYouTubeVideo
-    ? `https://img.youtube.com/vi/${ytVideoId}/hqdefault.jpg`
-    : 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1200&auto=format&fit=crop&q=80';
-
   // Force immediate autoplay on mount for direct videos across all devices (Safari, Chrome, Android, iOS)
   useEffect(() => {
     if (isDirectVideo && heroVideoRef.current) {
@@ -277,7 +271,6 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
         playPromise
           .then(() => {
             setIsHeroPlaying(true);
-            setIsVideoReady(true);
           })
           .catch(() => {});
       }
@@ -496,21 +489,10 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
                       toggleHeroPlay();
                     }
                   }}
-                  className="relative aspect-video w-full rounded-xl sm:rounded-2xl overflow-hidden bg-[#0a192f] border border-[#00A0DF]/30 shadow-lg group select-none cursor-pointer"
+                  className="relative aspect-video w-full rounded-xl sm:rounded-2xl overflow-hidden bg-slate-900 border-2 border-[#00A0DF]/30 shadow-lg group select-none cursor-pointer"
                   onMouseEnter={() => setIsHeroControlsHovered(true)}
                   onMouseLeave={() => setIsHeroControlsHovered(false)}
                 >
-                  {/* Instant 0ms Visual Backdrop / Poster (Completely Eliminates Initial Black Screen) */}
-                  <img
-                    src={heroPosterUrl}
-                    alt="Video Preview"
-                    loading="eager"
-                    decoding="async"
-                    className={`absolute inset-0 w-full h-full object-cover pointer-events-none transition-opacity duration-700 ${
-                      isVideoReady ? 'opacity-0 scale-105' : 'opacity-100 scale-100'
-                    }`}
-                  />
-
                   {/* Embedded / HTML5 Autoplaying Video */}
                   {isDirectVideo ? (
                     <video
@@ -521,15 +503,20 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
                       loop
                       playsInline
                       preload="auto"
-                      poster={heroPosterUrl}
-                      onLoadedData={() => setIsVideoReady(true)}
+                      onLoadedMetadata={() => {
+                        setIsHeroPlaying(true);
+                        heroVideoRef.current?.play().catch(() => {});
+                      }}
+                      onLoadedData={() => {
+                        setIsHeroPlaying(true);
+                        heroVideoRef.current?.play().catch(() => {});
+                      }}
                       onCanPlay={() => {
-                        setIsVideoReady(true);
+                        setIsHeroPlaying(true);
                         heroVideoRef.current?.play().catch(() => {});
                       }}
                       onPlay={() => {
                         setIsHeroPlaying(true);
-                        setIsVideoReady(true);
                       }}
                       onTimeUpdate={() => {
                         if (heroVideoRef.current) {
@@ -539,9 +526,7 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
                           }
                         }
                       }}
-                      className={`w-full h-full object-cover transition-opacity duration-500 ${
-                        isVideoReady ? 'opacity-100' : 'opacity-90'
-                      }`}
+                      className="w-full h-full object-cover"
                     />
                   ) : isYouTubeVideo ? (
                     <iframe
@@ -549,12 +534,7 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
                       src={getYouTubeEmbedUrl(hero.video_url)}
                       title="Hero Overview Video"
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      onLoad={() => {
-                        setTimeout(() => setIsVideoReady(true), 600);
-                      }}
-                      className={`w-full h-full pointer-events-none scale-[1.02] transition-opacity duration-500 ${
-                        isVideoReady ? 'opacity-100' : 'opacity-0'
-                      }`}
+                      className="w-full h-full pointer-events-none scale-[1.02]"
                     />
                   ) : (
                     <iframe
@@ -562,12 +542,7 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
                       src={getBunnyEmbedUrl(hero.video_url)}
                       title="Hero Overview Video"
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      onLoad={() => {
-                        setTimeout(() => setIsVideoReady(true), 600);
-                      }}
-                      className={`w-full h-full pointer-events-none scale-[1.02] transition-opacity duration-500 ${
-                        isVideoReady ? 'opacity-100' : 'opacity-0'
-                      }`}
+                      className="w-full h-full pointer-events-none scale-[1.02]"
                     />
                   )}
 

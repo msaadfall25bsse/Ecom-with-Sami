@@ -62,7 +62,8 @@ export async function GET(
             const parsedStart = parseInt(rangeVal.replace('-', ''), 10);
             if (!isNaN(parsedStart) && parsedStart < fileSize) {
               start = parsedStart;
-              const MAX_CHUNK = 5 * 1024 * 1024; // 5MB fast chunk
+              // 1MB initial chunk allows browser to start video playback within 150-200ms
+              const MAX_CHUNK = start === 0 ? 1024 * 1024 : 4 * 1024 * 1024;
               end = Math.min(start + MAX_CHUNK - 1, fileSize - 1);
             }
           } else {
@@ -75,8 +76,8 @@ export async function GET(
             }
           }
         } else {
-          // Default initial request without Range: send first 5MB slice for fast start
-          end = Math.min(5 * 1024 * 1024 - 1, fileSize - 1);
+          // Default initial request without Range: send first 1MB slice for instant start
+          end = Math.min(1024 * 1024 - 1, fileSize - 1);
         }
 
         // Determine which part contains this range slice
@@ -108,7 +109,9 @@ export async function GET(
                 'Accept-Ranges': 'bytes',
                 'Content-Length': String(chunkSize),
                 'Content-Type': contentType,
-                'Cache-Control': 'public, max-age=3600'
+                'Cache-Control': 'public, max-age=31536000, immutable',
+                'CDN-Cache-Control': 'public, max-age=31536000',
+                'Vary': 'Range'
               }
             });
           }
