@@ -96,6 +96,15 @@ export default function AdminCmsPage() {
   const uploadXhrRef = useRef<XMLHttpRequest | null>(null);
   const uploadAbortRef = useRef<AbortController | null>(null);
 
+  // Hero Video Upload States
+  const [heroUploading, setHeroUploading] = useState(false);
+  const [heroUploadProgress, setHeroUploadProgress] = useState(0);
+  const [heroUploadStatus, setHeroUploadStatus] = useState('');
+  const [heroUploadError, setHeroUploadError] = useState('');
+  const [heroUploadSuccess, setHeroUploadSuccess] = useState(false);
+  const heroUploadXhrRef = useRef<XMLHttpRequest | null>(null);
+  const heroFileInputRef = useRef<HTMLInputElement>(null);
+
   // New Supplier form state
   const [showAddSupplierModal, setShowAddSupplierModal] = useState(false);
   const [newSup, setNewSup] = useState({
@@ -706,6 +715,140 @@ export default function AdminCmsPage() {
         setUploadError('Upload cancelled');
       } else {
         setUploadError(err.message || 'Video upload failed. Please try again.');
+      }
+    }
+  };
+
+  // --- HERO HOMEPAGE VIDEO UPLOAD ACTIONS ---
+  const handleHeroVideoFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('video/') && !file.name.match(/\.(mp4|webm|mov|m4v|mkv)$/i)) {
+      setHeroUploadError('Please select a valid video file (.mp4, .webm, .mov, .m4v).');
+      return;
+    }
+
+    uploadHeroVideoFile(file);
+  };
+
+  const uploadHeroVideoFile = async (file: File) => {
+    setHeroUploading(true);
+    setHeroUploadProgress(0);
+    setHeroUploadSuccess(false);
+    setHeroUploadError('');
+    setHeroUploadStatus('Preparing video for persistent cloud storage...');
+
+    const cleanBase = file.name.replace(/\.[^/.]+$/, '').replace(/[^a-zA-Z0-9_-]/g, '_').substring(0, 40);
+    const manifestId = `hero_${Date.now()}_${cleanBase}`;
+
+    const PART_SIZE = 40 * 1024 * 1024; // 40MB parts safe under 50MB Supabase limit
+    const totalParts = Math.ceil(file.size / PART_SIZE);
+
+    try {
+      for (let p = 0; p < totalParts; p++) {
+        const start = p * PART_SIZE;
+        const end = Math.min(start + PART_SIZE, file.size);
+        const partBlob = file.slice(start, end);
+
+        setHeroUploadStatus(`Uploading cloud part ${p + 1}/${totalParts}...`);
+
+        // 1. Get signed upload URL
+        const resUrl = await fetch('/api/admin/cms/get-part-upload-url', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ manifestId, partIndex: p })
+        });
+
+        const urlData = await resUrl.json().catch(() => ({}));
+        if (!resUrl.ok || !urlData.signedUrl) {
+          throw new Error(urlData.message || `Failed to authorize upload part ${p + 1}`);
+        }
+
+        // 2. Direct PUT upload to Supabase Storage with progress tracking
+        await new Promise<void>((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          heroUploadXhrRef.current = xhr;
+
+          xhr.upload.onprogress = (e) => {
+            if (e.lengthComputable) {
+              const overallLoaded = start + e.loaded;
+              const percent = Math.min(Math.round((overallLoaded / file.size) * 100), 99);
+              setHeroUploadProgress(percent);
+              const loadedMB = (overallLoaded / (1024 * 1024)).toFixed(1);
+              const totalMB = (file.size / (1024 * 1024)).toFixed(1);
+              setHeroUploadStatus(`${loadedMB} MB / ${totalMB} MB (${percent}%) - Part ${p + 1}/${totalParts}`);
+            }
+          };
+
+          xhr.onload = () => {
+            heroUploadXhrRef.current = null;
+            if (xhr.status >= 200 && xhr.status < 300) {
+              resolve();
+            } else {
+              reject(new Error(`Part ${p + 1} upload failed with status ${xhr.status}`));
+            }
+          };
+
+          xhr.onerror = () => {
+            heroUploadXhrRef.current = null;
+            reject(new Error(`Network error uploading part ${p + 1}`));
+          };
+
+          xhr.onabort = () => {
+            heroUploadXhrRef.current = null;
+            reject(new Error('Upload cancelled'));
+          };
+
+          xhr.open('PUT', urlData.signedUrl, true);
+          xhr.setRequestHeader('Content-Type', 'application/octet-stream');
+          xhr.send(partBlob);
+        });
+      }
+
+      setHeroUploadStatus('Finalizing video manifest on cloud storage...');
+
+      // 3. Finalize manifest on server
+      const resFin = await fetch('/api/admin/cms/finalize-manifest', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          manifestId,
+          fileName: file.name,
+          totalSize: file.size,
+          totalParts,
+          partSize: PART_SIZE,
+          contentType: file.type || 'video/mp4'
+        })
+      });
+
+      const finData = await resFin.json().catch(() => ({}));
+      if (!resFin.ok || !finData.success || !finData.url) {
+        throw new Error(finData.message || 'Failed to finalize video on server');
+      }
+
+      // Automatically update cmsData.hero.video_url
+      setCmsData(prev => ({
+        ...prev,
+        hero: {
+          ...prev.hero,
+          video_url: finData.url
+        }
+      }));
+
+      setHeroUploadProgress(100);
+      setHeroUploading(false);
+      setHeroUploadSuccess(true);
+      const totalMB = (file.size / (1024 * 1024)).toFixed(1);
+      setHeroUploadStatus(`Upload complete 100%! (${totalMB} MB permanently stored)`);
+
+    } catch (err: any) {
+      setHeroUploading(false);
+      heroUploadXhrRef.current = null;
+      if (err.name === 'AbortError' || err.message === 'Upload cancelled') {
+        setHeroUploadError('Upload cancelled');
+      } else {
+        setHeroUploadError(err.message || 'Video upload failed. Please try again.');
       }
     }
   };
@@ -1630,19 +1773,105 @@ export default function AdminCmsPage() {
                 />
               </div>
 
-              <div className="bg-[#0B0F19] border border-white/10 rounded-2xl p-4">
-                <div className="flex items-center gap-2 text-xs sm:text-sm font-bold text-[#00A0DF] mb-2.5">
-                  <Video size={16} />
-                  <span>Preview Video Settings</span>
+              {/* Preview Video Settings with Direct File Upload */}
+              <div className="bg-[#0B0F19] border border-white/10 rounded-2xl p-4 sm:p-5 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-xs sm:text-sm font-bold text-[#00A0DF]">
+                    <Video size={16} />
+                    <span>Homepage Video Settings (Upload from Laptop or Paste Link)</span>
+                  </div>
+                  {cmsData.hero?.video_url && (
+                    <span className="text-[10px] sm:text-xs font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 rounded-full flex items-center gap-1 font-bold">
+                      <CheckCircle2 size={12} />
+                      <span>Active Video Set</span>
+                    </span>
+                  )}
                 </div>
+
+                {/* Direct Upload Box from Laptop / Device */}
+                <div className="p-4 rounded-xl bg-[#111827] border border-white/10 space-y-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                      <div className="text-xs sm:text-sm font-bold text-white flex items-center gap-1.5">
+                        <UploadCloud size={16} className="text-[#00A0DF]" />
+                        <span>Upload Video File directly from Laptop</span>
+                      </div>
+                      <p className="text-[11px] text-slate-400 mt-0.5">
+                        Upload your MP4, WebM or MOV video. It will be permanently stored and streamed directly on the homepage.
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <input
+                        ref={heroFileInputRef}
+                        type="file"
+                        accept="video/mp4,video/webm,video/quicktime,video/x-matroska,.mp4,.webm,.mov"
+                        className="hidden"
+                        onChange={handleHeroVideoFileSelect}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => heroFileInputRef.current?.click()}
+                        disabled={heroUploading}
+                        className="px-4 py-2 rounded-xl bg-[#00A0DF] hover:bg-[#008ec7] disabled:opacity-50 text-white text-xs font-black transition-all flex items-center gap-1.5 shadow-md cursor-pointer active:scale-95"
+                      >
+                        {heroUploading ? (
+                          <>
+                            <Loader2 size={13} className="animate-spin" />
+                            <span>Uploading...</span>
+                          </>
+                        ) : (
+                          <>
+                            <UploadCloud size={14} />
+                            <span>Select Video File</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Upload Progress Bar */}
+                  {heroUploading && (
+                    <div className="space-y-1.5 pt-2 border-t border-white/5">
+                      <div className="flex justify-between text-xs text-slate-300 font-mono">
+                        <span className="truncate pr-2">{heroUploadStatus}</span>
+                        <span className="font-bold text-[#00A0DF]">{heroUploadProgress}%</span>
+                      </div>
+                      <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-[#00A0DF] transition-all duration-200"
+                          style={{ width: `${heroUploadProgress}%` }}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {heroUploadSuccess && (
+                    <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold flex items-center gap-2">
+                      <CheckCircle2 size={15} />
+                      <span>{heroUploadStatus || 'Video file uploaded successfully and set for homepage!'}</span>
+                    </div>
+                  )}
+
+                  {heroUploadError && (
+                    <div className="p-2.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs font-bold">
+                      ⚠️ {heroUploadError}
+                    </div>
+                  )}
+                </div>
+
+                {/* Video URL & Overlay Title Inputs */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-bold text-slate-400 mb-1">Video Embed URL</label>
+                    <label className="block text-xs font-bold text-slate-400 mb-1">
+                      Video Stream URL (Auto-filled on upload or paste link)
+                    </label>
                     <input
                       type="text"
                       value={cmsData.hero?.video_url ?? ''}
                       onChange={(e) => setCmsData({ ...cmsData, hero: { ...cmsData.hero, video_url: e.target.value } })}
-                      className="w-full px-3 py-2 rounded-xl bg-[#111827] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF]"
+                      placeholder="e.g. /api/videos/hero_... or https://www.youtube.com/embed/..."
+                      className="w-full px-3 py-2 rounded-xl bg-[#111827] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF] font-mono"
                     />
                   </div>
                   <div>
@@ -1651,10 +1880,41 @@ export default function AdminCmsPage() {
                       type="text"
                       value={cmsData.hero?.video_title ?? ''}
                       onChange={(e) => setCmsData({ ...cmsData, hero: { ...cmsData.hero, video_title: e.target.value } })}
+                      placeholder="e.g. Watch Sami Explain the Entire Model..."
                       className="w-full px-3 py-2 rounded-xl bg-[#111827] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF]"
                     />
                   </div>
                 </div>
+
+                {/* Live In-CMS Video Preview Player */}
+                {cmsData.hero?.video_url && (
+                  <div className="p-3 rounded-xl bg-[#111827] border border-white/5 space-y-2">
+                    <div className="flex items-center justify-between text-[11px] text-slate-400">
+                      <span className="font-bold text-white flex items-center gap-1.5">
+                        <Eye size={12} className="text-[#00A0DF]" />
+                        <span>Live Video Preview (How it will play for students)</span>
+                      </span>
+                      <span className="font-mono text-[10px] truncate max-w-[200px] sm:max-w-xs">{cmsData.hero.video_url}</span>
+                    </div>
+                    <div className="max-w-md mx-auto aspect-video rounded-xl overflow-hidden bg-black border border-white/10 shadow-md">
+                      {cmsData.hero.video_url.includes('youtube.com') || cmsData.hero.video_url.includes('youtu.be') ? (
+                        <iframe
+                          src={cmsData.hero.video_url.includes('embed') ? cmsData.hero.video_url : `https://www.youtube.com/embed/${cmsData.hero.video_url.split('v=')[1]?.split('&')[0] || ''}`}
+                          title="Preview"
+                          className="w-full h-full"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        />
+                      ) : (
+                        <video
+                          src={cmsData.hero.video_url}
+                          controls
+                          playsInline
+                          className="w-full h-full object-cover"
+                        />
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
