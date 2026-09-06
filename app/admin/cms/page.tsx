@@ -636,24 +636,8 @@ export default function AdminCmsPage() {
     setUploadStatusText('Checking video resolution for 720p HD optimization...');
 
     try {
-      // Step 1: Optimize video to 720p HD if resolution exceeds 720p (reduces 136MB to ~40MB)
-      let videoToUpload = file;
-      try {
-        setUploadStatusText('Optimizing video to 720p HD resolution...');
-        const result = await optimizeVideoTo720p(file, (pct, status) => {
-          setUploadProgress(Math.round(pct * 0.4)); // First 40% is 720p downscaling
-          setUploadStatusText(status);
-        });
-
-        if (result.wasCompressed) {
-          videoToUpload = result.file;
-          const origMB = (result.originalSize / (1024 * 1024)).toFixed(1);
-          const compMB = (result.compressedSize / (1024 * 1024)).toFixed(1);
-          setUploadStatusText(`720p HD ready! Reduced from ${origMB} MB to ${compMB} MB`);
-        }
-      } catch (optErr) {
-        console.warn('Video optimization notice:', optErr);
-      }
+      const videoToUpload = file;
+      setUploadStatusText(`Preparing high-speed upload (${(videoToUpload.size / (1024 * 1024)).toFixed(1)} MB)...`);
 
       // Step 2: Upload in safe 15MB chunks to bypass Hostinger Nginx 413 Payload Too Large
       const CHUNK_SIZE = 15 * 1024 * 1024; // 15MB chunks (guaranteed under Hostinger limit)
@@ -682,12 +666,11 @@ export default function AdminCmsPage() {
           xhr.upload.onprogress = (e) => {
             if (e.lengthComputable) {
               const currentChunkLoaded = start + e.loaded;
-              // 40% to 99% progress
-              const uploadPct = 40 + Math.min(Math.round((currentChunkLoaded / videoToUpload.size) * 59), 59);
+              const uploadPct = Math.min(Math.round((currentChunkLoaded / videoToUpload.size) * 100), 99);
               setUploadProgress(uploadPct);
               const loadedMB = (currentChunkLoaded / (1024 * 1024)).toFixed(1);
               const totalMB = (videoToUpload.size / (1024 * 1024)).toFixed(1);
-              setUploadStatusText(`${loadedMB} MB / ${totalMB} MB (${uploadPct}%) - Storing 720p HD Video on Hostinger (Part ${c + 1}/${totalChunks})`);
+              setUploadStatusText(`${loadedMB} MB / ${totalMB} MB (${uploadPct}%) - Storing Video on Hostinger (Part ${c + 1}/${totalChunks})`);
             }
           };
 
@@ -780,24 +763,8 @@ export default function AdminCmsPage() {
     setHeroUploadStatus('Checking hero video resolution for 720p HD optimization...');
 
     try {
-      // Step 1: Optimize video to 720p HD if resolution exceeds 720p
-      let videoToUpload = file;
-      try {
-        setHeroUploadStatus('Optimizing hero video to 720p HD resolution...');
-        const result = await optimizeVideoTo720p(file, (pct, status) => {
-          setHeroUploadProgress(Math.round(pct * 0.4));
-          setHeroUploadStatus(status);
-        });
-
-        if (result.wasCompressed) {
-          videoToUpload = result.file;
-          const origMB = (result.originalSize / (1024 * 1024)).toFixed(1);
-          const compMB = (result.compressedSize / (1024 * 1024)).toFixed(1);
-          setHeroUploadStatus(`720p HD ready! Reduced from ${origMB} MB to ${compMB} MB`);
-        }
-      } catch (optErr) {
-        console.warn('Hero video optimization notice:', optErr);
-      }
+      const videoToUpload = file;
+      setHeroUploadStatus(`Preparing high-speed hero upload (${(videoToUpload.size / (1024 * 1024)).toFixed(1)} MB)...`);
 
       // Step 2: Upload in safe 15MB chunks to bypass Hostinger Nginx 413 Payload Too Large
       const CHUNK_SIZE = 15 * 1024 * 1024;
@@ -825,11 +792,11 @@ export default function AdminCmsPage() {
           xhr.upload.onprogress = (e) => {
             if (e.lengthComputable) {
               const currentChunkLoaded = start + e.loaded;
-              const uploadPct = 40 + Math.min(Math.round((currentChunkLoaded / videoToUpload.size) * 59), 59);
+              const uploadPct = Math.min(Math.round((currentChunkLoaded / videoToUpload.size) * 100), 99);
               setHeroUploadProgress(uploadPct);
               const loadedMB = (currentChunkLoaded / (1024 * 1024)).toFixed(1);
               const totalMB = (videoToUpload.size / (1024 * 1024)).toFixed(1);
-              setHeroUploadStatus(`${loadedMB} MB / ${totalMB} MB (${uploadPct}%) - Storing 720p HD Hero Video on Hostinger (Part ${c + 1}/${totalChunks})`);
+              setHeroUploadStatus(`${loadedMB} MB / ${totalMB} MB (${uploadPct}%) - Storing Hero Video on Hostinger (Part ${c + 1}/${totalChunks})`);
             }
           };
 
