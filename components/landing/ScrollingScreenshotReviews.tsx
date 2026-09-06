@@ -118,6 +118,7 @@ export function ScrollingScreenshotReviews({ data }: ScrollingScreenshotReviewsP
                       src={src}
                       alt="Student Result Review"
                       loading="lazy"
+                      decoding="async"
                       className="w-full h-auto object-cover rounded-2xl block pointer-events-none"
                     />
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5 text-white text-[11px] font-bold pointer-events-none">
@@ -149,6 +150,7 @@ export function ScrollingScreenshotReviews({ data }: ScrollingScreenshotReviewsP
                       src={src}
                       alt="Student Result Review"
                       loading="lazy"
+                      decoding="async"
                       className="w-full h-auto object-cover rounded-2xl block pointer-events-none"
                     />
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5 text-white text-[11px] font-bold pointer-events-none">

@@ -73,20 +73,9 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
 
   useEffect(() => {
     const syncData = async () => {
-      try {
-        localStorage.removeItem('sami_cms_content');
-      } catch (e) {}
-
       // 1. Local API Route
       try {
-        const timestamp = `${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
-        const res = await fetch(`/api/public/cms-content?_nocache=${timestamp}`, {
-          cache: 'no-store',
-          headers: {
-            'Cache-Control': 'no-cache, no-store, must-revalidate',
-            'Pragma': 'no-cache'
-          }
-        });
+        const res = await fetch('/api/public/cms-content');
         if (res.ok) {
           const data = await res.json();
           if (data.success && data.sections) {
@@ -115,7 +104,10 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
       }
     };
 
-    syncData();
+    // Only run network fetch on mount if SSR did not supply initialContent
+    if (!initialContent) {
+      syncData();
+    }
 
     window.addEventListener('sami_cms_updated', syncData);
     window.addEventListener('storage', syncData);
@@ -124,7 +116,7 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
       window.removeEventListener('sami_cms_updated', syncData);
       window.removeEventListener('storage', syncData);
     };
-  }, []);
+  }, [initialContent]);
 
   const hero = content.hero || defaultCmsContent.hero;
   const stats = content.stats || defaultCmsContent.stats;

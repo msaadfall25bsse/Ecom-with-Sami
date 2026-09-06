@@ -6,9 +6,7 @@ import { StickyMobileCta } from '@/components/layout';
 import { dbGetCmsSettings } from '@/lib/database';
 import { generateThemeCss, DEFAULT_THEME_COLORS } from '@/utils/cmsStore';
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
-export const fetchCache = 'force-no-store';
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: 'Master UAE & KSA Dropshipping | Ecom With Sami',
@@ -48,6 +46,10 @@ export default async function RootLayout({
     <html lang="en" data-theme={activeTheme} className="scroll-smooth">
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+        <link rel="preconnect" href="https://img.youtube.com" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://img.youtube.com" />
+        <link rel="preconnect" href="https://www.youtube.com" />
+        <link rel="dns-prefetch" href="https://www.youtube.com" />
         <style id="sami-dynamic-theme" dangerouslySetInnerHTML={{ __html: dynamicCss }} />
         <script
           dangerouslySetInnerHTML={{

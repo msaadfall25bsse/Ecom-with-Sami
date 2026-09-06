@@ -80,14 +80,7 @@ export default function EnrollmentPage() {
 
       // 2. Fetch fresh from public CMS API route
       try {
-        const timestamp = `${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
-        const res = await fetch(`/api/public/cms-content?_nocache=${timestamp}`, {
-          cache: 'no-store',
-          headers: {
-            'Cache-Control': 'no-cache, no-store, must-revalidate',
-            'Pragma': 'no-cache'
-          }
-        });
+        const res = await fetch('/api/public/cms-content');
         if (res.ok) {
           const data = await res.json();
           if (data.success && data.sections) {
