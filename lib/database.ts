@@ -58,7 +58,16 @@ export async function dbGetCmsSettings(): Promise<CmsContentSchema> {
                     ...(parsed.theme.custom_colors || {}) 
                   } 
                 } 
-              : defaultCmsContent.theme
+              : defaultCmsContent.theme,
+            screenshot_reviews: parsed.screenshot_reviews
+              ? {
+                  ...defaultCmsContent.screenshot_reviews,
+                  ...parsed.screenshot_reviews,
+                  images: Array.isArray(parsed.screenshot_reviews.images) && parsed.screenshot_reviews.images.length > 0
+                    ? parsed.screenshot_reviews.images
+                    : defaultCmsContent.screenshot_reviews?.images || []
+                }
+              : defaultCmsContent.screenshot_reviews
           };
         }
       }

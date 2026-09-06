@@ -726,3 +726,30 @@ body {
   pointer-events: none !important;
 }
 
+/* Vertical Scrolling Screenshot Reviews (LearnWithAfaq Style) */
+@keyframes scrollReviewsUp {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-50%);
+  }
+}
+
+.animate-scroll-vertical-col1 {
+  animation: scrollReviewsUp 38s linear infinite;
+  will-change: transform;
+}
+
+.animate-scroll-vertical-col2 {
+  animation: scrollReviewsUp 30s linear infinite;
+  will-change: transform;
+}
+
+.animate-scroll-vertical-col1:hover,
+.animate-scroll-vertical-col2:hover,
+.group-scroll:hover .animate-scroll-vertical-col1,
+.group-scroll:hover .animate-scroll-vertical-col2 {
+  animation-play-state: paused;
+}
+

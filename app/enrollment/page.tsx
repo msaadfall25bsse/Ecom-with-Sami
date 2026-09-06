@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Navbar, Footer, TopMarquee } from '@/components/layout';
-import { CountdownTimer } from '@/components/landing';
+import { CountdownTimer, ScrollingScreenshotReviews } from '@/components/landing';
 import { 
   ShieldCheck, 
   CheckCircle2, 
@@ -48,6 +48,7 @@ export default function EnrollmentPage() {
     transactionId: ''
   });
 
+  const [screenshotReviews, setScreenshotReviews] = useState(defaultCmsContent.screenshot_reviews);
   const [paymentMethods, setPaymentMethods] = useState(() => {
     return defaultCmsContent.payment_methods.map(pm => ({
       ...pm,
@@ -89,19 +90,24 @@ export default function EnrollmentPage() {
         });
         if (res.ok) {
           const data = await res.json();
-          if (data.success && data.sections?.payment_methods && Array.isArray(data.sections.payment_methods)) {
-            const methods = data.sections.payment_methods;
-            setPaymentMethods(methods.map((pm: any) => ({
-              ...pm,
-              themeColor: pm.id === 'easypaisa' ? 'border-emerald-500 bg-emerald-500/10 text-emerald-400'
-                : pm.id === 'jazzcash' ? 'border-amber-500 bg-amber-500/10 text-amber-400'
-                : pm.id === 'meezan' ? 'border-blue-500 bg-blue-500/10 text-blue-400'
-                : 'border-cyan-500 bg-cyan-500/10 text-cyan-400'
-            })));
-            try {
-              localStorage.setItem('sami_cms_payment_methods', JSON.stringify(methods));
-            } catch (e) {}
-            return;
+          if (data.success && data.sections) {
+            if (data.sections.screenshot_reviews) {
+              setScreenshotReviews(data.sections.screenshot_reviews);
+            }
+            if (data.sections.payment_methods && Array.isArray(data.sections.payment_methods)) {
+              const methods = data.sections.payment_methods;
+              setPaymentMethods(methods.map((pm: any) => ({
+                ...pm,
+                themeColor: pm.id === 'easypaisa' ? 'border-emerald-500 bg-emerald-500/10 text-emerald-400'
+                  : pm.id === 'jazzcash' ? 'border-amber-500 bg-amber-500/10 text-amber-400'
+                  : pm.id === 'meezan' ? 'border-blue-500 bg-blue-500/10 text-blue-400'
+                  : 'border-cyan-500 bg-cyan-500/10 text-cyan-400'
+              })));
+              try {
+                localStorage.setItem('sami_cms_payment_methods', JSON.stringify(methods));
+              } catch (e) {}
+              return;
+            }
           }
         }
       } catch (e) {}
@@ -117,6 +123,9 @@ export default function EnrollmentPage() {
 
           if (!error && data && data.value_json) {
             const parsed = typeof data.value_json === 'string' ? JSON.parse(data.value_json) : data.value_json;
+            if (parsed && parsed.screenshot_reviews) {
+              setScreenshotReviews(parsed.screenshot_reviews);
+            }
             if (parsed && Array.isArray(parsed.payment_methods)) {
               const methods = parsed.payment_methods;
               setPaymentMethods(methods.map((pm: any) => ({
@@ -653,6 +662,11 @@ export default function EnrollmentPage() {
         )}
 
       </div>
+
+      {/* ========================================================================= */}
+      {/* REAL STUDENT RESULTS SCREENSHOT REVIEWS MARQUEE (LEARNWITHAFAQ STYLE)     */}
+      {/* ========================================================================= */}
+      <ScrollingScreenshotReviews data={screenshotReviews} />
 
       {/* ========================================================================= */}
       {/* POPUP CONFIRMATION MODAL WINDOW */}
