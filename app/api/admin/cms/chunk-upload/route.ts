@@ -56,24 +56,32 @@ export async function POST(request: NextRequest) {
       const finalFileName = `${prefix}_${Date.now()}_${sanitizedBase}${ext}`;
       const finalFilePath = path.join(finalVideosDir, finalFileName);
 
-      // Assemble all parts synchronously into the destination file
+      // Assemble all parts using WriteStream into destination file
       if (fs.existsSync(finalFilePath)) {
-        fs.unlinkSync(finalFilePath);
+        try { fs.unlinkSync(finalFilePath); } catch {}
       }
 
+      const writeStream = fs.createWriteStream(finalFilePath, { flags: 'w' });
       for (let i = 0; i < totalChunks; i++) {
         const partFile = path.join(tempDir, `${safeUploadId}_part_${i}`);
         if (!fs.existsSync(partFile)) {
+          writeStream.end();
           return NextResponse.json(
             { success: false, message: `Missing chunk ${i} during assembly` },
             { status: 400 }
           );
         }
         const partData = fs.readFileSync(partFile);
-        fs.appendFileSync(finalFilePath, partData);
-        // Clean up temporary chunk
+        writeStream.write(partData);
+        // Clean up temporary chunk immediately
         try { fs.unlinkSync(partFile); } catch {}
       }
+
+      await new Promise<void>((resolve, reject) => {
+        writeStream.on('finish', resolve);
+        writeStream.on('error', reject);
+        writeStream.end();
+      });
 
       const finalUrl = `/api/videos/${finalFileName}`;
       const directUrl = `/uploads/videos/${finalFileName}`;
@@ -81,7 +89,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         success: true,
         isCompleted: true,
-        message: 'Video chunks assembled into final 720p file on Hostinger successfully!',
+        message: 'Video chunks assembled into final file on Hostinger successfully!',
         url: finalUrl,
         directUrl,
         filename: finalFileName

@@ -633,14 +633,14 @@ export default function AdminCmsPage() {
     setUploadProgress(0);
     setVideoUploadSuccess(false);
     setUploadError('');
-    setUploadStatusText('Checking video resolution for 720p HD optimization...');
 
     try {
       const videoToUpload = file;
-      setUploadStatusText(`Preparing high-speed upload (${(videoToUpload.size / (1024 * 1024)).toFixed(1)} MB)...`);
+      const totalMB = (videoToUpload.size / (1024 * 1024)).toFixed(1);
+      setUploadStatusText(`Preparing upload (${totalMB} MB)...`);
 
-      // Step 2: Upload in safe 15MB chunks to bypass Hostinger Nginx 413 Payload Too Large
-      const CHUNK_SIZE = 15 * 1024 * 1024; // 15MB chunks (guaranteed under Hostinger limit)
+      // Safe 850KB chunks to strictly guarantee passing through any Nginx 1MB client_max_body_size limit
+      const CHUNK_SIZE = 850 * 1024;
       const totalChunks = Math.ceil(videoToUpload.size / CHUNK_SIZE);
       const uploadId = `vid_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
       let finalVideoUrl = '';
@@ -650,64 +650,87 @@ export default function AdminCmsPage() {
         const end = Math.min(start + CHUNK_SIZE, videoToUpload.size);
         const chunkBlob = videoToUpload.slice(start, end);
 
-        const formData = new FormData();
-        formData.append('chunk', chunkBlob);
-        formData.append('uploadId', uploadId);
-        formData.append('chunkIndex', String(c));
-        formData.append('totalChunks', String(totalChunks));
-        formData.append('fileName', videoToUpload.name);
-        formData.append('moduleId', String(moduleId));
-        formData.append('isHero', 'false');
+        let chunkSuccess = false;
+        let lastErrorMsg = '';
 
-        await new Promise<void>((resolve, reject) => {
-          const xhr = new XMLHttpRequest();
-          uploadXhrRef.current = xhr;
+        // Retry each chunk up to 3 times in case of temporary network glitch
+        for (let attempt = 1; attempt <= 3; attempt++) {
+          try {
+            const formData = new FormData();
+            formData.append('chunk', chunkBlob);
+            formData.append('uploadId', uploadId);
+            formData.append('chunkIndex', String(c));
+            formData.append('totalChunks', String(totalChunks));
+            formData.append('fileName', videoToUpload.name);
+            formData.append('moduleId', String(moduleId));
+            formData.append('isHero', 'false');
 
-          xhr.upload.onprogress = (e) => {
-            if (e.lengthComputable) {
-              const currentChunkLoaded = start + e.loaded;
-              const uploadPct = Math.min(Math.round((currentChunkLoaded / videoToUpload.size) * 100), 99);
-              setUploadProgress(uploadPct);
-              const loadedMB = (currentChunkLoaded / (1024 * 1024)).toFixed(1);
-              const totalMB = (videoToUpload.size / (1024 * 1024)).toFixed(1);
-              setUploadStatusText(`${loadedMB} MB / ${totalMB} MB (${uploadPct}%) - Storing Video on Hostinger (Part ${c + 1}/${totalChunks})`);
-            }
-          };
+            await new Promise<void>((resolve, reject) => {
+              const xhr = new XMLHttpRequest();
+              uploadXhrRef.current = xhr;
 
-          xhr.onload = () => {
-            uploadXhrRef.current = null;
-            if (xhr.status >= 200 && xhr.status < 300) {
-              try {
-                const resData = JSON.parse(xhr.responseText);
-                if (resData.success) {
-                  if (resData.isCompleted && resData.url) {
-                    finalVideoUrl = resData.url;
-                  }
-                  resolve();
-                } else {
-                  reject(new Error(resData.message || `Part ${c + 1} upload failed`));
+              xhr.upload.onprogress = (e) => {
+                if (e.lengthComputable) {
+                  const currentChunkLoaded = start + e.loaded;
+                  const uploadPct = Math.min(Math.round((currentChunkLoaded / videoToUpload.size) * 100), 99);
+                  setUploadProgress(uploadPct);
+                  const loadedMB = (currentChunkLoaded / (1024 * 1024)).toFixed(1);
+                  setUploadStatusText(`${loadedMB} MB / ${totalMB} MB (${uploadPct}%) - Uploading (Part ${c + 1}/${totalChunks})`);
                 }
-              } catch (err: any) {
-                reject(new Error('Invalid response from server'));
-              }
-            } else {
-              reject(new Error(`Upload failed with status ${xhr.status}`));
+              };
+
+              xhr.onload = () => {
+                uploadXhrRef.current = null;
+                if (xhr.status >= 200 && xhr.status < 300) {
+                  try {
+                    const resData = JSON.parse(xhr.responseText);
+                    if (resData.success) {
+                      if (resData.isCompleted && resData.url) {
+                        finalVideoUrl = resData.url;
+                      }
+                      resolve();
+                    } else {
+                      reject(new Error(resData.message || `Part ${c + 1} upload failed`));
+                    }
+                  } catch {
+                    reject(new Error('Invalid response from server'));
+                  }
+                } else {
+                  reject(new Error(`Server returned HTTP ${xhr.status}`));
+                }
+              };
+
+              xhr.onerror = () => {
+                uploadXhrRef.current = null;
+                reject(new Error('Network error during chunk upload'));
+              };
+
+              xhr.onabort = () => {
+                uploadXhrRef.current = null;
+                reject(new Error('Upload cancelled'));
+              };
+
+              xhr.open('POST', '/api/admin/cms/chunk-upload', true);
+              xhr.send(formData);
+            });
+
+            chunkSuccess = true;
+            break;
+          } catch (err: any) {
+            lastErrorMsg = err.message || 'Chunk error';
+            if (lastErrorMsg === 'Upload cancelled') {
+              throw err;
             }
-          };
+            if (attempt < 3) {
+              setUploadStatusText(`Retrying part ${c + 1}/${totalChunks} (attempt ${attempt + 1})...`);
+              await new Promise((r) => setTimeout(r, 600 * attempt));
+            }
+          }
+        }
 
-          xhr.onerror = () => {
-            uploadXhrRef.current = null;
-            reject(new Error('Network error occurred during video upload'));
-          };
-
-          xhr.onabort = () => {
-            uploadXhrRef.current = null;
-            reject(new Error('Upload cancelled'));
-          };
-
-          xhr.open('POST', '/api/admin/cms/chunk-upload', true);
-          xhr.send(formData);
-        });
+        if (!chunkSuccess) {
+          throw new Error(lastErrorMsg || `Failed to upload part ${c + 1} after 3 attempts`);
+        }
       }
 
       if (finalVideoUrl) {
@@ -715,8 +738,7 @@ export default function AdminCmsPage() {
         setUploadProgress(100);
         setUploadingVideo(false);
         setVideoUploadSuccess(true);
-        const totalMB = (videoToUpload.size / (1024 * 1024)).toFixed(1);
-        setUploadStatusText(`Upload complete 100%! (${totalMB} MB permanently stored at 720p HD on Hostinger)`);
+        setUploadStatusText(`Upload complete 100%! (${totalMB} MB permanently saved)`);
       } else {
         throw new Error('Video assembly completed but no URL was returned');
       }
@@ -760,14 +782,14 @@ export default function AdminCmsPage() {
     setHeroUploadProgress(0);
     setHeroUploadSuccess(false);
     setHeroUploadError('');
-    setHeroUploadStatus('Checking hero video resolution for 720p HD optimization...');
 
     try {
       const videoToUpload = file;
-      setHeroUploadStatus(`Preparing high-speed hero upload (${(videoToUpload.size / (1024 * 1024)).toFixed(1)} MB)...`);
+      const totalMB = (videoToUpload.size / (1024 * 1024)).toFixed(1);
+      setHeroUploadStatus(`Preparing hero upload (${totalMB} MB)...`);
 
-      // Step 2: Upload in safe 15MB chunks to bypass Hostinger Nginx 413 Payload Too Large
-      const CHUNK_SIZE = 15 * 1024 * 1024;
+      // Safe 850KB chunks to strictly guarantee passing through any Nginx 1MB client_max_body_size limit
+      const CHUNK_SIZE = 850 * 1024;
       const totalChunks = Math.ceil(videoToUpload.size / CHUNK_SIZE);
       const uploadId = `hero_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
       let finalHeroUrl = '';
@@ -777,63 +799,85 @@ export default function AdminCmsPage() {
         const end = Math.min(start + CHUNK_SIZE, videoToUpload.size);
         const chunkBlob = videoToUpload.slice(start, end);
 
-        const formData = new FormData();
-        formData.append('chunk', chunkBlob);
-        formData.append('uploadId', uploadId);
-        formData.append('chunkIndex', String(c));
-        formData.append('totalChunks', String(totalChunks));
-        formData.append('fileName', videoToUpload.name);
-        formData.append('isHero', 'true');
+        let chunkSuccess = false;
+        let lastErrorMsg = '';
 
-        await new Promise<void>((resolve, reject) => {
-          const xhr = new XMLHttpRequest();
-          heroUploadXhrRef.current = xhr;
+        for (let attempt = 1; attempt <= 3; attempt++) {
+          try {
+            const formData = new FormData();
+            formData.append('chunk', chunkBlob);
+            formData.append('uploadId', uploadId);
+            formData.append('chunkIndex', String(c));
+            formData.append('totalChunks', String(totalChunks));
+            formData.append('fileName', videoToUpload.name);
+            formData.append('isHero', 'true');
 
-          xhr.upload.onprogress = (e) => {
-            if (e.lengthComputable) {
-              const currentChunkLoaded = start + e.loaded;
-              const uploadPct = Math.min(Math.round((currentChunkLoaded / videoToUpload.size) * 100), 99);
-              setHeroUploadProgress(uploadPct);
-              const loadedMB = (currentChunkLoaded / (1024 * 1024)).toFixed(1);
-              const totalMB = (videoToUpload.size / (1024 * 1024)).toFixed(1);
-              setHeroUploadStatus(`${loadedMB} MB / ${totalMB} MB (${uploadPct}%) - Storing Hero Video on Hostinger (Part ${c + 1}/${totalChunks})`);
-            }
-          };
+            await new Promise<void>((resolve, reject) => {
+              const xhr = new XMLHttpRequest();
+              heroUploadXhrRef.current = xhr;
 
-          xhr.onload = () => {
-            heroUploadXhrRef.current = null;
-            if (xhr.status >= 200 && xhr.status < 300) {
-              try {
-                const resData = JSON.parse(xhr.responseText);
-                if (resData.success) {
-                  if (resData.isCompleted && resData.url) {
-                    finalHeroUrl = resData.url;
-                  }
-                  resolve();
-                } else {
-                  reject(new Error(resData.message || `Hero part ${c + 1} upload failed`));
+              xhr.upload.onprogress = (e) => {
+                if (e.lengthComputable) {
+                  const currentChunkLoaded = start + e.loaded;
+                  const uploadPct = Math.min(Math.round((currentChunkLoaded / videoToUpload.size) * 100), 99);
+                  setHeroUploadProgress(uploadPct);
+                  const loadedMB = (currentChunkLoaded / (1024 * 1024)).toFixed(1);
+                  setHeroUploadStatus(`${loadedMB} MB / ${totalMB} MB (${uploadPct}%) - Uploading (Part ${c + 1}/${totalChunks})`);
                 }
-              } catch (err: any) {
-                reject(new Error('Invalid response from server'));
-              }
-            } else {
-              reject(new Error(`Upload failed with status ${xhr.status}`));
+              };
+
+              xhr.onload = () => {
+                heroUploadXhrRef.current = null;
+                if (xhr.status >= 200 && xhr.status < 300) {
+                  try {
+                    const resData = JSON.parse(xhr.responseText);
+                    if (resData.success) {
+                      if (resData.isCompleted && resData.url) {
+                        finalHeroUrl = resData.url;
+                      }
+                      resolve();
+                    } else {
+                      reject(new Error(resData.message || `Hero part ${c + 1} upload failed`));
+                    }
+                  } catch {
+                    reject(new Error('Invalid response from server'));
+                  }
+                } else {
+                  reject(new Error(`Server returned HTTP ${xhr.status}`));
+                }
+              };
+
+              xhr.onerror = () => {
+                heroUploadXhrRef.current = null;
+                reject(new Error('Network error occurred during hero video upload'));
+              };
+
+              xhr.onabort = () => {
+                heroUploadXhrRef.current = null;
+                reject(new Error('Upload cancelled'));
+              };
+
+              xhr.open('POST', '/api/admin/cms/chunk-upload', true);
+              xhr.send(formData);
+            });
+
+            chunkSuccess = true;
+            break;
+          } catch (err: any) {
+            lastErrorMsg = err.message || 'Chunk error';
+            if (lastErrorMsg === 'Upload cancelled') {
+              throw err;
             }
-          };
+            if (attempt < 3) {
+              setHeroUploadStatus(`Retrying hero part ${c + 1}/${totalChunks} (attempt ${attempt + 1})...`);
+              await new Promise((r) => setTimeout(r, 600 * attempt));
+            }
+          }
+        }
 
-          xhr.onerror = () => {
-            heroUploadXhrRef.current = null;
-            reject(new Error('Network error occurred during hero video upload'));
-          };
-
-          xhr.onabort = () => {
-            heroUploadXhrRef.current = null;
-            reject(new Error('Upload cancelled'));
-          };
-
-          xhr.open('POST', '/api/admin/cms/chunk-upload', true);
-          xhr.send(formData);
-        });
+        if (!chunkSuccess) {
+          throw new Error(lastErrorMsg || `Failed to upload hero part ${c + 1} after 3 attempts`);
+        }
       }
 
       if (finalHeroUrl) {
@@ -847,8 +891,7 @@ export default function AdminCmsPage() {
         setHeroUploadProgress(100);
         setHeroUploading(false);
         setHeroUploadSuccess(true);
-        const totalMB = (videoToUpload.size / (1024 * 1024)).toFixed(1);
-        setHeroUploadStatus(`Upload complete 100%! (${totalMB} MB stored on Hostinger at 720p HD)`);
+        setHeroUploadStatus(`Upload complete 100%! (${totalMB} MB saved successfully)`);
       } else {
         throw new Error('Hero video assembly completed but no URL was returned');
       }
