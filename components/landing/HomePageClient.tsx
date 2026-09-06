@@ -64,6 +64,7 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
   // Hero Autoplay Video & Sound States (LearnWithAfaq Style)
   const [isHeroMuted, setIsHeroMuted] = useState(true);
   const [isHeroPlaying, setIsHeroPlaying] = useState(true);
+  const [isVideoReady, setIsVideoReady] = useState(false);
   const [heroCurrentTime, setHeroCurrentTime] = useState(1);
   const [heroDuration, setHeroDuration] = useState(128);
   const [isHeroControlsHovered, setIsHeroControlsHovered] = useState(false);
@@ -255,6 +256,34 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
   );
   const isDirectVideo = !isYouTubeVideo && !isBunnyVideo;
 
+  const getYouTubeId = (url?: string) => {
+    if (!url) return 'dQw4w9WgXcQ';
+    const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/);
+    return match && match[1] ? match[1] : 'dQw4w9WgXcQ';
+  };
+
+  const ytVideoId = getYouTubeId(hero.video_url);
+  const heroPosterUrl = isYouTubeVideo
+    ? `https://img.youtube.com/vi/${ytVideoId}/hqdefault.jpg`
+    : 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1200&auto=format&fit=crop&q=80';
+
+  // Force immediate autoplay on mount for direct videos across all devices (Safari, Chrome, Android, iOS)
+  useEffect(() => {
+    if (isDirectVideo && heroVideoRef.current) {
+      heroVideoRef.current.defaultMuted = true;
+      heroVideoRef.current.muted = true;
+      const playPromise = heroVideoRef.current.play();
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => {
+            setIsHeroPlaying(true);
+            setIsVideoReady(true);
+          })
+          .catch(() => {});
+      }
+    }
+  }, [isDirectVideo, hero.video_url]);
+
   // Auto increment counter when playing if video is an embed iframe
   useEffect(() => {
     if (!isDirectVideo && isHeroPlaying) {
@@ -265,16 +294,14 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
     }
   }, [isDirectVideo, isHeroPlaying, heroDuration]);
 
-  const getYouTubeEmbedUrl = (url: string, muted: boolean) => {
-    let vId = 'dQw4w9WgXcQ';
-    const match = url?.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/);
-    if (match && match[1]) vId = match[1];
-    return `https://www.youtube.com/embed/${vId}?autoplay=1&mute=${muted ? 1 : 0}&loop=1&playlist=${vId}&controls=0&modestbranding=1&rel=0&playsinline=1&enablejsapi=1`;
+  const getYouTubeEmbedUrl = (url: string) => {
+    const vId = getYouTubeId(url);
+    return `https://www.youtube.com/embed/${vId}?autoplay=1&mute=1&loop=1&playlist=${vId}&controls=0&modestbranding=1&rel=0&playsinline=1&enablejsapi=1`;
   };
 
-  const getBunnyEmbedUrl = (url: string, muted: boolean) => {
+  const getBunnyEmbedUrl = (url: string) => {
     const base = url.split('?')[0];
-    return `${base}?autoplay=true&muted=${muted ? 'true' : 'false'}&loop=true&playsinline=true`;
+    return `${base}?autoplay=true&muted=true&loop=true&playsinline=true`;
   };
 
   const videoReviews = [
@@ -469,10 +496,21 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
                       toggleHeroPlay();
                     }
                   }}
-                  className="relative aspect-video w-full rounded-xl sm:rounded-2xl overflow-hidden bg-slate-950 border border-black/10 shadow-lg group select-none cursor-pointer"
+                  className="relative aspect-video w-full rounded-xl sm:rounded-2xl overflow-hidden bg-[#0a192f] border border-[#00A0DF]/30 shadow-lg group select-none cursor-pointer"
                   onMouseEnter={() => setIsHeroControlsHovered(true)}
                   onMouseLeave={() => setIsHeroControlsHovered(false)}
                 >
+                  {/* Instant 0ms Visual Backdrop / Poster (Completely Eliminates Initial Black Screen) */}
+                  <img
+                    src={heroPosterUrl}
+                    alt="Video Preview"
+                    loading="eager"
+                    decoding="async"
+                    className={`absolute inset-0 w-full h-full object-cover pointer-events-none transition-opacity duration-700 ${
+                      isVideoReady ? 'opacity-0 scale-105' : 'opacity-100 scale-100'
+                    }`}
+                  />
+
                   {/* Embedded / HTML5 Autoplaying Video */}
                   {isDirectVideo ? (
                     <video
@@ -482,6 +520,17 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
                       muted={isHeroMuted}
                       loop
                       playsInline
+                      preload="auto"
+                      poster={heroPosterUrl}
+                      onLoadedData={() => setIsVideoReady(true)}
+                      onCanPlay={() => {
+                        setIsVideoReady(true);
+                        heroVideoRef.current?.play().catch(() => {});
+                      }}
+                      onPlay={() => {
+                        setIsHeroPlaying(true);
+                        setIsVideoReady(true);
+                      }}
                       onTimeUpdate={() => {
                         if (heroVideoRef.current) {
                           setHeroCurrentTime(Math.floor(heroVideoRef.current.currentTime));
@@ -490,23 +539,35 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
                           }
                         }
                       }}
-                      className="w-full h-full object-cover"
+                      className={`w-full h-full object-cover transition-opacity duration-500 ${
+                        isVideoReady ? 'opacity-100' : 'opacity-90'
+                      }`}
                     />
                   ) : isYouTubeVideo ? (
                     <iframe
                       ref={heroIframeRef}
-                      src={getYouTubeEmbedUrl(hero.video_url, isHeroMuted)}
+                      src={getYouTubeEmbedUrl(hero.video_url)}
                       title="Hero Overview Video"
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      className="w-full h-full pointer-events-none scale-[1.02]"
+                      onLoad={() => {
+                        setTimeout(() => setIsVideoReady(true), 600);
+                      }}
+                      className={`w-full h-full pointer-events-none scale-[1.02] transition-opacity duration-500 ${
+                        isVideoReady ? 'opacity-100' : 'opacity-0'
+                      }`}
                     />
                   ) : (
                     <iframe
                       ref={heroIframeRef}
-                      src={getBunnyEmbedUrl(hero.video_url, isHeroMuted)}
+                      src={getBunnyEmbedUrl(hero.video_url)}
                       title="Hero Overview Video"
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      className="w-full h-full pointer-events-none scale-[1.02]"
+                      onLoad={() => {
+                        setTimeout(() => setIsVideoReady(true), 600);
+                      }}
+                      className={`w-full h-full pointer-events-none scale-[1.02] transition-opacity duration-500 ${
+                        isVideoReady ? 'opacity-100' : 'opacity-0'
+                      }`}
                     />
                   )}
 
