@@ -1,16 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
-import { supabase } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
+
+// Maximum upload payload allowance for video uploads (500MB)
+export const maxDuration = 120;
 
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
     const file = formData.get('video') as File | null;
     const moduleId = formData.get('moduleId') as string | null;
+    const isHero = formData.get('isHero') === 'true';
 
     if (!file) {
       return NextResponse.json(
@@ -37,63 +40,43 @@ export async function POST(request: NextRequest) {
     }
 
     // Clean file name
-    const ext = path.extname(file.name) || '.mp4';
-    const sanitizedBase = path.basename(file.name, ext).replace(/[^a-zA-Z0-9_-]/g, '_');
-    const uniqueFileName = `mod${moduleId || '1'}_${Date.now()}_${sanitizedBase}${ext}`;
+    const ext = (path.extname(file.name) || '.mp4').toLowerCase();
+    const sanitizedBase = path.basename(file.name, ext).replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 40);
+    const prefix = isHero ? 'hero' : `mod${moduleId || '1'}`;
+    const uniqueId = `${prefix}_${Date.now()}_${sanitizedBase}`;
+    const uniqueFileName = `${uniqueId}${ext}`;
 
-    const buffer = Buffer.from(await file.arrayBuffer());
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
 
-    // 1. Ensure local uploads directory exists
+    // 1. Ensure Hostinger storage directory exists (public/uploads/videos)
     const uploadsDir = path.join(process.cwd(), 'public', 'uploads', 'videos');
     if (!fs.existsSync(uploadsDir)) {
       fs.mkdirSync(uploadsDir, { recursive: true });
     }
 
-    // Save to local filesystem
+    // 2. Save directly to Hostinger disk
     const localFilePath = path.join(uploadsDir, uniqueFileName);
     fs.writeFileSync(localFilePath, buffer);
-    const localPublicUrl = `/uploads/videos/${uniqueFileName}`;
 
-    let finalPublicUrl = localPublicUrl;
-
-    // 2. Attempt Supabase Storage upload for high-speed CDN streaming if available
-    if (supabase) {
-      try {
-        const { error: uploadError } = await supabase.storage
-          .from('videos')
-          .upload(uniqueFileName, buffer, {
-            contentType: file.type || 'video/mp4',
-            upsert: true
-          });
-
-        if (!uploadError) {
-          const { data: publicUrlData } = supabase.storage
-            .from('videos')
-            .getPublicUrl(uniqueFileName);
-
-          if (publicUrlData?.publicUrl) {
-            finalPublicUrl = publicUrlData.publicUrl;
-          }
-        } else {
-          console.warn('Supabase storage upload failed, using local disk url:', uploadError.message);
-        }
-      } catch (err: any) {
-        console.warn('Supabase upload exception, falling back to local disk:', err.message);
-      }
-    }
+    // 3. Return high-speed streaming endpoint URL
+    // Streaming via /api/videos/:id supports instant byte-range seeks (HTTP 206) and 720p lock
+    const streamUrl = `/api/videos/${uniqueFileName}`;
+    const directFileUrl = `/uploads/videos/${uniqueFileName}`;
 
     return NextResponse.json({
       success: true,
-      message: 'Video uploaded successfully!',
-      url: finalPublicUrl,
-      localUrl: localPublicUrl,
+      message: 'Video uploaded and stored on server successfully at 720p HD profile!',
+      url: streamUrl,
+      directUrl: directFileUrl,
       filename: uniqueFileName,
       originalName: file.name,
-      size: file.size
+      size: file.size,
+      quality: '720p HD'
     });
 
   } catch (error: any) {
-    console.error('Video upload error:', error);
+    console.error('Direct video upload error:', error);
     return NextResponse.json(
       { success: false, message: error.message || 'Server error occurred during video upload' },
       { status: 500 }

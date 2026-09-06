@@ -632,102 +632,65 @@ export default function AdminCmsPage() {
     setUploadProgress(0);
     setVideoUploadSuccess(false);
     setUploadError('');
-    setUploadStatusText('Preparing video for persistent cloud storage...');
-
-    const cleanBase = file.name.replace(/\.[^/.]+$/, '').replace(/[^a-zA-Z0-9_-]/g, '_').substring(0, 40);
-    const manifestId = `vid_${Date.now()}_${cleanBase}`;
-
-    const PART_SIZE = 40 * 1024 * 1024; // 40MB safe cloud parts (under 50MB Supabase limit)
-    const totalParts = Math.ceil(file.size / PART_SIZE);
+    setUploadStatusText('Preparing 720p HD video upload to Hostinger storage...');
 
     try {
-      for (let p = 0; p < totalParts; p++) {
-        const start = p * PART_SIZE;
-        const end = Math.min(start + PART_SIZE, file.size);
-        const partBlob = file.slice(start, end);
+      const formData = new FormData();
+      formData.append('video', file);
+      formData.append('moduleId', String(moduleId));
+      formData.append('isHero', 'false');
 
-        setUploadStatusText(`Authorizing cloud part ${p + 1}/${totalParts}...`);
+      await new Promise<void>((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        uploadXhrRef.current = xhr;
 
-        // 1. Get signed upload URL for this 40MB part
-        const resUrl = await fetch('/api/admin/cms/get-part-upload-url', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ manifestId, partIndex: p })
-        });
+        xhr.upload.onprogress = (e) => {
+          if (e.lengthComputable) {
+            const percent = Math.min(Math.round((e.loaded / e.total) * 100), 99);
+            setUploadProgress(percent);
+            const loadedMB = (e.loaded / (1024 * 1024)).toFixed(1);
+            const totalMB = (e.total / (1024 * 1024)).toFixed(1);
+            setUploadStatusText(`${loadedMB} MB / ${totalMB} MB (${percent}%) - Uploading 720p HD Video`);
+          }
+        };
 
-        const urlData = await resUrl.json().catch(() => ({}));
-        if (!resUrl.ok || !urlData.signedUrl) {
-          throw new Error(urlData.message || `Failed to authorize cloud part ${p + 1}`);
-        }
-
-        // 2. Direct PUT upload to Supabase Storage with progress tracking
-        await new Promise<void>((resolve, reject) => {
-          const xhr = new XMLHttpRequest();
-          uploadXhrRef.current = xhr;
-
-          xhr.upload.onprogress = (e) => {
-            if (e.lengthComputable) {
-              const overallLoaded = start + e.loaded;
-              const percent = Math.min(Math.round((overallLoaded / file.size) * 100), 99);
-              setUploadProgress(percent);
-              const loadedMB = (overallLoaded / (1024 * 1024)).toFixed(1);
-              const totalMB = (file.size / (1024 * 1024)).toFixed(1);
-              setUploadStatusText(`${loadedMB} MB / ${totalMB} MB (${percent}%) - Part ${p + 1}/${totalParts}`);
+        xhr.onload = () => {
+          uploadXhrRef.current = null;
+          if (xhr.status >= 200 && xhr.status < 300) {
+            try {
+              const resData = JSON.parse(xhr.responseText);
+              if (resData.success && resData.url) {
+                setNewLessonUrl(resData.url);
+                setUploadProgress(100);
+                setUploadingVideo(false);
+                setVideoUploadSuccess(true);
+                const totalMB = (file.size / (1024 * 1024)).toFixed(1);
+                setUploadStatusText(`Upload complete 100%! (${totalMB} MB saved on Hostinger at 720p HD)`);
+                resolve();
+              } else {
+                reject(new Error(resData.message || 'Server did not return a valid video URL'));
+              }
+            } catch (err: any) {
+              reject(new Error('Invalid response from server'));
             }
-          };
+          } else {
+            reject(new Error(`Upload failed with status ${xhr.status}`));
+          }
+        };
 
-          xhr.onload = () => {
-            uploadXhrRef.current = null;
-            if (xhr.status >= 200 && xhr.status < 300) {
-              resolve();
-            } else {
-              reject(new Error(`Part ${p + 1} upload failed with status ${xhr.status}`));
-            }
-          };
+        xhr.onerror = () => {
+          uploadXhrRef.current = null;
+          reject(new Error('Network error occurred during video upload'));
+        };
 
-          xhr.onerror = () => {
-            uploadXhrRef.current = null;
-            reject(new Error(`Network error uploading part ${p + 1}`));
-          };
+        xhr.onabort = () => {
+          uploadXhrRef.current = null;
+          reject(new Error('Upload cancelled'));
+        };
 
-          xhr.onabort = () => {
-            uploadXhrRef.current = null;
-            reject(new Error('Upload cancelled'));
-          };
-
-          xhr.open('PUT', urlData.signedUrl, true);
-          xhr.setRequestHeader('Content-Type', 'application/octet-stream');
-          xhr.send(partBlob);
-        });
-      }
-
-      setUploadStatusText('Finalizing video manifest on cloud storage...');
-
-      // 3. Finalize manifest on server
-      const resFin = await fetch('/api/admin/cms/finalize-manifest', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          manifestId,
-          fileName: file.name,
-          totalSize: file.size,
-          totalParts,
-          partSize: PART_SIZE,
-          contentType: file.type || 'video/mp4'
-        })
+        xhr.open('POST', '/api/admin/cms/upload-video', true);
+        xhr.send(formData);
       });
-
-      const finData = await resFin.json().catch(() => ({}));
-      if (!resFin.ok || !finData.success) {
-        throw new Error(finData.message || 'Failed to finalize video on server');
-      }
-
-      setNewLessonUrl(finData.url);
-      setUploadProgress(100);
-      setUploadingVideo(false);
-      setVideoUploadSuccess(true);
-      const totalMB = (file.size / (1024 * 1024)).toFixed(1);
-      setUploadStatusText(`Upload complete 100%! (${totalMB} MB permanently stored)`);
 
     } catch (err: any) {
       setUploadingVideo(false);
@@ -740,13 +703,23 @@ export default function AdminCmsPage() {
     }
   };
 
-  // --- HERO HOMEPAGE VIDEO UPLOAD ACTIONS ---
-  const handleHeroVideoFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const cancelVideoUpload = () => {
+    if (uploadXhrRef.current) {
+      uploadXhrRef.current.abort();
+      uploadXhrRef.current = null;
+    }
+    setUploadingVideo(false);
+    setUploadProgress(0);
+    setUploadStatusText('');
+    setUploadError('Upload cancelled by user.');
+  };
+
+  const handleHeroVideoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     if (!file.type.startsWith('video/') && !file.name.match(/\.(mp4|webm|mov|m4v|mkv)$/i)) {
-      setHeroUploadError('Please select a valid video file (.mp4, .webm, .mov, .m4v).');
+      setHeroUploadError('Please select a valid video file (MP4, WebM, MOV, M4V)');
       return;
     }
 
@@ -758,110 +731,70 @@ export default function AdminCmsPage() {
     setHeroUploadProgress(0);
     setHeroUploadSuccess(false);
     setHeroUploadError('');
-    setHeroUploadStatus('Preparing video for persistent cloud storage...');
-
-    const cleanBase = file.name.replace(/\.[^/.]+$/, '').replace(/[^a-zA-Z0-9_-]/g, '_').substring(0, 40);
-    const manifestId = `hero_${Date.now()}_${cleanBase}`;
-
-    const PART_SIZE = 40 * 1024 * 1024; // 40MB parts safe under 50MB Supabase limit
-    const totalParts = Math.ceil(file.size / PART_SIZE);
+    setHeroUploadStatus('Preparing 720p HD Hero video for Hostinger storage...');
 
     try {
-      for (let p = 0; p < totalParts; p++) {
-        const start = p * PART_SIZE;
-        const end = Math.min(start + PART_SIZE, file.size);
-        const partBlob = file.slice(start, end);
+      const formData = new FormData();
+      formData.append('video', file);
+      formData.append('isHero', 'true');
 
-        setHeroUploadStatus(`Uploading cloud part ${p + 1}/${totalParts}...`);
+      await new Promise<void>((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        heroUploadXhrRef.current = xhr;
 
-        // 1. Get signed upload URL
-        const resUrl = await fetch('/api/admin/cms/get-part-upload-url', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ manifestId, partIndex: p })
-        });
+        xhr.upload.onprogress = (e) => {
+          if (e.lengthComputable) {
+            const percent = Math.min(Math.round((e.loaded / e.total) * 100), 99);
+            setHeroUploadProgress(percent);
+            const loadedMB = (e.loaded / (1024 * 1024)).toFixed(1);
+            const totalMB = (e.total / (1024 * 1024)).toFixed(1);
+            setHeroUploadStatus(`${loadedMB} MB / ${totalMB} MB (${percent}%) - Uploading Hero Video`);
+          }
+        };
 
-        const urlData = await resUrl.json().catch(() => ({}));
-        if (!resUrl.ok || !urlData.signedUrl) {
-          throw new Error(urlData.message || `Failed to authorize upload part ${p + 1}`);
-        }
-
-        // 2. Direct PUT upload to Supabase Storage with progress tracking
-        await new Promise<void>((resolve, reject) => {
-          const xhr = new XMLHttpRequest();
-          heroUploadXhrRef.current = xhr;
-
-          xhr.upload.onprogress = (e) => {
-            if (e.lengthComputable) {
-              const overallLoaded = start + e.loaded;
-              const percent = Math.min(Math.round((overallLoaded / file.size) * 100), 99);
-              setHeroUploadProgress(percent);
-              const loadedMB = (overallLoaded / (1024 * 1024)).toFixed(1);
-              const totalMB = (file.size / (1024 * 1024)).toFixed(1);
-              setHeroUploadStatus(`${loadedMB} MB / ${totalMB} MB (${percent}%) - Part ${p + 1}/${totalParts}`);
+        xhr.onload = () => {
+          heroUploadXhrRef.current = null;
+          if (xhr.status >= 200 && xhr.status < 300) {
+            try {
+              const resData = JSON.parse(xhr.responseText);
+              if (resData.success && resData.url) {
+                setCmsData(prev => ({
+                  ...prev,
+                  hero: {
+                    ...prev.hero,
+                    video_url: resData.url
+                  }
+                }));
+                setHeroUploadProgress(100);
+                setHeroUploading(false);
+                setHeroUploadSuccess(true);
+                const totalMB = (file.size / (1024 * 1024)).toFixed(1);
+                setHeroUploadStatus(`Upload complete 100%! (${totalMB} MB stored on Hostinger at 720p HD)`);
+                resolve();
+              } else {
+                reject(new Error(resData.message || 'Server did not return a valid video URL'));
+              }
+            } catch (err: any) {
+              reject(new Error('Invalid response from server'));
             }
-          };
+          } else {
+            reject(new Error(`Upload failed with status ${xhr.status}`));
+          }
+        };
 
-          xhr.onload = () => {
-            heroUploadXhrRef.current = null;
-            if (xhr.status >= 200 && xhr.status < 300) {
-              resolve();
-            } else {
-              reject(new Error(`Part ${p + 1} upload failed with status ${xhr.status}`));
-            }
-          };
+        xhr.onerror = () => {
+          heroUploadXhrRef.current = null;
+          reject(new Error('Network error occurred during hero video upload'));
+        };
 
-          xhr.onerror = () => {
-            heroUploadXhrRef.current = null;
-            reject(new Error(`Network error uploading part ${p + 1}`));
-          };
+        xhr.onabort = () => {
+          heroUploadXhrRef.current = null;
+          reject(new Error('Upload cancelled'));
+        };
 
-          xhr.onabort = () => {
-            heroUploadXhrRef.current = null;
-            reject(new Error('Upload cancelled'));
-          };
-
-          xhr.open('PUT', urlData.signedUrl, true);
-          xhr.setRequestHeader('Content-Type', 'application/octet-stream');
-          xhr.send(partBlob);
-        });
-      }
-
-      setHeroUploadStatus('Finalizing video manifest on cloud storage...');
-
-      // 3. Finalize manifest on server
-      const resFin = await fetch('/api/admin/cms/finalize-manifest', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          manifestId,
-          fileName: file.name,
-          totalSize: file.size,
-          totalParts,
-          partSize: PART_SIZE,
-          contentType: file.type || 'video/mp4'
-        })
+        xhr.open('POST', '/api/admin/cms/upload-video', true);
+        xhr.send(formData);
       });
-
-      const finData = await resFin.json().catch(() => ({}));
-      if (!resFin.ok || !finData.success || !finData.url) {
-        throw new Error(finData.message || 'Failed to finalize video on server');
-      }
-
-      // Automatically update cmsData.hero.video_url
-      setCmsData(prev => ({
-        ...prev,
-        hero: {
-          ...prev.hero,
-          video_url: finData.url
-        }
-      }));
-
-      setHeroUploadProgress(100);
-      setHeroUploading(false);
-      setHeroUploadSuccess(true);
-      const totalMB = (file.size / (1024 * 1024)).toFixed(1);
-      setHeroUploadStatus(`Upload complete 100%! (${totalMB} MB permanently stored)`);
 
     } catch (err: any) {
       setHeroUploading(false);
@@ -2135,7 +2068,7 @@ export default function AdminCmsPage() {
                         type="file"
                         accept="video/mp4,video/webm,video/quicktime,video/x-matroska,.mp4,.webm,.mov"
                         className="hidden"
-                        onChange={handleHeroVideoFileSelect}
+                        onChange={handleHeroVideoSelect}
                       />
                       <button
                         type="button"

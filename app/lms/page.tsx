@@ -1285,12 +1285,17 @@ export default function LmsClassroomPage() {
                   </div>
 
                   {/* Cloud Database Sync Status & Fullscreen Toggle */}
-                  {/* Cloud Database Sync Status */}
+                  {/* 720p Quality Badge & Cloud Database Sync Status */}
                   <div className="flex-shrink-0 flex items-center gap-2 self-end sm:self-center">
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-[11px] font-bold">
+                      <span className="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
+                      <span>720p HD Ready</span>
+                    </span>
+
                     {syncStatus === 'syncing' ? (
                       <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-semibold animate-pulse">
                         <Loader2 size={12} className="animate-spin" />
-                        <span>Syncing to Supabase...</span>
+                        <span>Saving...</span>
                       </span>
                     ) : syncFeedback ? (
                       <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-bold">
@@ -1300,7 +1305,7 @@ export default function LmsClassroomPage() {
                     ) : (
                       <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-800/80 border border-white/5 text-slate-300 text-xs">
                         <Cloud size={12} className="text-[#00A0DF]" />
-                        <span>Cloud Synced</span>
+                        <span>Saved</span>
                       </span>
                     )}
                   </div>
