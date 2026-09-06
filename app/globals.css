@@ -332,6 +332,8 @@ body {
   text-align: center;
   min-height: 46px;
   user-select: none;
+  touch-action: manipulation !important;
+  -webkit-tap-highlight-color: transparent !important;
 }
 
 @media (min-width: 480px) {
@@ -356,18 +358,65 @@ body {
   }
 }
 
-.lwa-btn:hover,
-.btn-primary-lwa:hover,
-.btn-glow:hover {
-  background: #008ac2;
-  transform: translateY(-2px);
-  box-shadow: 0 16px 36px -6px rgba(0, 160, 223, 0.75);
+/* Guard hover states: Only apply on mouse pointer devices, never trap mobile taps */
+@media (hover: hover) and (pointer: fine) {
+  .lwa-btn:hover,
+  .btn-primary-lwa:hover,
+  .btn-glow:hover {
+    background: #008ac2;
+    transform: translateY(-2px);
+    box-shadow: 0 16px 36px -6px rgba(0, 160, 223, 0.75);
+  }
 }
 
 .lwa-btn:active,
 .btn-primary-lwa:active,
 .btn-glow:active {
   transform: translateY(0) scale(0.98);
+}
+
+/* ========================================================================= */
+/* iOS 15 / Older Mobile Safari Zero-Delay Touch & Click Optimization */
+/* ========================================================================= */
+html,
+body,
+button,
+a,
+input,
+select,
+textarea,
+[role="button"],
+.cursor-pointer {
+  touch-action: manipulation !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+button,
+a,
+[role="button"],
+input[type="button"],
+input[type="submit"] {
+  cursor: pointer;
+  -webkit-appearance: none;
+}
+
+/* Minimum 44px hit-target for all mobile interactive controls */
+@media (max-width: 768px) {
+  button,
+  .lwa-btn,
+  .btn-primary-lwa,
+  [role="button"] {
+    min-height: 44px;
+  }
+}
+
+/* Performance booster for older GPUs (iPhone 7 / A10 Fusion) */
+@supports (-webkit-touch-callout: none) {
+  .backdrop-blur-2xl,
+  .backdrop-blur-xl {
+    -webkit-backdrop-filter: blur(8px) !important;
+    backdrop-filter: blur(8px) !important;
+  }
 }
 
 /* Shimmer Light Sweep on Buttons */
@@ -610,6 +659,7 @@ body {
 
 .animate-pulse-glow {
   animation: pulseGlow 5s ease-in-out infinite;
+  pointer-events: none !important;
 }
 
 /* Floating Animation */

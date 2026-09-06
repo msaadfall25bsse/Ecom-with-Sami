@@ -479,14 +479,19 @@ export default function EnrollmentPage() {
                     key={pm.id}
                     type="button"
                     onClick={() => setSelectedMethod(pm.id as any)}
-                    className={`py-3 px-3 rounded-2xl border text-xs font-black transition-all flex flex-col items-center gap-1 ${
+                    onTouchEnd={(e) => {
+                      // Instant tap on iOS without waiting for 300ms synthetic click
+                      setSelectedMethod(pm.id as any);
+                    }}
+                    style={{ touchAction: 'manipulation' }}
+                    className={`py-3 px-3 min-h-[58px] rounded-2xl border text-xs font-black transition-colors flex flex-col items-center justify-center gap-1 cursor-pointer select-none active:bg-[#008ec7] ${
                       selectedMethod === pm.id
-                        ? 'bg-[#00A0DF] text-white border-[#00A0DF] shadow-lg shadow-[#00A0DF]/30 scale-[1.02]'
-                        : 'bg-[#0B0F19] text-slate-300 border-white/10 hover:border-slate-600'
+                        ? 'bg-[#00A0DF] text-white border-[#00A0DF] shadow-lg shadow-[#00A0DF]/30'
+                        : 'bg-[#0B0F19] text-slate-300 border-white/10 active:border-[#00A0DF]'
                     }`}
                   >
-                    <span>{pm.name}</span>
-                    <span className="text-[9px] opacity-80 font-normal">{pm.badge}</span>
+                    <span className="pointer-events-none">{pm.name}</span>
+                    <span className="text-[9px] opacity-80 font-normal pointer-events-none">{pm.badge}</span>
                   </button>
                 ))}
               </div>
@@ -505,7 +510,9 @@ export default function EnrollmentPage() {
                 <button
                   type="button"
                   onClick={() => handleCopy(currentPayment.accountNumber, currentPayment.id)}
-                  className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-white hover:bg-slate-100 text-slate-900 text-xs font-black flex items-center justify-center gap-1.5 transition-all shadow-md flex-shrink-0"
+                  onTouchEnd={() => handleCopy(currentPayment.accountNumber, currentPayment.id)}
+                  style={{ touchAction: 'manipulation' }}
+                  className="w-full sm:w-auto min-h-[46px] px-5 py-2.5 rounded-xl bg-white hover:bg-slate-100 active:bg-slate-200 text-slate-900 text-xs font-black flex items-center justify-center gap-1.5 transition-all shadow-md flex-shrink-0 cursor-pointer select-none"
                 >
                   <Copy size={14} className="text-[#00A0DF]" />
                   <span>{copiedId === currentPayment.id ? 'Copied to Clipboard!' : 'Copy Account Number'}</span>
@@ -644,7 +651,8 @@ export default function EnrollmentPage() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="w-full py-4 px-6 rounded-2xl text-sm sm:text-base font-black uppercase text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 flex items-center justify-center gap-2 shadow-xl shadow-emerald-600/30 transition-all mt-4"
+                  style={{ touchAction: 'manipulation' }}
+                  className="w-full min-h-[52px] py-4 px-6 rounded-2xl text-sm sm:text-base font-black uppercase text-white bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 disabled:opacity-50 flex items-center justify-center gap-2 shadow-xl shadow-emerald-600/30 transition-all mt-4 cursor-pointer select-none"
                 >
                   <ShieldCheck size={20} />
                   <span>{submitting ? 'Submitting Application...' : 'SUBMIT APPLICATION & GET INSTANT LMS ACCESS'}</span>

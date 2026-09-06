@@ -60,6 +60,7 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
   const [activeVideoTitle, setActiveVideoTitle] = useState('');
   const [content, setContent] = useState<CmsContentSchema>(initialContent || defaultCmsContent);
   const [videoReviewMode, setVideoReviewMode] = useState<'moving' | 'grid'>('moving');
+  const [isReviewTouchPaused, setIsReviewTouchPaused] = useState(false);
 
   // Hero Autoplay Video & Sound States (LearnWithAfaq Style)
   const [isHeroMuted, setIsHeroMuted] = useState(true);
@@ -208,8 +209,8 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
     }
   };
 
-  const toggleHeroMute = (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const toggleHeroMute = (e?: React.MouseEvent | React.TouchEvent) => {
+    if (e) e.stopPropagation();
     const nextMuted = !isHeroMuted;
     setIsHeroMuted(nextMuted);
 
@@ -546,16 +547,23 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
                     />
                   )}
 
-                  {/* Frosted Glassmorphic "Click To Unmute" Center Overlay */}
+                  {/* Frosted Glassmorphic "Click To Unmute" Center Overlay (Native button with instant touch for iOS 15) */}
                   {isHeroMuted && (
-                    <div 
+                    <button 
+                      type="button"
+                      aria-label="Click to unmute video"
                       onClick={(e) => {
                         e.stopPropagation();
                         handleHeroUnmute();
                       }}
-                      className="absolute inset-0 z-20 flex items-center justify-center bg-black/20 backdrop-blur-[2px] cursor-pointer p-3 transition-opacity duration-300"
+                      onTouchEnd={(e) => {
+                        e.stopPropagation();
+                        handleHeroUnmute();
+                      }}
+                      style={{ touchAction: 'manipulation' }}
+                      className="absolute inset-0 z-20 w-full h-full flex items-center justify-center bg-black/25 backdrop-blur-[2px] cursor-pointer p-3 transition-opacity duration-300 border-none outline-none select-none"
                     >
-                      <div className="bg-white/20 hover:bg-white/30 border-2 border-white/60 backdrop-blur-md rounded-2xl sm:rounded-3xl p-4 sm:p-6 text-center text-white shadow-2xl transition-transform hover:scale-105 active:scale-95 max-w-[260px] sm:max-w-[290px] group/card">
+                      <div className="bg-white/20 hover:bg-white/30 border-2 border-white/60 backdrop-blur-md rounded-2xl sm:rounded-3xl p-4 sm:p-6 text-center text-white shadow-2xl transition-transform active:scale-95 max-w-[260px] sm:max-w-[290px] group/card pointer-events-none">
                         <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-2 sm:mb-2.5 rounded-full bg-white/25 flex items-center justify-center border border-white/60 shadow-inner group-hover/card:scale-110 transition-transform">
                           <Volume2 size={28} className="text-white animate-pulse" />
                         </div>
@@ -566,27 +574,37 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
                           Click To Unmute
                         </div>
                       </div>
-                    </div>
+                    </button>
                   )}
 
-                  {/* Bottom Sleek Control Bar (Afaq style - No Zoom Button) */}
-                  <div className={`absolute bottom-0 inset-x-0 z-30 bg-gradient-to-t from-black/80 via-black/40 to-transparent px-3 py-2 flex items-center justify-between gap-2.5 transition-opacity duration-200 ${isHeroMuted && !isHeroControlsHovered ? 'opacity-80' : 'opacity-100'}`}>
-                    <div className="flex items-center gap-2">
+                  {/* Bottom Sleek Control Bar (Afaq style - 44px touch targets for mobile) */}
+                  <div className={`absolute bottom-0 inset-x-0 z-30 bg-gradient-to-t from-black/80 via-black/40 to-transparent px-3 py-2 flex items-center justify-between gap-2 transition-opacity duration-200 ${isHeroMuted && !isHeroControlsHovered ? 'opacity-80' : 'opacity-100'}`}>
+                    <div className="flex items-center gap-1 sm:gap-2">
                       <button
                         type="button"
                         onClick={toggleHeroPlay}
-                        className="text-white hover:text-[#00A0DF] transition-colors p-1"
+                        onTouchEnd={(e) => {
+                          e.stopPropagation();
+                          toggleHeroPlay();
+                        }}
+                        style={{ touchAction: 'manipulation' }}
+                        className="text-white hover:text-[#00A0DF] transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center cursor-pointer select-none"
                         title={isHeroPlaying ? 'Pause Video' : 'Play Video'}
                       >
-                        {isHeroPlaying ? <Pause size={15} /> : <Play size={15} className="fill-current" />}
+                        {isHeroPlaying ? <Pause size={17} /> : <Play size={17} className="fill-current" />}
                       </button>
                       <button
                         type="button"
                         onClick={toggleHeroMute}
-                        className="text-white hover:text-[#00A0DF] transition-colors p-1"
+                        onTouchEnd={(e) => {
+                          e.stopPropagation();
+                          toggleHeroMute();
+                        }}
+                        style={{ touchAction: 'manipulation' }}
+                        className="text-white hover:text-[#00A0DF] transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center cursor-pointer select-none"
                         title={isHeroMuted ? 'Unmute Sound' : 'Mute Sound'}
                       >
-                        {isHeroMuted ? <VolumeX size={15} /> : <Volume2 size={15} />}
+                        {isHeroMuted ? <VolumeX size={17} /> : <Volume2 size={17} />}
                       </button>
                       <span className="text-[10px] sm:text-xs font-mono font-bold text-white">
                         {formatHeroTime(heroCurrentTime)}
@@ -609,7 +627,8 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
               <div className="lg:hidden flex flex-col items-center w-full mt-4 sm:mt-5 px-1">
                 <Link
                   href="/enrollment"
-                  className="lwa-btn w-full py-3.5 sm:py-4 text-xs xs:text-sm font-black rounded-xl hover:bg-[#008ac2] transition-all shadow-xl shadow-[#00A0DF]/30 text-center uppercase tracking-wider"
+                  style={{ touchAction: 'manipulation' }}
+                  className="lwa-btn w-full min-h-[50px] py-3.5 sm:py-4 text-xs xs:text-sm font-black rounded-xl hover:bg-[#008ac2] transition-all shadow-xl shadow-[#00A0DF]/30 text-center uppercase tracking-wider cursor-pointer select-none"
                 >
                   {hero.cta_text || 'YES! I WANT TO LEARN THIS'}
                 </Link>
@@ -994,15 +1013,31 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
             </div>
           </div>
 
-          {/* 1. CONTINUOUS MOVING STREAM (HARDWARE ACCELERATED MARQUEE) */}
+          {/* 1. CONTINUOUS MOVING STREAM (HARDWARE ACCELERATED MARQUEE WITH ZERO-DELAY TOUCH) */}
           {videoReviewMode === 'moving' ? (
-            <div className="space-y-4 overflow-hidden py-2 marquee-fade-mask relative touch-pan-x">
-              <div className="animate-marquee-slow flex items-stretch gap-3.5 sm:gap-5">
+            <div 
+              className="space-y-4 overflow-hidden py-2 marquee-fade-mask relative touch-pan-x"
+              onTouchStart={() => setIsReviewTouchPaused(true)}
+              onTouchEnd={() => {
+                setTimeout(() => setIsReviewTouchPaused(false), 1200);
+              }}
+            >
+              <div 
+                className="animate-marquee-slow flex items-stretch gap-3.5 sm:gap-5"
+                style={{ animationPlayState: isReviewTouchPaused ? 'paused' : undefined }}
+              >
                 {[...videoReviews, ...videoReviews, ...videoReviews, ...videoReviews].map((rev, idx) => (
                   <div
                     key={idx}
+                    role="button"
+                    tabIndex={0}
+                    style={{ touchAction: 'manipulation' }}
                     onClick={() => openReviewVideo(rev.headline, rev.videoUrl)}
-                    className="w-[265px] xs:w-[295px] sm:w-[340px] bg-white border border-gray-200 rounded-2xl p-4 sm:p-5 shadow-sm hover:shadow-2xl hover:border-[#00A0DF] transition-all flex flex-col justify-between flex-shrink-0 cursor-pointer card-hover-lift group"
+                    onTouchEnd={(e) => {
+                      e.stopPropagation();
+                      openReviewVideo(rev.headline, rev.videoUrl);
+                    }}
+                    className="w-[265px] xs:w-[295px] sm:w-[340px] bg-white border border-gray-200 rounded-2xl p-4 sm:p-5 shadow-sm hover:shadow-2xl hover:border-[#00A0DF] transition-all flex flex-col justify-between flex-shrink-0 cursor-pointer card-hover-lift group select-none active:border-[#00A0DF]"
                   >
                     <div>
                       <div className="flex items-center justify-between mb-2">

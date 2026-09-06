@@ -104,16 +104,23 @@ export function ScrollingScreenshotReviews({ data }: ScrollingScreenshotReviewsP
                 {loopCol1.map((src, i) => (
                   <div
                     key={`col1-${i}`}
+                    role="button"
+                    tabIndex={0}
+                    style={{ touchAction: 'manipulation' }}
                     onClick={() => setSelectedImage(src)}
-                    className="relative group rounded-2xl overflow-hidden border border-white/10 hover:border-[#00A0DF]/60 bg-[#111827] shadow-lg cursor-pointer transition-transform duration-300 hover:scale-[1.02] active:scale-95 flex-shrink-0"
+                    onTouchEnd={(e) => {
+                      e.stopPropagation();
+                      setSelectedImage(src);
+                    }}
+                    className="relative group rounded-2xl overflow-hidden border border-white/10 hover:border-[#00A0DF]/60 bg-[#111827] shadow-lg cursor-pointer transition-transform duration-200 active:opacity-90 flex-shrink-0 select-none"
                   >
                     <img
                       src={src}
                       alt="Student Result Review"
                       loading="lazy"
-                      className="w-full h-auto object-cover rounded-2xl block"
+                      className="w-full h-auto object-cover rounded-2xl block pointer-events-none"
                     />
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5 text-white text-[11px] font-bold">
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5 text-white text-[11px] font-bold pointer-events-none">
                       <ZoomIn size={16} className="text-[#00A0DF]" />
                       <span>Click to Zoom</span>
                     </div>
@@ -128,16 +135,23 @@ export function ScrollingScreenshotReviews({ data }: ScrollingScreenshotReviewsP
                 {loopCol2.map((src, i) => (
                   <div
                     key={`col2-${i}`}
+                    role="button"
+                    tabIndex={0}
+                    style={{ touchAction: 'manipulation' }}
                     onClick={() => setSelectedImage(src)}
-                    className="relative group rounded-2xl overflow-hidden border border-white/10 hover:border-[#00A0DF]/60 bg-[#111827] shadow-lg cursor-pointer transition-transform duration-300 hover:scale-[1.02] active:scale-95 flex-shrink-0"
+                    onTouchEnd={(e) => {
+                      e.stopPropagation();
+                      setSelectedImage(src);
+                    }}
+                    className="relative group rounded-2xl overflow-hidden border border-white/10 hover:border-[#00A0DF]/60 bg-[#111827] shadow-lg cursor-pointer transition-transform duration-200 active:opacity-90 flex-shrink-0 select-none"
                   >
                     <img
                       src={src}
                       alt="Student Result Review"
                       loading="lazy"
-                      className="w-full h-auto object-cover rounded-2xl block"
+                      className="w-full h-auto object-cover rounded-2xl block pointer-events-none"
                     />
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5 text-white text-[11px] font-bold">
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5 text-white text-[11px] font-bold pointer-events-none">
                       <ZoomIn size={16} className="text-[#00A0DF]" />
                       <span>Click to Zoom</span>
                     </div>
