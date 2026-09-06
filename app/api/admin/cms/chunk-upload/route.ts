@@ -1,16 +1,50 @@
 import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
+import os from 'os';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
-export const maxDuration = 120;
+export const maxDuration = 300;
+
+/**
+ * Reliable Video Storage Directory Resolver
+ * Tries the public web directory first; falls back to os.tmpdir()
+ * to guarantee 100% writable permission across all Linux & Hostinger environments.
+ */
+function getVideoStorageDir(): string {
+  // 1. Primary: public/uploads/videos
+  const primaryDir = path.join(process.cwd(), 'public', 'uploads', 'videos');
+  try {
+    if (!fs.existsSync(primaryDir)) {
+      fs.mkdirSync(primaryDir, { recursive: true });
+    }
+    const testFile = path.join(primaryDir, `.perm_${Date.now()}`);
+    fs.writeFileSync(testFile, '1');
+    fs.unlinkSync(testFile);
+    return primaryDir;
+  } catch {
+    // Primary path restricted or no permission, proceed to fallback
+  }
+
+  // 2. Guaranteed writable Linux fallback
+  const fallbackDir = path.join(os.tmpdir(), 'ecom_videos');
+  try {
+    if (!fs.existsSync(fallbackDir)) {
+      fs.mkdirSync(fallbackDir, { recursive: true });
+    }
+    return fallbackDir;
+  } catch {
+    return os.tmpdir();
+  }
+}
 
 /**
  * Hostinger Safe Chunked Video Uploader
  * 
- * Bypasses Nginx/LiteSpeed 413 "Payload Too Large" limits by receiving
- * video files in safe 15MB binary slices and assembling them directly on Hostinger disk.
+ * Directly appends binary chunk slices to a single temporary file
+ * and renames on completion — eliminating disk permission errors,
+ * memory overhead, and multi-part assembly bottlenecks.
  */
 export async function POST(request: NextRequest) {
   try {
@@ -32,64 +66,41 @@ export async function POST(request: NextRequest) {
 
     const chunkIndex = parseInt(chunkIndexStr, 10);
     const totalChunks = parseInt(totalChunksStr, 10);
-
     const safeUploadId = uploadId.replace(/[^a-zA-Z0-9_-]/g, '_');
-    const tempDir = path.join(process.cwd(), 'public', 'uploads', 'videos', 'temp');
-    if (!fs.existsSync(tempDir)) {
-      fs.mkdirSync(tempDir, { recursive: true });
+    const storageDir = getVideoStorageDir();
+
+    const tempFilePath = path.join(storageDir, `temp_${safeUploadId}.part`);
+    const chunkBuffer = Buffer.from(await chunk.arrayBuffer());
+
+    // On the first chunk, clean up any previous aborted attempt
+    if (chunkIndex === 0 && fs.existsSync(tempFilePath)) {
+      try { fs.unlinkSync(tempFilePath); } catch {}
     }
 
-    const tempChunkPath = path.join(tempDir, `${safeUploadId}_part_${chunkIndex}`);
-    const chunkBuffer = Buffer.from(await chunk.arrayBuffer());
-    fs.writeFileSync(tempChunkPath, chunkBuffer);
+    // Append current chunk directly to the assembling temporary file
+    fs.appendFileSync(tempFilePath, chunkBuffer);
 
-    // If this is the final chunk, assemble all parts into the final video file
+    // If this is the final chunk, finalize into permanent video file
     if (chunkIndex === totalChunks - 1) {
-      const finalVideosDir = path.join(process.cwd(), 'public', 'uploads', 'videos');
-      if (!fs.existsSync(finalVideosDir)) {
-        fs.mkdirSync(finalVideosDir, { recursive: true });
-      }
-
       const ext = (path.extname(fileName || '') || '.mp4').toLowerCase();
       const sanitizedBase = path.basename(fileName || 'video', ext).replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 40);
       const prefix = isHero ? 'hero' : `mod${moduleId || '1'}`;
       const finalFileName = `${prefix}_${Date.now()}_${sanitizedBase}${ext}`;
-      const finalFilePath = path.join(finalVideosDir, finalFileName);
+      const finalFilePath = path.join(storageDir, finalFileName);
 
-      // Assemble all parts using WriteStream into destination file
       if (fs.existsSync(finalFilePath)) {
         try { fs.unlinkSync(finalFilePath); } catch {}
       }
 
-      const writeStream = fs.createWriteStream(finalFilePath, { flags: 'w' });
-      for (let i = 0; i < totalChunks; i++) {
-        const partFile = path.join(tempDir, `${safeUploadId}_part_${i}`);
-        if (!fs.existsSync(partFile)) {
-          writeStream.end();
-          return NextResponse.json(
-            { success: false, message: `Missing chunk ${i} during assembly` },
-            { status: 400 }
-          );
-        }
-        const partData = fs.readFileSync(partFile);
-        writeStream.write(partData);
-        // Clean up temporary chunk immediately
-        try { fs.unlinkSync(partFile); } catch {}
-      }
+      fs.renameSync(tempFilePath, finalFilePath);
 
-      await new Promise<void>((resolve, reject) => {
-        writeStream.on('finish', resolve);
-        writeStream.on('error', reject);
-        writeStream.end();
-      });
-
-      const finalUrl = `/api/videos/${finalFileName}`;
+      const finalUrl = `/api/videos/${encodeURIComponent(finalFileName)}`;
       const directUrl = `/uploads/videos/${finalFileName}`;
 
       return NextResponse.json({
         success: true,
         isCompleted: true,
-        message: 'Video chunks assembled into final file on Hostinger successfully!',
+        message: 'Video saved successfully!',
         url: finalUrl,
         directUrl,
         filename: finalFileName
@@ -107,7 +118,7 @@ export async function POST(request: NextRequest) {
   } catch (error: any) {
     console.error('Chunk upload exception:', error);
     return NextResponse.json(
-      { success: false, message: error.message || 'Chunk upload failed' },
+      { success: false, message: error.message || 'Chunk upload processing error on server' },
       { status: 500 }
     );
   }

@@ -30,7 +30,10 @@ export async function GET(
       path.join(process.cwd(), 'public', 'uploads', 'videos', `${cleanId}.webm`),
       path.join(process.cwd(), 'public', 'uploads', 'videos', `${cleanId}.mov`),
       path.join(os.tmpdir(), 'ecom_videos', sanitizedFilename),
-      path.join(os.tmpdir(), sanitizedFilename)
+      path.join(os.tmpdir(), 'ecom_videos', `${cleanId}.mp4`),
+      path.join(os.tmpdir(), 'ecom_videos', `${cleanId}.webm`),
+      path.join(os.tmpdir(), sanitizedFilename),
+      path.join(os.tmpdir(), `${cleanId}.mp4`)
     ];
 
     const filePath = candidatePaths.find(p => fs.existsSync(p));

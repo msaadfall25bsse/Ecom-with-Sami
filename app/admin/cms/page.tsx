@@ -675,7 +675,7 @@ export default function AdminCmsPage() {
                   const uploadPct = Math.min(Math.round((currentChunkLoaded / videoToUpload.size) * 100), 99);
                   setUploadProgress(uploadPct);
                   const loadedMB = (currentChunkLoaded / (1024 * 1024)).toFixed(1);
-                  setUploadStatusText(`${loadedMB} MB / ${totalMB} MB (${uploadPct}%) - Uploading (Part ${c + 1}/${totalChunks})`);
+                  setUploadStatusText(`Uploading: ${uploadPct}% (${loadedMB} MB of ${totalMB} MB)`);
                 }
               };
 
@@ -690,19 +690,24 @@ export default function AdminCmsPage() {
                       }
                       resolve();
                     } else {
-                      reject(new Error(resData.message || `Part ${c + 1} upload failed`));
+                      reject(new Error(resData.message || 'Chunk upload failed'));
                     }
                   } catch {
                     reject(new Error('Invalid response from server'));
                   }
                 } else {
-                  reject(new Error(`Server returned HTTP ${xhr.status}`));
+                  try {
+                    const errRes = JSON.parse(xhr.responseText);
+                    reject(new Error(errRes.message || `Server returned HTTP ${xhr.status}`));
+                  } catch {
+                    reject(new Error(`Server returned HTTP ${xhr.status}`));
+                  }
                 }
               };
 
               xhr.onerror = () => {
                 uploadXhrRef.current = null;
-                reject(new Error('Network error during chunk upload'));
+                reject(new Error('Network connection error during chunk upload'));
               };
 
               xhr.onabort = () => {
@@ -722,14 +727,14 @@ export default function AdminCmsPage() {
               throw err;
             }
             if (attempt < 3) {
-              setUploadStatusText(`Retrying part ${c + 1}/${totalChunks} (attempt ${attempt + 1})...`);
+              setUploadStatusText(`Uploading (${totalMB} MB) • Retrying connection...`);
               await new Promise((r) => setTimeout(r, 600 * attempt));
             }
           }
         }
 
         if (!chunkSuccess) {
-          throw new Error(lastErrorMsg || `Failed to upload part ${c + 1} after 3 attempts`);
+          throw new Error(lastErrorMsg || 'Upload interrupted. Please try again.');
         }
       }
 
@@ -738,9 +743,9 @@ export default function AdminCmsPage() {
         setUploadProgress(100);
         setUploadingVideo(false);
         setVideoUploadSuccess(true);
-        setUploadStatusText(`Upload complete 100%! (${totalMB} MB permanently saved)`);
+        setUploadStatusText(`Upload complete 100%! (${totalMB} MB saved successfully)`);
       } else {
-        throw new Error('Video assembly completed but no URL was returned');
+        throw new Error('Video was uploaded but no URL was returned by server');
       }
 
     } catch (err: any) {
@@ -822,7 +827,7 @@ export default function AdminCmsPage() {
                   const uploadPct = Math.min(Math.round((currentChunkLoaded / videoToUpload.size) * 100), 99);
                   setHeroUploadProgress(uploadPct);
                   const loadedMB = (currentChunkLoaded / (1024 * 1024)).toFixed(1);
-                  setHeroUploadStatus(`${loadedMB} MB / ${totalMB} MB (${uploadPct}%) - Uploading (Part ${c + 1}/${totalChunks})`);
+                  setHeroUploadStatus(`Uploading hero video: ${uploadPct}% (${loadedMB} MB of ${totalMB} MB)`);
                 }
               };
 
@@ -837,13 +842,18 @@ export default function AdminCmsPage() {
                       }
                       resolve();
                     } else {
-                      reject(new Error(resData.message || `Hero part ${c + 1} upload failed`));
+                      reject(new Error(resData.message || 'Hero chunk upload failed'));
                     }
                   } catch {
                     reject(new Error('Invalid response from server'));
                   }
                 } else {
-                  reject(new Error(`Server returned HTTP ${xhr.status}`));
+                  try {
+                    const errRes = JSON.parse(xhr.responseText);
+                    reject(new Error(errRes.message || `Server returned HTTP ${xhr.status}`));
+                  } catch {
+                    reject(new Error(`Server returned HTTP ${xhr.status}`));
+                  }
                 }
               };
 
@@ -869,14 +879,14 @@ export default function AdminCmsPage() {
               throw err;
             }
             if (attempt < 3) {
-              setHeroUploadStatus(`Retrying hero part ${c + 1}/${totalChunks} (attempt ${attempt + 1})...`);
+              setHeroUploadStatus(`Uploading hero (${totalMB} MB) • Retrying connection...`);
               await new Promise((r) => setTimeout(r, 600 * attempt));
             }
           }
         }
 
         if (!chunkSuccess) {
-          throw new Error(lastErrorMsg || `Failed to upload hero part ${c + 1} after 3 attempts`);
+          throw new Error(lastErrorMsg || 'Hero upload interrupted. Please try again.');
         }
       }
 
