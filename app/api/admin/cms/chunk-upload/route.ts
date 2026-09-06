@@ -56,24 +56,24 @@ export async function POST(request: NextRequest) {
       const finalFileName = `${prefix}_${Date.now()}_${sanitizedBase}${ext}`;
       const finalFilePath = path.join(finalVideosDir, finalFileName);
 
-      const writeStream = fs.createWriteStream(finalFilePath, { flags: 'w' });
+      // Assemble all parts synchronously into the destination file
+      if (fs.existsSync(finalFilePath)) {
+        fs.unlinkSync(finalFilePath);
+      }
 
       for (let i = 0; i < totalChunks; i++) {
         const partFile = path.join(tempDir, `${safeUploadId}_part_${i}`);
         if (!fs.existsSync(partFile)) {
-          writeStream.close();
           return NextResponse.json(
             { success: false, message: `Missing chunk ${i} during assembly` },
             { status: 400 }
           );
         }
         const partData = fs.readFileSync(partFile);
-        writeStream.write(partData);
+        fs.appendFileSync(finalFilePath, partData);
         // Clean up temporary chunk
         try { fs.unlinkSync(partFile); } catch {}
       }
-
-      writeStream.end();
 
       const finalUrl = `/api/videos/${finalFileName}`;
       const directUrl = `/uploads/videos/${finalFileName}`;
