@@ -13,6 +13,7 @@
     "test:suite": "npx tsx scripts/test_complete_api_suite.ts",
     "seed": "npx tsx scripts/seed_supabase_data.ts",
     "backup": "npx tsx scripts/backup_database.ts",
+    "export:mysql": "npx tsx scripts/export_supabase_to_mysql.ts",
     "reset-admin": "npx tsx scripts/reset_admin_password.ts"
   },
   "dependencies": {
