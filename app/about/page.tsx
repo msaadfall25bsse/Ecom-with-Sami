@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Navbar, Footer, TopMarquee } from '@/components/layout';
@@ -17,10 +17,30 @@ import {
   Phone
 } from 'lucide-react';
 import { useContactConfig } from '@/utils/contactConfig';
+import { defaultCmsContent } from '@/utils/cmsStore';
 
 export default function AboutPage() {
   const { displayPhone, getWhatsAppUrl } = useContactConfig();
   const whatsappUrl = getWhatsAppUrl('Hi Sami! I want to ask some questions before enrolling.');
+  const [mentor, setMentor] = useState(defaultCmsContent.mentor);
+
+  useEffect(() => {
+    const fetchContent = async () => {
+      try {
+        const res = await fetch(`/api/public/cms-content?_nocache=${Date.now()}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.sections?.mentor) {
+            setMentor({ ...defaultCmsContent.mentor, ...data.sections.mentor });
+          }
+        }
+      } catch (e) {}
+    };
+
+    fetchContent();
+    window.addEventListener('sami_cms_updated', fetchContent);
+    return () => window.removeEventListener('sami_cms_updated', fetchContent);
+  }, []);
 
   return (
     <div className="min-h-screen bg-white text-slate-900 selection:bg-[#00A0DF] selection:text-white">
@@ -32,10 +52,10 @@ export default function AboutPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl mx-auto text-center">
             <span className="inline-block bg-[#00A0DF]/20 text-[#00A0DF] border border-[#00A0DF]/40 text-xs font-black uppercase tracking-wider px-4 py-1.5 rounded-full mb-4">
-              MEET YOUR MENTOR
+              {mentor.tag || 'MEET YOUR MENTOR'}
             </span>
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-white tracking-tight mb-4 sm:mb-6">
-              Empowering 9,700+ Pakistani Students to Build <span className="text-[#00A0DF]">Real Online Stores</span>
+              Empowering <span className="text-[#00A0DF]">{mentor.stat1_value || mentor.students_count || '9,700+'}</span> Students to Build <span className="text-[#00A0DF]">Real Online Stores</span>
             </h1>
             <p className="text-sm sm:text-base md:text-xl text-slate-300 leading-relaxed max-w-2xl mx-auto">
               From absolute zero to multi-million revenue in UAE &amp; Saudi Arabia markets. Learn the exact framework from someone who does it daily.
@@ -54,27 +74,28 @@ export default function AboutPage() {
               <div className="w-full max-w-sm bg-slate-950 rounded-3xl p-6 border-2 border-[#00A0DF]/30 shadow-2xl text-center">
                 <div className="w-40 h-40 sm:w-48 sm:h-48 mx-auto rounded-full bg-gradient-to-tr from-[#00A0DF] to-emerald-400 p-1.5 mb-6 shadow-xl shadow-[#00A0DF]/30 overflow-hidden">
                   <Image
-                    src="/images/sami-logo.jpg"
-                    alt="Muhammad Sami - Founder & Lead eCommerce Mentor"
+                    src={mentor.image || '/images/sami-logo.jpg'}
+                    alt={`${mentor.name || 'Mentor Sami'} - Founder & Lead eCommerce Mentor`}
                     width={192}
                     height={192}
                     className="w-full h-full rounded-full object-cover"
                     priority
+                    unoptimized={Boolean(mentor.image && (mentor.image.startsWith('http') || mentor.image.startsWith('data:')))}
                   />
                 </div>
-                <h2 className="text-2xl font-black text-white mb-1">Muhammad Sami</h2>
+                <h2 className="text-2xl font-black text-white mb-1">{mentor.name || 'Muhammad Sami'}</h2>
                 <p className="text-xs font-bold text-[#00A0DF] uppercase tracking-wider mb-4">
-                  Founder &bull; Lead eCommerce Mentor
+                  {mentor.badge || mentor.title || 'Founder • Lead eCommerce Mentor'}
                 </p>
 
                 <div className="grid grid-cols-2 gap-3 pt-4 border-t border-slate-800 text-left">
                   <div className="bg-slate-900/80 p-3 rounded-xl border border-slate-800">
-                    <span className="text-xs text-slate-400 block">Total Students</span>
-                    <strong className="text-base sm:text-lg font-black text-white">9,700+</strong>
+                    <span className="text-xs text-slate-400 block">{mentor.stat1_label || 'Total Students'}</span>
+                    <strong className="text-base sm:text-lg font-black text-white">{mentor.stat1_value || mentor.students_count || '9,700+'}</strong>
                   </div>
                   <div className="bg-slate-900/80 p-3 rounded-xl border border-slate-800">
-                    <span className="text-xs text-slate-400 block">Active Focus</span>
-                    <strong className="text-base sm:text-lg font-black text-emerald-400">UAE &amp; KSA</strong>
+                    <span className="text-xs text-slate-400 block">{mentor.stat2_label || 'Active Focus'}</span>
+                    <strong className="text-base sm:text-lg font-black text-emerald-400">{mentor.stat2_value || 'UAE & KSA'}</strong>
                   </div>
                 </div>
               </div>
@@ -84,38 +105,41 @@ export default function AboutPage() {
             <div className="lg:col-span-7">
               <span className="text-xs font-black uppercase tracking-widest text-[#00A0DF] block mb-2">MY STORY &amp; PHILOSOPHY</span>
               <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 tracking-tight mb-4">
-                &ldquo;You Don&rsquo;t Need Millions To Start. You Just Need A Proven Step-by-Step Blueprint.&rdquo;
+                &ldquo;{mentor.quote || 'You Don’t Need Millions To Start. You Just Need A Proven Step-by-Step Blueprint.'}&rdquo;
               </h2>
               <div className="space-y-4 text-xs sm:text-sm md:text-base text-slate-600 leading-relaxed mb-8">
-                <p>
-                  When I started dropshipping, the biggest hurdle wasn&rsquo;t the technical setup &mdash; it was the lack of reliable local supplier contacts in the GCC and constant trial-and-error wasting hard-earned ad spend.
-                </p>
-                <p>
-                  After years of testing, scaling, and establishing direct relationships with verified warehouses across Dubai, Sharjah, and Riyadh, I designed this training specifically for beginners in Pakistan who want to earn in Dirhams and Riyals from home.
-                </p>
-                <p>
-                  Our goal is simple: eliminate the guesswork, give you direct phone numbers to real suppliers, teach you high-converting TikTok &amp; Facebook media buying, and provide live mentorship whenever you get stuck.
-                </p>
+                {mentor.story ? (
+                  mentor.story.split('\n\n').map((para, pIdx) => (
+                    <p key={pIdx}>{para}</p>
+                  ))
+                ) : (
+                  <>
+                    <p>
+                      When I started dropshipping, the biggest hurdle wasn&rsquo;t the technical setup &mdash; it was the lack of reliable local supplier contacts in the GCC and constant trial-and-error wasting hard-earned ad spend.
+                    </p>
+                    <p>
+                      After years of testing, scaling, and establishing direct relationships with verified warehouses across Dubai, Sharjah, and Riyadh, I designed this training specifically for beginners in Pakistan who want to earn in Dirhams and Riyals from home.
+                    </p>
+                    <p>
+                      Our goal is simple: eliminate the guesswork, give you direct phone numbers to real suppliers, teach you high-converting TikTok &amp; Facebook media buying, and provide live mentorship whenever you get stuck.
+                    </p>
+                  </>
+                )}
               </div>
 
               {/* Core Pillars */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-8">
-                <div className="flex items-center gap-2.5 text-xs sm:text-sm font-bold text-slate-800">
-                  <CheckCircle2 size={18} className="text-emerald-500 flex-shrink-0" />
-                  <span>100% Practical Screen Walkthroughs</span>
-                </div>
-                <div className="flex items-center gap-2.5 text-xs sm:text-sm font-bold text-slate-800">
-                  <CheckCircle2 size={18} className="text-emerald-500 flex-shrink-0" />
-                  <span>Direct Verified GCC Warehouse Lists</span>
-                </div>
-                <div className="flex items-center gap-2.5 text-xs sm:text-sm font-bold text-slate-800">
-                  <CheckCircle2 size={18} className="text-emerald-500 flex-shrink-0" />
-                  <span>Lifetime WhatsApp Mentorship (9AM-5PM)</span>
-                </div>
-                <div className="flex items-center gap-2.5 text-xs sm:text-sm font-bold text-slate-800">
-                  <CheckCircle2 size={18} className="text-emerald-500 flex-shrink-0" />
-                  <span>Weekly Live Campaign &amp; Pixel Audits</span>
-                </div>
+                {(mentor.benefits && mentor.benefits.length > 0 ? mentor.benefits : [
+                  '100% Practical Screen Walkthroughs',
+                  'Direct Verified GCC Warehouse Lists',
+                  'Lifetime WhatsApp Mentorship (9AM-5PM)',
+                  'Weekly Live Campaign & Pixel Audits'
+                ]).map((benefit, bIdx) => (
+                  <div key={bIdx} className="flex items-center gap-2.5 text-xs sm:text-sm font-bold text-slate-800">
+                    <CheckCircle2 size={18} className="text-emerald-500 flex-shrink-0" />
+                    <span>{benefit}</span>
+                  </div>
+                ))}
               </div>
 
               {/* CTAs */}

@@ -37,6 +37,7 @@ import {
   Check,
   RotateCcw,
   SlidersHorizontal,
+  Star,
   X
 } from 'lucide-react';
 import { 
@@ -54,7 +55,7 @@ import { supabase } from '@/lib/supabase';
 export default function AdminCmsPage() {
   const router = useRouter();
   const [authChecking, setAuthChecking] = useState(true);
-  const [activeTab, setActiveTab] = useState<'lms' | 'hero' | 'stats' | 'bonuses' | 'reviews' | 'faqs' | 'payments' | 'contact' | 'pixels' | 'themes'>('lms');
+  const [activeTab, setActiveTab] = useState<'lms' | 'hero' | 'mentor' | 'stats' | 'bonuses' | 'reviews' | 'faqs' | 'payments' | 'contact' | 'pixels' | 'themes'>('lms');
   const [cmsData, setCmsData] = useState<CmsContentSchema>(defaultCmsContent);
   const [modules, setModules] = useState<Module[]>(initialModules);
   const [suppliers, setSuppliers] = useState<Supplier[]>(initialSuppliers);
@@ -137,6 +138,13 @@ export default function AdminCmsPage() {
   const [screenshotUploadError, setScreenshotUploadError] = useState('');
   const [newScreenshotUrl, setNewScreenshotUrl] = useState('');
   const screenshotFileInputRef = useRef<HTMLInputElement>(null);
+
+  // Mentor Profile State
+  const [mentorUploading, setMentorUploading] = useState(false);
+  const [mentorUploadProgress, setMentorUploadProgress] = useState(0);
+  const [mentorUploadStatus, setMentorUploadStatus] = useState('');
+  const [mentorUploadError, setMentorUploadError] = useState('');
+  const mentorFileInputRef = useRef<HTMLInputElement>(null);
   const currentThemeColors: ThemeCustomColors = {
     ...DEFAULT_THEME_COLORS,
     ...(cmsData.theme?.custom_colors || {})
@@ -1090,6 +1098,98 @@ export default function AdminCmsPage() {
     setCmsData({ ...cmsData, faqs: updated });
   };
 
+  // --- MENTOR PROFILE ACTIONS ---
+  const handleMentorImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      setMentorUploadError('Please select a valid image file (PNG, JPG, WebP).');
+      return;
+    }
+
+    setMentorUploading(true);
+    setMentorUploadError('');
+    setMentorUploadProgress(15);
+    setMentorUploadStatus(`Uploading ${file.name}...`);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      setMentorUploadProgress(45);
+      const res = await fetch('/api/admin/cms/upload-mentor-image', {
+        method: 'POST',
+        body: formData
+      });
+
+      setMentorUploadProgress(85);
+      const data = await res.json();
+      if (res.ok && data.success && data.url) {
+        setMentorUploadProgress(100);
+        setMentorUploadStatus('Mentor image uploaded successfully!');
+        setCmsData(prev => ({
+          ...prev,
+          mentor: {
+            ...(prev.mentor || defaultCmsContent.mentor),
+            image: data.url
+          }
+        }));
+        setTimeout(() => {
+          setMentorUploading(false);
+          setMentorUploadProgress(0);
+        }, 1200);
+      } else {
+        throw new Error(data.message || 'Failed to upload mentor image');
+      }
+    } catch (err: any) {
+      setMentorUploading(false);
+      setMentorUploadError(err.message || 'Image upload failed. Please try again.');
+    }
+  };
+
+  const handleAddMentorBenefit = () => {
+    setCmsData(prev => {
+      const current = prev.mentor || defaultCmsContent.mentor;
+      return {
+        ...prev,
+        mentor: {
+          ...current,
+          benefits: [...(current.benefits || []), 'New Mentorship Benefit / Feature']
+        }
+      };
+    });
+  };
+
+  const handleUpdateMentorBenefit = (index: number, val: string) => {
+    setCmsData(prev => {
+      const current = prev.mentor || defaultCmsContent.mentor;
+      const updated = [...(current.benefits || [])];
+      updated[index] = val;
+      return {
+        ...prev,
+        mentor: {
+          ...current,
+          benefits: updated
+        }
+      };
+    });
+  };
+
+  const handleDeleteMentorBenefit = (index: number) => {
+    setCmsData(prev => {
+      const current = prev.mentor || defaultCmsContent.mentor;
+      const updated = (current.benefits || []).filter((_, i) => i !== index);
+      return {
+        ...prev,
+        mentor: {
+          ...current,
+          benefits: updated
+        }
+      };
+    });
+  };
+
   return (
     <div className="min-h-screen bg-[#0B0F19] text-white pb-20 font-sans selection:bg-[#00A0DF] selection:text-white">
       
@@ -1152,6 +1252,7 @@ export default function AdminCmsPage() {
             { id: 'lms', label: '📚 LMS Modules', icon: BookOpen },
             { id: 'themes', label: '🎨 Themes', icon: Palette },
             { id: 'hero', label: '📣 Hero Section', icon: Sparkles },
+            { id: 'mentor', label: '👤 Mentor Profile', icon: Award },
             { id: 'stats', label: '⏱ Urgency Stats', icon: Clock },
             { id: 'bonuses', label: '🎁 6 Bonuses', icon: Gift },
             { id: 'reviews', label: '🏆 Reviews', icon: Award },
@@ -2062,8 +2163,422 @@ export default function AdminCmsPage() {
         )}
 
         {/* ========================================================================= */}
-        {/* TAB 2: STATS */}
+        {/* TAB: MENTOR PROFILE MANAGEMENT */}
         {/* ========================================================================= */}
+        {activeTab === 'mentor' && (
+          <div className="space-y-6 sm:space-y-8">
+            
+            {/* Header Card */}
+            <div className="bg-[#111827] border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xl">
+              <div>
+                <h2 className="text-base sm:text-2xl font-black text-white flex items-center gap-2">
+                  <Award size={22} className="text-[#00A0DF]" />
+                  <span>Mentor Profile &amp; Identity Management</span>
+                </h2>
+                <p className="text-xs text-slate-400 mt-1">
+                  Control mentor photo (upload directly or paste URL), name, badge, bio, benefits checklist, stats counters, and philosophy. Updates live across Homepage &amp; About page.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleSaveAll}
+                disabled={loading}
+                className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-[#00A0DF] hover:bg-[#008ec7] disabled:opacity-50 text-white text-xs font-black shadow-lg shadow-[#00A0DF]/30 transition-all active:scale-95 flex-shrink-0"
+              >
+                <Save size={14} />
+                <span>{loading ? 'Saving...' : 'Save Mentor Profile'}</span>
+              </button>
+            </div>
+
+            {/* Main Content Grid: Left Picture/Preview + Right Profile Details */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              
+              {/* Left Column: Photo & Live Preview (lg:col-span-5) */}
+              <div className="lg:col-span-5 bg-[#111827] border border-white/10 rounded-2xl sm:rounded-3xl p-5 sm:p-6 space-y-5 shadow-xl flex flex-col items-center text-center">
+                <div className="w-full text-left">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-[#00A0DF] bg-[#00A0DF]/10 px-2.5 py-1 rounded-md border border-[#00A0DF]/20">
+                    Live Visual Preview
+                  </span>
+                  <h3 className="text-sm sm:text-base font-black text-white mt-1.5">Mentor Avatar &amp; Card</h3>
+                </div>
+
+                {/* Visual Avatar Card Mockup (Exact Homepage Look) */}
+                <div className="w-full max-w-xs bg-[#0B0F19] border border-white/10 rounded-3xl p-6 shadow-2xl flex flex-col items-center">
+                  <div className="relative w-40 h-40 rounded-3xl bg-gradient-to-tr from-[#00A0DF] to-emerald-400 p-1.5 shadow-2xl mb-4 overflow-hidden">
+                    <img
+                      src={cmsData.mentor?.image || '/images/sami-logo.jpg'}
+                      alt={cmsData.mentor?.name || 'Mentor Sami'}
+                      className="w-full h-full rounded-2xl object-cover"
+                      onError={(e) => { (e.target as HTMLImageElement).src = '/images/sami-logo.jpg'; }}
+                    />
+                  </div>
+                  <span className="inline-flex items-center gap-1.5 bg-[#00A0DF]/20 text-[#00A0DF] border border-[#00A0DF]/30 text-[11px] font-black px-3 py-0.5 rounded-full uppercase tracking-wider mb-2">
+                    <Star size={11} className="fill-[#00A0DF]" />
+                    <span>{cmsData.mentor?.badge || 'Digital Marketing Expert'}</span>
+                  </span>
+                  <h4 className="text-base font-black text-white">
+                    {cmsData.mentor?.name || 'Muhammad Sami'}
+                  </h4>
+                  <p className="text-xs text-slate-400 mt-1 line-clamp-2">
+                    {cmsData.mentor?.title || 'Top E-Commerce Mentor & GCC Dropshipping Expert'}
+                  </p>
+                </div>
+
+                {/* Upload & Image URL Controls */}
+                <div className="w-full space-y-3 pt-3 border-t border-white/10 text-left">
+                  <label className="block text-xs font-bold text-white">
+                    Upload New Mentor Picture
+                  </label>
+                  
+                  {/* File Upload Button */}
+                  <div className="flex items-center gap-2">
+                    <input
+                      ref={mentorFileInputRef}
+                      type="file"
+                      accept="image/png,image/jpeg,image/jpg,image/webp"
+                      className="hidden"
+                      onChange={handleMentorImageUpload}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => mentorFileInputRef.current?.click()}
+                      disabled={mentorUploading}
+                      className="w-full py-2.5 px-4 rounded-xl bg-[#00A0DF] hover:bg-[#008ec7] disabled:opacity-50 text-white text-xs font-black transition-all flex items-center justify-center gap-2 shadow-lg shadow-[#00A0DF]/20 cursor-pointer active:scale-95"
+                    >
+                      {mentorUploading ? (
+                        <>
+                          <Loader2 size={14} className="animate-spin" />
+                          <span>Uploading Picture...</span>
+                        </>
+                      ) : (
+                        <>
+                          <UploadCloud size={15} />
+                          <span>Choose Picture from Device</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+
+                  {/* Upload Progress */}
+                  {mentorUploading && (
+                    <div className="space-y-1.5">
+                      <div className="flex justify-between text-xs text-slate-300 font-mono">
+                        <span className="truncate pr-2">{mentorUploadStatus}</span>
+                        <span className="font-bold text-[#00A0DF]">{mentorUploadProgress}%</span>
+                      </div>
+                      <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-gradient-to-r from-[#00A0DF] to-emerald-400 transition-all duration-200"
+                          style={{ width: `${mentorUploadProgress}%` }}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {mentorUploadError && (
+                    <p className="text-xs text-red-400 font-medium">{mentorUploadError}</p>
+                  )}
+
+                  {/* Manual Image URL Input */}
+                  <div className="pt-2">
+                    <label className="block text-[11px] font-bold text-slate-400 mb-1">
+                      Or Paste Direct Image URL:
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. https://... or /images/sami-logo.jpg"
+                      value={cmsData.mentor?.image ?? ''}
+                      onChange={(e) => setCmsData({
+                        ...cmsData,
+                        mentor: { ...(cmsData.mentor || defaultCmsContent.mentor), image: e.target.value }
+                      })}
+                      className="w-full px-3 py-2 rounded-xl bg-[#0B0F19] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF]"
+                    />
+                  </div>
+
+                  {/* Reset to Default Image */}
+                  <button
+                    type="button"
+                    onClick={() => setCmsData({
+                      ...cmsData,
+                      mentor: { ...(cmsData.mentor || defaultCmsContent.mentor), image: '/images/sami-logo.jpg' }
+                    })}
+                    className="text-[11px] text-slate-400 hover:text-white flex items-center gap-1 transition-colors"
+                  >
+                    <RotateCcw size={11} />
+                    <span>Reset to default logo photo</span>
+                  </button>
+                </div>
+
+              </div>
+
+              {/* Right Column: Identity, Bio, Stats, Benefits (lg:col-span-7) */}
+              <div className="lg:col-span-7 space-y-6">
+                
+                {/* Identity Inputs */}
+                <div className="bg-[#111827] border border-white/10 rounded-2xl sm:rounded-3xl p-5 sm:p-7 space-y-4 shadow-xl">
+                  <h3 className="text-sm sm:text-base font-black text-white flex items-center gap-2">
+                    <Sparkles size={16} className="text-[#00A0DF]" />
+                    <span>Identity &amp; Titles</span>
+                  </h3>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-400 mb-1">Mentor Full Name</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Muhammad Sami"
+                        value={cmsData.mentor?.name ?? ''}
+                        onChange={(e) => setCmsData({
+                          ...cmsData,
+                          mentor: { ...(cmsData.mentor || defaultCmsContent.mentor), name: e.target.value }
+                        })}
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-white font-bold focus:outline-none focus:border-[#00A0DF]"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-400 mb-1">Badge Under Photo</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Digital Marketing Expert"
+                        value={cmsData.mentor?.badge ?? ''}
+                        onChange={(e) => setCmsData({
+                          ...cmsData,
+                          mentor: { ...(cmsData.mentor || defaultCmsContent.mentor), badge: e.target.value }
+                        })}
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF]"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-400 mb-1">Section Tag Pill</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. YOUR MENTOR"
+                        value={cmsData.mentor?.tag ?? ''}
+                        onChange={(e) => setCmsData({
+                          ...cmsData,
+                          mentor: { ...(cmsData.mentor || defaultCmsContent.mentor), tag: e.target.value }
+                        })}
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF]"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-400 mb-1">Professional Title / Role</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Top E-Commerce Mentor & GCC Dropshipping Expert"
+                        value={cmsData.mentor?.title ?? ''}
+                        onChange={(e) => setCmsData({
+                          ...cmsData,
+                          mentor: { ...(cmsData.mentor || defaultCmsContent.mentor), title: e.target.value }
+                        })}
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF]"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-400 mb-1">
+                      Short Bio / Subtitle (Homepage Mentor Card)
+                    </label>
+                    <textarea
+                      rows={2}
+                      placeholder="e.g. You don't just need the right mentor — you need the right community too..."
+                      value={cmsData.mentor?.bio ?? ''}
+                      onChange={(e) => setCmsData({
+                        ...cmsData,
+                        mentor: { ...(cmsData.mentor || defaultCmsContent.mentor), bio: e.target.value }
+                      })}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF] resize-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-400 mb-1">
+                      Mentor Core Quote (About Page &amp; Philosophy)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. You Don't Need Millions To Start. You Just Need A Proven Step-by-Step Blueprint."
+                      value={cmsData.mentor?.quote ?? ''}
+                      onChange={(e) => setCmsData({
+                        ...cmsData,
+                        mentor: { ...(cmsData.mentor || defaultCmsContent.mentor), quote: e.target.value }
+                      })}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-amber-400 font-medium focus:outline-none focus:border-[#00A0DF]"
+                    />
+                  </div>
+
+                </div>
+
+                {/* 3 Stat Counters */}
+                <div className="bg-[#111827] border border-white/10 rounded-2xl sm:rounded-3xl p-5 sm:p-7 space-y-4 shadow-xl">
+                  <h3 className="text-sm sm:text-base font-black text-white flex items-center gap-2">
+                    <Clock size={16} className="text-[#00A0DF]" />
+                    <span>3 Credibility &amp; Stat Counters</span>
+                  </h3>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    {/* Stat 1 */}
+                    <div className="bg-[#0B0F19] p-3.5 rounded-xl border border-white/5 space-y-2">
+                      <label className="block text-[11px] font-bold text-[#00A0DF]">Stat #1 (Blue)</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. 9,700+"
+                        value={cmsData.mentor?.stat1_value ?? cmsData.mentor?.students_count ?? ''}
+                        onChange={(e) => setCmsData({
+                          ...cmsData,
+                          mentor: { 
+                            ...(cmsData.mentor || defaultCmsContent.mentor), 
+                            stat1_value: e.target.value,
+                            students_count: e.target.value 
+                          }
+                        })}
+                        className="w-full px-2.5 py-1.5 rounded-lg bg-[#111827] border border-white/10 text-xs font-black text-white focus:outline-none"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Label: Students mentored"
+                        value={cmsData.mentor?.stat1_label ?? ''}
+                        onChange={(e) => setCmsData({
+                          ...cmsData,
+                          mentor: { ...(cmsData.mentor || defaultCmsContent.mentor), stat1_label: e.target.value }
+                        })}
+                        className="w-full px-2.5 py-1 rounded-lg bg-[#111827] border border-white/5 text-[11px] text-slate-300 focus:outline-none"
+                      />
+                    </div>
+
+                    {/* Stat 2 */}
+                    <div className="bg-[#0B0F19] p-3.5 rounded-xl border border-white/5 space-y-2">
+                      <label className="block text-[11px] font-bold text-emerald-400">Stat #2 (Green)</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. UAE & KSA"
+                        value={cmsData.mentor?.stat2_value ?? ''}
+                        onChange={(e) => setCmsData({
+                          ...cmsData,
+                          mentor: { ...(cmsData.mentor || defaultCmsContent.mentor), stat2_value: e.target.value }
+                        })}
+                        className="w-full px-2.5 py-1.5 rounded-lg bg-[#111827] border border-white/10 text-xs font-black text-emerald-400 focus:outline-none"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Label: Market focus"
+                        value={cmsData.mentor?.stat2_label ?? ''}
+                        onChange={(e) => setCmsData({
+                          ...cmsData,
+                          mentor: { ...(cmsData.mentor || defaultCmsContent.mentor), stat2_label: e.target.value }
+                        })}
+                        className="w-full px-2.5 py-1 rounded-lg bg-[#111827] border border-white/5 text-[11px] text-slate-300 focus:outline-none"
+                      />
+                    </div>
+
+                    {/* Stat 3 */}
+                    <div className="bg-[#0B0F19] p-3.5 rounded-xl border border-white/5 space-y-2">
+                      <label className="block text-[11px] font-bold text-amber-400">Stat #3 (Gold)</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Lifetime"
+                        value={cmsData.mentor?.stat3_value ?? ''}
+                        onChange={(e) => setCmsData({
+                          ...cmsData,
+                          mentor: { ...(cmsData.mentor || defaultCmsContent.mentor), stat3_value: e.target.value }
+                        })}
+                        className="w-full px-2.5 py-1.5 rounded-lg bg-[#111827] border border-white/10 text-xs font-black text-amber-400 focus:outline-none"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Label: Access & support"
+                        value={cmsData.mentor?.stat3_label ?? ''}
+                        onChange={(e) => setCmsData({
+                          ...cmsData,
+                          mentor: { ...(cmsData.mentor || defaultCmsContent.mentor), stat3_label: e.target.value }
+                        })}
+                        className="w-full px-2.5 py-1 rounded-lg bg-[#111827] border border-white/5 text-[11px] text-slate-300 focus:outline-none"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Benefits Checklist */}
+                <div className="bg-[#111827] border border-white/10 rounded-2xl sm:rounded-3xl p-5 sm:p-7 space-y-4 shadow-xl">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-sm sm:text-base font-black text-white flex items-center gap-2">
+                        <CheckCircle2 size={16} className="text-emerald-400" />
+                        <span>Key Mentorship Benefits Checklist</span>
+                      </h3>
+                      <p className="text-[11px] text-slate-400">Green checkmark points displayed in the mentor card</p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={handleAddMentorBenefit}
+                      className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all flex items-center gap-1 active:scale-95"
+                    >
+                      <Plus size={13} />
+                      <span>Add Benefit</span>
+                    </button>
+                  </div>
+
+                  <div className="space-y-2.5">
+                    {((cmsData.mentor?.benefits && cmsData.mentor.benefits.length > 0) 
+                      ? cmsData.mentor.benefits 
+                      : (defaultCmsContent.mentor.benefits || [])
+                    ).map((benefit, bIdx) => (
+                      <div key={bIdx} className="flex items-center gap-2 bg-[#0B0F19] p-2 rounded-xl border border-white/5">
+                        <span className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center flex-shrink-0 text-xs font-bold">
+                          ✓
+                        </span>
+                        <input
+                          type="text"
+                          value={benefit}
+                          onChange={(e) => handleUpdateMentorBenefit(bIdx, e.target.value)}
+                          className="flex-1 bg-transparent text-xs sm:text-sm text-white focus:outline-none"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteMentorBenefit(bIdx)}
+                          className="p-1.5 text-slate-500 hover:text-red-400 rounded-lg hover:bg-white/5 transition-colors"
+                          title="Delete benefit"
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Detailed Story (About Page) */}
+                <div className="bg-[#111827] border border-white/10 rounded-2xl sm:rounded-3xl p-5 sm:p-7 space-y-3 shadow-xl">
+                  <h3 className="text-sm sm:text-base font-black text-white">
+                    Detailed Story &amp; Vision (Displayed on /about page)
+                  </h3>
+                  <p className="text-[11px] text-slate-400">Separate paragraphs with a blank double line.</p>
+                  <textarea
+                    rows={5}
+                    placeholder="Enter the full backstory and philosophy of mentor Sami..."
+                    value={cmsData.mentor?.story ?? ''}
+                    onChange={(e) => setCmsData({
+                      ...cmsData,
+                      mentor: { ...(cmsData.mentor || defaultCmsContent.mentor), story: e.target.value }
+                    })}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF] leading-relaxed"
+                  />
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+        )}
         {activeTab === 'stats' && (
           <div className="bg-[#111827] border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-8 space-y-4">
             <h3 className="text-sm sm:text-lg font-bold text-white">4 Platform Stats Row</h3>

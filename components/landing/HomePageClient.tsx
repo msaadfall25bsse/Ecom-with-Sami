@@ -878,71 +878,63 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
               <div className="lg:col-span-5 flex flex-col items-center text-center">
                 <div className="relative w-44 h-44 sm:w-56 sm:h-56 rounded-3xl bg-gradient-to-tr from-[#00A0DF] to-emerald-400 p-1.5 shadow-2xl mb-4 animate-float overflow-hidden">
                   <Image
-                    src="/images/sami-logo.jpg"
+                    src={mentor.image || '/images/sami-logo.jpg'}
                     alt={mentor.name || 'Mentor Muhammad Sami'}
                     width={224}
                     height={224}
                     className="w-full h-full rounded-2xl object-cover"
                     priority
+                    unoptimized={Boolean(mentor.image && (mentor.image.startsWith('http') || mentor.image.startsWith('data:')))}
                   />
                 </div>
                 <span className="inline-flex items-center gap-1.5 bg-[#00A0DF]/20 text-[#00A0DF] border border-[#00A0DF]/30 text-xs font-black px-3.5 py-1 rounded-full uppercase tracking-wider">
                   <Star size={12} className="fill-[#00A0DF]" />
-                  Digital Marketing Expert
+                  {mentor.badge || 'Digital Marketing Expert'}
                 </span>
               </div>
 
               {/* Mentor Details */}
               <div className="lg:col-span-7">
-                <span className="section-tag-pill">YOUR MENTOR</span>
+                <span className="section-tag-pill">{mentor.tag || 'YOUR MENTOR'}</span>
                 <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-white tracking-tight mt-2 mb-3">
                   {mentor.name || 'Muhammad Sami'}
                 </h2>
                 <p className="text-xs sm:text-sm md:text-base text-slate-300 font-medium leading-relaxed mb-6">
-                  You don’t just need the right mentor — you need the right community too. <strong>Both are included in your purchase today.</strong>
+                  {mentor.bio || (
+                    <>You don’t just need the right mentor — you need the right community too. <strong>Both are included in your purchase today.</strong></>
+                  )}
                 </p>
 
                 {/* Benefits List */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
-                  <div className="flex items-center gap-2.5 text-xs sm:text-sm text-slate-200 font-semibold">
-                    <span className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center flex-shrink-0">
-                      <Check size={13} className="stroke-[3]" />
-                    </span>
-                    <span>Lifetime WhatsApp support</span>
-                  </div>
-                  <div className="flex items-center gap-2.5 text-xs sm:text-sm text-slate-200 font-semibold">
-                    <span className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center flex-shrink-0">
-                      <Check size={13} className="stroke-[3]" />
-                    </span>
-                    <span>Private Facebook community</span>
-                  </div>
-                  <div className="flex items-center gap-2.5 text-xs sm:text-sm text-slate-200 font-semibold">
-                    <span className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center flex-shrink-0">
-                      <Check size={13} className="stroke-[3]" />
-                    </span>
-                    <span>Private WhatsApp community</span>
-                  </div>
-                  <div className="flex items-center gap-2.5 text-xs sm:text-sm text-slate-200 font-semibold">
-                    <span className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center flex-shrink-0">
-                      <Check size={13} className="stroke-[3]" />
-                    </span>
-                    <span>Smooth, guided journey</span>
-                  </div>
+                  {(mentor.benefits && mentor.benefits.length > 0 ? mentor.benefits : [
+                    'Lifetime WhatsApp support',
+                    'Private Facebook community',
+                    'Private WhatsApp community',
+                    'Smooth, guided journey'
+                  ]).map((benefit, bIdx) => (
+                    <div key={bIdx} className="flex items-center gap-2.5 text-xs sm:text-sm text-slate-200 font-semibold">
+                      <span className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center flex-shrink-0">
+                        <Check size={13} className="stroke-[3]" />
+                      </span>
+                      <span>{benefit}</span>
+                    </div>
+                  ))}
                 </div>
 
                 {/* Stat Counters */}
                 <div className="grid grid-cols-3 gap-3 pt-5 border-t border-slate-800 text-center">
                   <div>
-                    <div className="text-lg sm:text-2xl font-black text-[#00A0DF]">{mentor.students_count || '9,700+'}</div>
-                    <div className="text-[11px] text-slate-400 font-semibold">Students mentored</div>
+                    <div className="text-lg sm:text-2xl font-black text-[#00A0DF]">{mentor.stat1_value || mentor.students_count || '9,700+'}</div>
+                    <div className="text-[11px] text-slate-400 font-semibold">{mentor.stat1_label || 'Students mentored'}</div>
                   </div>
                   <div>
-                    <div className="text-lg sm:text-2xl font-black text-emerald-400">UAE &amp; KSA</div>
-                    <div className="text-[11px] text-slate-400 font-semibold">Market focus</div>
+                    <div className="text-lg sm:text-2xl font-black text-emerald-400">{mentor.stat2_value || 'UAE & KSA'}</div>
+                    <div className="text-[11px] text-slate-400 font-semibold">{mentor.stat2_label || 'Market focus'}</div>
                   </div>
                   <div>
-                    <div className="text-lg sm:text-2xl font-black text-amber-400">Lifetime</div>
-                    <div className="text-[11px] text-slate-400 font-semibold">Access &amp; support</div>
+                    <div className="text-lg sm:text-2xl font-black text-amber-400">{mentor.stat3_value || 'Lifetime'}</div>
+                    <div className="text-[11px] text-slate-400 font-semibold">{mentor.stat3_label || 'Access & support'}</div>
                   </div>
                 </div>
 

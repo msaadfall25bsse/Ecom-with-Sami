@@ -41,6 +41,7 @@ export async function POST(request: NextRequest) {
       revalidatePath('/admin/cms', 'page');
       revalidatePath('/checkout', 'page');
       revalidatePath('/enrollment', 'page');
+      revalidatePath('/about', 'page');
     } catch (e) {
       console.warn('Revalidation notice:', e);
     }

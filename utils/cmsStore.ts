@@ -26,10 +26,22 @@ export interface CmsContentSchema {
   mentor: {
     name: string;
     title: string;
+    image: string;
+    tag: string;
+    badge: string;
     bio: string;
-    students_count: string;
-    primary_markets: string;
-    access_badge: string;
+    benefits: string[];
+    stat1_value: string;
+    stat1_label: string;
+    stat2_value: string;
+    stat2_label: string;
+    stat3_value: string;
+    stat3_label: string;
+    quote?: string;
+    story?: string;
+    students_count?: string;
+    primary_markets?: string;
+    access_badge?: string;
   };
   bonuses: {
     tag: string;
@@ -294,10 +306,27 @@ export const defaultCmsContent: CmsContentSchema = {
     mentorship_type: 'Direct WhatsApp Support'
   },
   mentor: {
-    name: 'Sardar Samiullah (Sami Ur Rehman)',
+    name: 'Muhammad Sami',
     title: 'Top E-Commerce Mentor & GCC Dropshipping Expert',
-    bio: 'Founder of Ecom With Sami. Over 5+ years of active e-commerce experience scaling 7-figure stores across Dubai, Sharjah, Riyadh, and Jeddah. Trained over 9,700 students.',
-    students_count: '9,742+',
+    image: '/images/sami-logo.jpg',
+    tag: 'YOUR MENTOR',
+    badge: 'Digital Marketing Expert',
+    bio: 'You don’t just need the right mentor — you need the right community too. Both are included in your purchase today.',
+    benefits: [
+      'Lifetime WhatsApp support',
+      'Private Facebook community',
+      'Private WhatsApp community',
+      'Smooth, guided journey'
+    ],
+    stat1_value: '9,700+',
+    stat1_label: 'Students mentored',
+    stat2_value: 'UAE & KSA',
+    stat2_label: 'Market focus',
+    stat3_value: 'Lifetime',
+    stat3_label: 'Access & support',
+    quote: 'You Don’t Need Millions To Start. You Just Need A Proven Step-by-Step Blueprint.',
+    story: 'When I started dropshipping, the biggest hurdle wasn’t the technical setup — it was the lack of reliable local supplier contacts in the GCC and constant trial-and-error wasting hard-earned ad spend.\n\nAfter years of testing, scaling, and establishing direct relationships with verified warehouses across Dubai, Sharjah, and Riyadh, I designed this training specifically for beginners in Pakistan who want to earn in Dirhams and Riyals from home.\n\nOur goal is simple: eliminate the guesswork, give you direct phone numbers to real suppliers, teach you high-converting TikTok & Facebook media buying, and provide live mentorship whenever you get stuck.',
+    students_count: '9,700+',
     primary_markets: 'UAE & Saudi Arabia (KSA)',
     access_badge: 'Verified Mentor & Coach'
   },
