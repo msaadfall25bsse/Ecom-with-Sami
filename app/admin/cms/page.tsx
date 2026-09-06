@@ -52,6 +52,7 @@ import {
 import { Module, Supplier, initialModules, initialSuppliers } from '@/utils/db';
 
 import { supabase } from '@/lib/supabase';
+import { optimizeVideoTo720p } from '@/utils/videoCompressor';
 
 export default function AdminCmsPage() {
   const router = useRouter();
@@ -632,65 +633,110 @@ export default function AdminCmsPage() {
     setUploadProgress(0);
     setVideoUploadSuccess(false);
     setUploadError('');
-    setUploadStatusText('Preparing 720p HD video upload to Hostinger storage...');
+    setUploadStatusText('Checking video resolution for 720p HD optimization...');
 
     try {
-      const formData = new FormData();
-      formData.append('video', file);
-      formData.append('moduleId', String(moduleId));
-      formData.append('isHero', 'false');
+      // Step 1: Optimize video to 720p HD if resolution exceeds 720p (reduces 136MB to ~40MB)
+      let videoToUpload = file;
+      try {
+        setUploadStatusText('Optimizing video to 720p HD resolution...');
+        const result = await optimizeVideoTo720p(file, (pct, status) => {
+          setUploadProgress(Math.round(pct * 0.4)); // First 40% is 720p downscaling
+          setUploadStatusText(status);
+        });
 
-      await new Promise<void>((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        uploadXhrRef.current = xhr;
+        if (result.wasCompressed) {
+          videoToUpload = result.file;
+          const origMB = (result.originalSize / (1024 * 1024)).toFixed(1);
+          const compMB = (result.compressedSize / (1024 * 1024)).toFixed(1);
+          setUploadStatusText(`720p HD ready! Reduced from ${origMB} MB to ${compMB} MB`);
+        }
+      } catch (optErr) {
+        console.warn('Video optimization notice:', optErr);
+      }
 
-        xhr.upload.onprogress = (e) => {
-          if (e.lengthComputable) {
-            const percent = Math.min(Math.round((e.loaded / e.total) * 100), 99);
-            setUploadProgress(percent);
-            const loadedMB = (e.loaded / (1024 * 1024)).toFixed(1);
-            const totalMB = (e.total / (1024 * 1024)).toFixed(1);
-            setUploadStatusText(`${loadedMB} MB / ${totalMB} MB (${percent}%) - Uploading 720p HD Video`);
-          }
-        };
+      // Step 2: Upload in safe 15MB chunks to bypass Hostinger Nginx 413 Payload Too Large
+      const CHUNK_SIZE = 15 * 1024 * 1024; // 15MB chunks (guaranteed under Hostinger limit)
+      const totalChunks = Math.ceil(videoToUpload.size / CHUNK_SIZE);
+      const uploadId = `vid_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+      let finalVideoUrl = '';
 
-        xhr.onload = () => {
-          uploadXhrRef.current = null;
-          if (xhr.status >= 200 && xhr.status < 300) {
-            try {
-              const resData = JSON.parse(xhr.responseText);
-              if (resData.success && resData.url) {
-                setNewLessonUrl(resData.url);
-                setUploadProgress(100);
-                setUploadingVideo(false);
-                setVideoUploadSuccess(true);
-                const totalMB = (file.size / (1024 * 1024)).toFixed(1);
-                setUploadStatusText(`Upload complete 100%! (${totalMB} MB saved on Hostinger at 720p HD)`);
-                resolve();
-              } else {
-                reject(new Error(resData.message || 'Server did not return a valid video URL'));
-              }
-            } catch (err: any) {
-              reject(new Error('Invalid response from server'));
+      for (let c = 0; c < totalChunks; c++) {
+        const start = c * CHUNK_SIZE;
+        const end = Math.min(start + CHUNK_SIZE, videoToUpload.size);
+        const chunkBlob = videoToUpload.slice(start, end);
+
+        const formData = new FormData();
+        formData.append('chunk', chunkBlob);
+        formData.append('uploadId', uploadId);
+        formData.append('chunkIndex', String(c));
+        formData.append('totalChunks', String(totalChunks));
+        formData.append('fileName', videoToUpload.name);
+        formData.append('moduleId', String(moduleId));
+        formData.append('isHero', 'false');
+
+        await new Promise<void>((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          uploadXhrRef.current = xhr;
+
+          xhr.upload.onprogress = (e) => {
+            if (e.lengthComputable) {
+              const currentChunkLoaded = start + e.loaded;
+              // 40% to 99% progress
+              const uploadPct = 40 + Math.min(Math.round((currentChunkLoaded / videoToUpload.size) * 59), 59);
+              setUploadProgress(uploadPct);
+              const loadedMB = (currentChunkLoaded / (1024 * 1024)).toFixed(1);
+              const totalMB = (videoToUpload.size / (1024 * 1024)).toFixed(1);
+              setUploadStatusText(`${loadedMB} MB / ${totalMB} MB (${uploadPct}%) - Storing 720p HD Video on Hostinger (Part ${c + 1}/${totalChunks})`);
             }
-          } else {
-            reject(new Error(`Upload failed with status ${xhr.status}`));
-          }
-        };
+          };
 
-        xhr.onerror = () => {
-          uploadXhrRef.current = null;
-          reject(new Error('Network error occurred during video upload'));
-        };
+          xhr.onload = () => {
+            uploadXhrRef.current = null;
+            if (xhr.status >= 200 && xhr.status < 300) {
+              try {
+                const resData = JSON.parse(xhr.responseText);
+                if (resData.success) {
+                  if (resData.isCompleted && resData.url) {
+                    finalVideoUrl = resData.url;
+                  }
+                  resolve();
+                } else {
+                  reject(new Error(resData.message || `Part ${c + 1} upload failed`));
+                }
+              } catch (err: any) {
+                reject(new Error('Invalid response from server'));
+              }
+            } else {
+              reject(new Error(`Upload failed with status ${xhr.status}`));
+            }
+          };
 
-        xhr.onabort = () => {
-          uploadXhrRef.current = null;
-          reject(new Error('Upload cancelled'));
-        };
+          xhr.onerror = () => {
+            uploadXhrRef.current = null;
+            reject(new Error('Network error occurred during video upload'));
+          };
 
-        xhr.open('POST', '/api/admin/cms/upload-video', true);
-        xhr.send(formData);
-      });
+          xhr.onabort = () => {
+            uploadXhrRef.current = null;
+            reject(new Error('Upload cancelled'));
+          };
+
+          xhr.open('POST', '/api/admin/cms/chunk-upload', true);
+          xhr.send(formData);
+        });
+      }
+
+      if (finalVideoUrl) {
+        setNewLessonUrl(finalVideoUrl);
+        setUploadProgress(100);
+        setUploadingVideo(false);
+        setVideoUploadSuccess(true);
+        const totalMB = (videoToUpload.size / (1024 * 1024)).toFixed(1);
+        setUploadStatusText(`Upload complete 100%! (${totalMB} MB permanently stored at 720p HD on Hostinger)`);
+      } else {
+        throw new Error('Video assembly completed but no URL was returned');
+      }
 
     } catch (err: any) {
       setUploadingVideo(false);
@@ -731,70 +777,114 @@ export default function AdminCmsPage() {
     setHeroUploadProgress(0);
     setHeroUploadSuccess(false);
     setHeroUploadError('');
-    setHeroUploadStatus('Preparing 720p HD Hero video for Hostinger storage...');
+    setHeroUploadStatus('Checking hero video resolution for 720p HD optimization...');
 
     try {
-      const formData = new FormData();
-      formData.append('video', file);
-      formData.append('isHero', 'true');
+      // Step 1: Optimize video to 720p HD if resolution exceeds 720p
+      let videoToUpload = file;
+      try {
+        setHeroUploadStatus('Optimizing hero video to 720p HD resolution...');
+        const result = await optimizeVideoTo720p(file, (pct, status) => {
+          setHeroUploadProgress(Math.round(pct * 0.4));
+          setHeroUploadStatus(status);
+        });
 
-      await new Promise<void>((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        heroUploadXhrRef.current = xhr;
+        if (result.wasCompressed) {
+          videoToUpload = result.file;
+          const origMB = (result.originalSize / (1024 * 1024)).toFixed(1);
+          const compMB = (result.compressedSize / (1024 * 1024)).toFixed(1);
+          setHeroUploadStatus(`720p HD ready! Reduced from ${origMB} MB to ${compMB} MB`);
+        }
+      } catch (optErr) {
+        console.warn('Hero video optimization notice:', optErr);
+      }
 
-        xhr.upload.onprogress = (e) => {
-          if (e.lengthComputable) {
-            const percent = Math.min(Math.round((e.loaded / e.total) * 100), 99);
-            setHeroUploadProgress(percent);
-            const loadedMB = (e.loaded / (1024 * 1024)).toFixed(1);
-            const totalMB = (e.total / (1024 * 1024)).toFixed(1);
-            setHeroUploadStatus(`${loadedMB} MB / ${totalMB} MB (${percent}%) - Uploading Hero Video`);
-          }
-        };
+      // Step 2: Upload in safe 15MB chunks to bypass Hostinger Nginx 413 Payload Too Large
+      const CHUNK_SIZE = 15 * 1024 * 1024;
+      const totalChunks = Math.ceil(videoToUpload.size / CHUNK_SIZE);
+      const uploadId = `hero_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+      let finalHeroUrl = '';
 
-        xhr.onload = () => {
-          heroUploadXhrRef.current = null;
-          if (xhr.status >= 200 && xhr.status < 300) {
-            try {
-              const resData = JSON.parse(xhr.responseText);
-              if (resData.success && resData.url) {
-                setCmsData(prev => ({
-                  ...prev,
-                  hero: {
-                    ...prev.hero,
-                    video_url: resData.url
-                  }
-                }));
-                setHeroUploadProgress(100);
-                setHeroUploading(false);
-                setHeroUploadSuccess(true);
-                const totalMB = (file.size / (1024 * 1024)).toFixed(1);
-                setHeroUploadStatus(`Upload complete 100%! (${totalMB} MB stored on Hostinger at 720p HD)`);
-                resolve();
-              } else {
-                reject(new Error(resData.message || 'Server did not return a valid video URL'));
-              }
-            } catch (err: any) {
-              reject(new Error('Invalid response from server'));
+      for (let c = 0; c < totalChunks; c++) {
+        const start = c * CHUNK_SIZE;
+        const end = Math.min(start + CHUNK_SIZE, videoToUpload.size);
+        const chunkBlob = videoToUpload.slice(start, end);
+
+        const formData = new FormData();
+        formData.append('chunk', chunkBlob);
+        formData.append('uploadId', uploadId);
+        formData.append('chunkIndex', String(c));
+        formData.append('totalChunks', String(totalChunks));
+        formData.append('fileName', videoToUpload.name);
+        formData.append('isHero', 'true');
+
+        await new Promise<void>((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          heroUploadXhrRef.current = xhr;
+
+          xhr.upload.onprogress = (e) => {
+            if (e.lengthComputable) {
+              const currentChunkLoaded = start + e.loaded;
+              const uploadPct = 40 + Math.min(Math.round((currentChunkLoaded / videoToUpload.size) * 59), 59);
+              setHeroUploadProgress(uploadPct);
+              const loadedMB = (currentChunkLoaded / (1024 * 1024)).toFixed(1);
+              const totalMB = (videoToUpload.size / (1024 * 1024)).toFixed(1);
+              setHeroUploadStatus(`${loadedMB} MB / ${totalMB} MB (${uploadPct}%) - Storing 720p HD Hero Video on Hostinger (Part ${c + 1}/${totalChunks})`);
             }
-          } else {
-            reject(new Error(`Upload failed with status ${xhr.status}`));
+          };
+
+          xhr.onload = () => {
+            heroUploadXhrRef.current = null;
+            if (xhr.status >= 200 && xhr.status < 300) {
+              try {
+                const resData = JSON.parse(xhr.responseText);
+                if (resData.success) {
+                  if (resData.isCompleted && resData.url) {
+                    finalHeroUrl = resData.url;
+                  }
+                  resolve();
+                } else {
+                  reject(new Error(resData.message || `Hero part ${c + 1} upload failed`));
+                }
+              } catch (err: any) {
+                reject(new Error('Invalid response from server'));
+              }
+            } else {
+              reject(new Error(`Upload failed with status ${xhr.status}`));
+            }
+          };
+
+          xhr.onerror = () => {
+            heroUploadXhrRef.current = null;
+            reject(new Error('Network error occurred during hero video upload'));
+          };
+
+          xhr.onabort = () => {
+            heroUploadXhrRef.current = null;
+            reject(new Error('Upload cancelled'));
+          };
+
+          xhr.open('POST', '/api/admin/cms/chunk-upload', true);
+          xhr.send(formData);
+        });
+      }
+
+      if (finalHeroUrl) {
+        setCmsData(prev => ({
+          ...prev,
+          hero: {
+            ...prev.hero,
+            video_url: finalHeroUrl
           }
-        };
-
-        xhr.onerror = () => {
-          heroUploadXhrRef.current = null;
-          reject(new Error('Network error occurred during hero video upload'));
-        };
-
-        xhr.onabort = () => {
-          heroUploadXhrRef.current = null;
-          reject(new Error('Upload cancelled'));
-        };
-
-        xhr.open('POST', '/api/admin/cms/upload-video', true);
-        xhr.send(formData);
-      });
+        }));
+        setHeroUploadProgress(100);
+        setHeroUploading(false);
+        setHeroUploadSuccess(true);
+        const totalMB = (videoToUpload.size / (1024 * 1024)).toFixed(1);
+        setHeroUploadStatus(`Upload complete 100%! (${totalMB} MB stored on Hostinger at 720p HD)`);
+      } else {
+        throw new Error('Hero video assembly completed but no URL was returned');
+      }
 
     } catch (err: any) {
       setHeroUploading(false);
