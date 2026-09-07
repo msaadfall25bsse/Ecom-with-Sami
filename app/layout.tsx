@@ -13,7 +13,7 @@ export const revalidate = 60;
 export const metadata: Metadata = {
   metadataBase: new URL('https://ecomwithsami.com'),
   title: {
-    default: 'Master UAE & KSA Dropshipping | Ecom With Sami',
+    default: 'Ecom With Sami',
     template: '%s | Ecom With Sami'
   },
   description: 'Learn UAE & KSA Shopify dropshipping step-by-step in Urdu. 9,700+ students trained, lifetime mentorship, verified supplier directory, and high-ROI ads training. Start today for PKR 3,799.',
@@ -48,7 +48,7 @@ export const metadata: Metadata = {
     },
   },
   openGraph: {
-    title: 'Master UAE & KSA Dropshipping | Ecom With Sami',
+    title: 'Ecom With Sami',
     description: 'Build a profitable online Shopify dropshipping business from scratch with mentor Sami. 9,700+ students trained across Pakistan, UAE, and KSA.',
     url: 'https://ecomwithsami.com',
     siteName: 'Ecom With Sami',
@@ -65,7 +65,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Master UAE & KSA Dropshipping | Ecom With Sami',
+    title: 'Ecom With Sami',
     description: 'Build a profitable online Shopify dropshipping business from scratch with mentor Sami. 9,700+ students trained.',
     images: ['/sami-logo.jpg'],
     creator: '@ecomwithsami',

@@ -209,7 +209,10 @@ export async function GET(
                 'Content-Type': contentType,
                 'Cache-Control': 'public, max-age=31536000, immutable',
                 'CDN-Cache-Control': 'public, max-age=31536000',
-                'Vary': 'Range'
+                'Vary': 'Range',
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
+                'Access-Control-Allow-Headers': 'Range, Content-Range, Accept-Ranges'
               }
             });
           }
@@ -217,9 +220,27 @@ export async function GET(
       }
     }
 
-    return new NextResponse('Video not found', { status: 404 });
+    return new NextResponse('Video not found', { 
+      status: 404,
+      headers: { 'Access-Control-Allow-Origin': '*' }
+    });
   } catch (error: any) {
     console.error('Video streaming error:', error);
-    return new NextResponse(error.message || 'Stream error', { status: 500 });
+    return new NextResponse(error.message || 'Stream error', { 
+      status: 500,
+      headers: { 'Access-Control-Allow-Origin': '*' }
+    });
   }
+}
+
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 204,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
+      'Access-Control-Allow-Headers': 'Range, Content-Range, Accept-Ranges',
+      'Access-Control-Max-Age': '86400',
+    },
+  });
 }
