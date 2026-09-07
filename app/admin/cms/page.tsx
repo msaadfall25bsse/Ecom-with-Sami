@@ -2035,66 +2035,77 @@ export default function AdminCmsPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-400 mb-1">Top Urgent Pill Badge (Very Top)</label>
+                  <label className="block text-xs font-bold text-slate-300 mb-1">
+                    Top Pill - Left Badge (Main Text)
+                  </label>
                   <input
                     type="text"
-                    value={cmsData.hero?.top_pill_badge ?? defaultCmsContent.hero.top_pill_badge}
+                    value={cmsData.hero?.top_pill_badge ?? ''}
                     onChange={(e) => setCmsData({ ...cmsData, hero: { ...cmsData.hero, top_pill_badge: e.target.value } })}
-                    placeholder="🔥 2026 LIVE BATCH REGISTRATION CLOSING SOON"
-                    className="w-full px-3 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-amber-400 font-bold focus:outline-none focus:border-[#00A0DF]"
+                    placeholder="e.g. Pakistan’s Premier E-commerce Mentorship"
+                    className="w-full px-3 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-cyan-400 font-bold focus:outline-none focus:border-[#00A0DF]"
                   />
+                  <span className="text-[10px] text-slate-500 block mt-1">Main text inside the top pill badge</span>
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-400 mb-1">Program Badge (Above Headline)</label>
+                  <label className="block text-xs font-bold text-slate-300 mb-1">
+                    Top Pill - Right Badge (Optional)
+                  </label>
                   <input
                     type="text"
-                    value={cmsData.hero?.program_badge ?? defaultCmsContent.hero.program_badge}
-                    onChange={(e) => setCmsData({ ...cmsData, hero: { ...cmsData.hero, program_badge: e.target.value } })}
-                    placeholder="Pakistan's #1 Dropshipping Launchpad"
+                    value={cmsData.hero?.badge ?? ''}
+                    onChange={(e) => setCmsData({ ...cmsData, hero: { ...cmsData.hero, badge: e.target.value } })}
+                    placeholder="Leave blank to hide completely"
                     className="w-full px-3 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF]"
                   />
+                  <span className="text-[10px] text-slate-500 block mt-1">Leave blank to hide the dot • and second badge</span>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-400 mb-1">Top Badge Text</label>
+                  <label className="block text-xs font-bold text-slate-300 mb-1">Program Badge (Above Headline)</label>
                   <input
                     type="text"
-                    value={cmsData.hero?.badge ?? ''}
-                    onChange={(e) => setCmsData({ ...cmsData, hero: { ...cmsData.hero, badge: e.target.value } })}
+                    value={cmsData.hero?.program_badge ?? defaultCmsContent.hero.program_badge}
+                    onChange={(e) => setCmsData({ ...cmsData, hero: { ...cmsData.hero, program_badge: e.target.value } })}
+                    placeholder="e.g. Ecominion Program"
                     className="w-full px-3 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF]"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-400 mb-1">Highlighted Text (Blue)</label>
+                  <label className="block text-xs font-bold text-slate-300 mb-1">Highlighted Headline Text (Cyan Blue)</label>
                   <input
                     type="text"
                     value={cmsData.hero?.title_highlight ?? ''}
                     onChange={(e) => setCmsData({ ...cmsData, hero: { ...cmsData.hero, title_highlight: e.target.value } })}
-                    className="w-full px-3 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF]"
+                    placeholder="e.g. And Grow Your Business From Pakistan"
+                    className="w-full px-3 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-[#00A0DF] font-bold focus:outline-none focus:border-[#00A0DF]"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-400 mb-1">Main Headline</label>
+                <label className="block text-xs font-bold text-slate-300 mb-1">Main Headline</label>
                 <input
                   type="text"
                   value={cmsData.hero?.title_line1 ?? ''}
                   onChange={(e) => setCmsData({ ...cmsData, hero: { ...cmsData.hero, title_line1: e.target.value } })}
+                  placeholder="e.g. Learn Local Dropshipping and Build Your Own Brand"
                   className="w-full px-3 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF]"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-400 mb-1">Sub-headline Description</label>
+                <label className="block text-xs font-bold text-slate-300 mb-1">Sub-headline Description</label>
                 <textarea
                   rows={2}
                   value={cmsData.hero?.subtitle ?? ''}
                   onChange={(e) => setCmsData({ ...cmsData, hero: { ...cmsData.hero, subtitle: e.target.value } })}
+                  placeholder="Type description, or leave completely blank to remove from homepage"
                   className="w-full px-3 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF] resize-none"
                 />
+                <span className="text-[10px] text-slate-500 block mt-1">If left blank, no subtitle will appear on the homepage</span>
               </div>
 
               <div>

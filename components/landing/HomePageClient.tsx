@@ -76,9 +76,12 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
     }
 
     const syncData = async () => {
-      // 1. Local API Route
+      // 1. Local API Route (Always fetch fresh with no-store & timestamp)
       try {
-        const res = await fetch('/api/public/cms-content');
+        const res = await fetch('/api/public/cms-content?_t=' + Date.now(), {
+          cache: 'no-store',
+          headers: { 'Pragma': 'no-cache', 'Cache-Control': 'no-cache' }
+        });
         if (res.ok) {
           const data = await res.json();
           if (data.success && data.sections) {
@@ -400,20 +403,34 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
             <div className="lg:col-span-6 xl:col-span-7 flex flex-col items-center lg:items-start text-center lg:text-left">
               
               {/* Top Pill Badge */}
-              <div className="dropshipping-badge mb-3.5 sm:mb-4 cursor-pointer">
-                <span className="badge-dot" />
-                <span className="badge-blue">
-                  {hero.top_pill_badge 
-                    ? (hero.top_pill_badge.includes('•') ? hero.top_pill_badge.split('•')[0].trim() : hero.top_pill_badge)
-                    : 'PAKISTAN’S #1'}
-                </span>
-                <span className="text-slate-400 font-bold">•</span>
-                <span className="badge-dark">
-                  {hero.top_pill_badge && hero.top_pill_badge.includes('•')
-                    ? hero.top_pill_badge.split('•').slice(1).join('•').trim()
-                    : (hero.badge || "UAE/KSA DROPSHIPPING TRAINING")}
-                </span>
-              </div>
+              {(() => {
+                let leftBadge = '';
+                let rightBadge = '';
+
+                if (hero.top_pill_badge && hero.top_pill_badge.includes('•')) {
+                  const parts = hero.top_pill_badge.split('•');
+                  leftBadge = parts[0]?.trim() || '';
+                  rightBadge = parts.slice(1).join('•').trim();
+                } else {
+                  leftBadge = hero.top_pill_badge?.trim() || '';
+                  rightBadge = hero.badge?.trim() || '';
+                }
+
+                if (!leftBadge && !rightBadge) return null;
+
+                return (
+                  <div className="dropshipping-badge mb-3.5 sm:mb-4 cursor-pointer">
+                    <span className="badge-dot" />
+                    {leftBadge && <span className="badge-blue">{leftBadge}</span>}
+                    {rightBadge && (
+                      <>
+                        <span className="text-slate-400 font-bold">•</span>
+                        <span className="badge-dark">{rightBadge}</span>
+                      </>
+                    )}
+                  </div>
+                );
+              })()}
 
               {/* Main Headline (All Bold Uppercase with Italic Cyan Highlight) */}
               <h1 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl xl:text-[54px] font-black text-slate-900 tracking-tight leading-[1.12] sm:leading-[1.1] mb-3 sm:mb-4">
@@ -424,9 +441,11 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
               </h1>
 
               {/* Subtitle */}
-              <p className="text-sm xs:text-base sm:text-lg md:text-xl text-slate-600 font-semibold max-w-xl mb-5 sm:mb-7 leading-relaxed">
-                {hero.subtitle || 'Beginner Friendly Training from Basics — Zero Experience Required'}
-              </p>
+              {hero.subtitle && hero.subtitle.trim() !== '' && (
+                <p className="text-sm xs:text-base sm:text-lg md:text-xl text-slate-600 font-semibold max-w-xl mb-5 sm:mb-7 leading-relaxed">
+                  {hero.subtitle}
+                </p>
+              )}
 
               {/* Desktop-Only CTA Button & Social Proof */}
               <div className="hidden lg:flex flex-col items-start gap-3.5">

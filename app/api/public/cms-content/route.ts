@@ -1,10 +1,14 @@
 import { NextResponse } from 'next/server';
 import { dbGetCmsSettings } from '@/lib/database';
 
-export const revalidate = 60;
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
 
-const CACHE_HEADERS = {
-  'Cache-Control': 'public, max-age=10, s-maxage=60, stale-while-revalidate=300',
+const NO_CACHE_HEADERS = {
+  'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0, s-maxage=0',
+  'Pragma': 'no-cache',
+  'Expires': '0',
 };
 
 export async function GET() {
@@ -12,12 +16,13 @@ export async function GET() {
     const data = await dbGetCmsSettings();
     return NextResponse.json(
       { success: true, sections: data },
-      { headers: CACHE_HEADERS }
+      { headers: NO_CACHE_HEADERS }
     );
   } catch (error: any) {
     return NextResponse.json(
       { success: false, message: error.message || 'Failed to fetch public CMS data from database' },
-      { status: 500, headers: { 'Cache-Control': 'no-store' } }
+      { status: 500, headers: NO_CACHE_HEADERS }
     );
   }
 }
+

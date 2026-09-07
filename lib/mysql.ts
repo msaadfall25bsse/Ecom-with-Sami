@@ -72,11 +72,63 @@ export async function ensureAnalyticsTables(): Promise<boolean> {
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
     `);
 
+    // 4. CMS Settings table in Hostinger MySQL
+    await p.query(`
+      CREATE TABLE IF NOT EXISTS cms_settings (
+        \`key\` VARCHAR(191) PRIMARY KEY,
+        \`value_json\` LONGTEXT NOT NULL,
+        \`updated_at\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    `);
+
     tablesInitialized = true;
     return true;
   } catch (error) {
     return false;
   }
+}
+
+/**
+ * Fetches CMS settings from Hostinger MySQL.
+ */
+export async function mysqlGetCmsSettings(): Promise<any | null> {
+  const hasTables = await ensureAnalyticsTables();
+  if (hasTables && pool) {
+    try {
+      const [rows]: any = await pool.query(
+        `SELECT value_json FROM cms_settings WHERE \`key\` = 'main_cms' LIMIT 1`
+      );
+      if (Array.isArray(rows) && rows.length > 0 && rows[0]?.value_json) {
+        const raw = rows[0].value_json;
+        return typeof raw === 'string' ? JSON.parse(raw) : raw;
+      }
+    } catch {
+      // Fall through
+    }
+  }
+  return null;
+}
+
+/**
+ * Saves CMS settings into Hostinger MySQL.
+ */
+export async function mysqlSaveCmsSettings(data: any): Promise<boolean> {
+  const hasTables = await ensureAnalyticsTables();
+  if (hasTables && pool) {
+    try {
+      const jsonStr = typeof data === 'string' ? data : JSON.stringify(data);
+      await pool.query(
+        `INSERT INTO cms_settings (\`key\`, \`value_json\`, \`updated_at\`)
+         VALUES ('main_cms', ?, NOW())
+         ON DUPLICATE KEY UPDATE \`value_json\` = VALUES(\`value_json\`), \`updated_at\` = NOW()`,
+        [jsonStr]
+      );
+      return true;
+    } catch (err) {
+      console.error('MySQL CMS save error:', err);
+    }
+  }
+  return false;
 }
 
 /**

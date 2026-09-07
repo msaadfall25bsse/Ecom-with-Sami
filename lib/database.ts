@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { mysqlGetCmsSettings, mysqlSaveCmsSettings } from './mysql';
 import { defaultCmsContent, CmsContentSchema, ThemeCustomColors, DEFAULT_THEME_COLORS } from '@/utils/cmsStore';
 import { 
   initialStudents, 
@@ -16,10 +17,88 @@ import {
   Lesson 
 } from '@/utils/db';
 
+function parseCmsSchema(parsed: any): CmsContentSchema {
+  return {
+    ...defaultCmsContent,
+    ...parsed,
+    hero: { ...defaultCmsContent.hero, ...(parsed.hero || {}) },
+    stats: { ...defaultCmsContent.stats, ...(parsed.stats || {}) },
+    mentor: { ...defaultCmsContent.mentor, ...(parsed.mentor || {}) },
+    marquee: { ...defaultCmsContent.marquee, ...(parsed.marquee || {}) },
+    contact: { ...defaultCmsContent.contact, ...(parsed.contact || {}) },
+    bonuses: { ...defaultCmsContent.bonuses, ...(parsed.bonuses || {}) },
+    why_dropshipping: { ...defaultCmsContent.why_dropshipping, ...(parsed.why_dropshipping || {}) },
+    what_you_get: parsed.what_you_get
+      ? {
+          ...defaultCmsContent.what_you_get,
+          ...parsed.what_you_get,
+          items: Array.isArray(parsed.what_you_get.items) && parsed.what_you_get.items.length > 0
+            ? parsed.what_you_get.items
+            : defaultCmsContent.what_you_get.items
+        }
+      : defaultCmsContent.what_you_get,
+    who_is_this_for: parsed.who_is_this_for
+      ? {
+          ...defaultCmsContent.who_is_this_for,
+          ...parsed.who_is_this_for,
+          items: Array.isArray(parsed.who_is_this_for.items) && parsed.who_is_this_for.items.length > 0
+            ? parsed.who_is_this_for.items
+            : defaultCmsContent.who_is_this_for.items
+        }
+      : defaultCmsContent.who_is_this_for,
+    video_reviews: parsed.video_reviews
+      ? {
+          ...defaultCmsContent.video_reviews,
+          ...parsed.video_reviews,
+          items: Array.isArray(parsed.video_reviews.items) && parsed.video_reviews.items.length > 0
+            ? parsed.video_reviews.items
+            : defaultCmsContent.video_reviews.items
+        }
+      : defaultCmsContent.video_reviews,
+    options_comparison: { ...defaultCmsContent.options_comparison, ...(parsed.options_comparison || {}) },
+    cost_of_waiting: { ...defaultCmsContent.cost_of_waiting, ...(parsed.cost_of_waiting || {}) },
+    final_cta: { ...defaultCmsContent.final_cta, ...(parsed.final_cta || {}) },
+    footer: { ...defaultCmsContent.footer, ...(parsed.footer || {}) },
+    testimonials: Array.isArray(parsed.testimonials) ? parsed.testimonials : defaultCmsContent.testimonials,
+    faqs: Array.isArray(parsed.faqs) ? parsed.faqs : defaultCmsContent.faqs,
+    payment_methods: Array.isArray(parsed.payment_methods) ? parsed.payment_methods : defaultCmsContent.payment_methods,
+    theme: parsed.theme 
+      ? { 
+          ...defaultCmsContent.theme, 
+          ...parsed.theme, 
+          custom_colors: { 
+            ...defaultCmsContent.theme?.custom_colors, 
+            ...(parsed.theme.custom_colors || {}) 
+          } 
+        } 
+      : defaultCmsContent.theme,
+    screenshot_reviews: parsed.screenshot_reviews
+      ? {
+          ...defaultCmsContent.screenshot_reviews,
+          ...parsed.screenshot_reviews,
+          images: Array.isArray(parsed.screenshot_reviews.images) && parsed.screenshot_reviews.images.length > 0
+            ? parsed.screenshot_reviews.images
+            : defaultCmsContent.screenshot_reviews?.images || []
+        }
+      : defaultCmsContent.screenshot_reviews
+  };
+}
+
 // -----------------------------------------------------------------------------
-// 1. CMS SETTINGS (100% DIRECT SUPABASE REAL-TIME READ/WRITE)
+// 1. CMS SETTINGS (HOSTINGER MYSQL PRIMARY WITH SUPABASE MIRROR)
 // -----------------------------------------------------------------------------
 export async function dbGetCmsSettings(): Promise<CmsContentSchema> {
+  // 1. Primary: Read from Hostinger MySQL
+  try {
+    const mysqlData = await mysqlGetCmsSettings();
+    if (mysqlData && typeof mysqlData === 'object') {
+      return parseCmsSchema(mysqlData);
+    }
+  } catch (e) {
+    // Fall through
+  }
+
+  // 2. Secondary: Fallback to Supabase
   if (supabase) {
     try {
       const { data, error } = await supabase
@@ -34,70 +113,7 @@ export async function dbGetCmsSettings(): Promise<CmsContentSchema> {
           : data.value_json;
 
         if (parsed && typeof parsed === 'object') {
-          return {
-            ...defaultCmsContent,
-            ...parsed,
-            hero: { ...defaultCmsContent.hero, ...(parsed.hero || {}) },
-            stats: { ...defaultCmsContent.stats, ...(parsed.stats || {}) },
-            mentor: { ...defaultCmsContent.mentor, ...(parsed.mentor || {}) },
-            marquee: { ...defaultCmsContent.marquee, ...(parsed.marquee || {}) },
-            contact: { ...defaultCmsContent.contact, ...(parsed.contact || {}) },
-            bonuses: { ...defaultCmsContent.bonuses, ...(parsed.bonuses || {}) },
-            why_dropshipping: { ...defaultCmsContent.why_dropshipping, ...(parsed.why_dropshipping || {}) },
-            what_you_get: parsed.what_you_get
-              ? {
-                  ...defaultCmsContent.what_you_get,
-                  ...parsed.what_you_get,
-                  items: Array.isArray(parsed.what_you_get.items) && parsed.what_you_get.items.length > 0
-                    ? parsed.what_you_get.items
-                    : defaultCmsContent.what_you_get.items
-                }
-              : defaultCmsContent.what_you_get,
-            who_is_this_for: parsed.who_is_this_for
-              ? {
-                  ...defaultCmsContent.who_is_this_for,
-                  ...parsed.who_is_this_for,
-                  items: Array.isArray(parsed.who_is_this_for.items) && parsed.who_is_this_for.items.length > 0
-                    ? parsed.who_is_this_for.items
-                    : defaultCmsContent.who_is_this_for.items
-                }
-              : defaultCmsContent.who_is_this_for,
-            video_reviews: parsed.video_reviews
-              ? {
-                  ...defaultCmsContent.video_reviews,
-                  ...parsed.video_reviews,
-                  items: Array.isArray(parsed.video_reviews.items) && parsed.video_reviews.items.length > 0
-                    ? parsed.video_reviews.items
-                    : defaultCmsContent.video_reviews.items
-                }
-              : defaultCmsContent.video_reviews,
-            options_comparison: { ...defaultCmsContent.options_comparison, ...(parsed.options_comparison || {}) },
-            cost_of_waiting: { ...defaultCmsContent.cost_of_waiting, ...(parsed.cost_of_waiting || {}) },
-            final_cta: { ...defaultCmsContent.final_cta, ...(parsed.final_cta || {}) },
-            footer: { ...defaultCmsContent.footer, ...(parsed.footer || {}) },
-            testimonials: Array.isArray(parsed.testimonials) ? parsed.testimonials : defaultCmsContent.testimonials,
-            faqs: Array.isArray(parsed.faqs) ? parsed.faqs : defaultCmsContent.faqs,
-            payment_methods: Array.isArray(parsed.payment_methods) ? parsed.payment_methods : defaultCmsContent.payment_methods,
-            theme: parsed.theme 
-              ? { 
-                  ...defaultCmsContent.theme, 
-                  ...parsed.theme, 
-                  custom_colors: { 
-                    ...defaultCmsContent.theme?.custom_colors, 
-                    ...(parsed.theme.custom_colors || {}) 
-                  } 
-                } 
-              : defaultCmsContent.theme,
-            screenshot_reviews: parsed.screenshot_reviews
-              ? {
-                  ...defaultCmsContent.screenshot_reviews,
-                  ...parsed.screenshot_reviews,
-                  images: Array.isArray(parsed.screenshot_reviews.images) && parsed.screenshot_reviews.images.length > 0
-                    ? parsed.screenshot_reviews.images
-                    : defaultCmsContent.screenshot_reviews?.images || []
-                }
-              : defaultCmsContent.screenshot_reviews
-          };
+          return parseCmsSchema(parsed);
         }
       }
     } catch (e) {
@@ -143,6 +159,14 @@ export async function dbSaveCmsSettings(patch: Partial<CmsContentSchema>): Promi
       : (existing.theme || defaultCmsContent.theme)
   };
 
+  // 1. Primary: Save to Hostinger MySQL
+  try {
+    await mysqlSaveCmsSettings(updated);
+  } catch (e) {
+    console.error('Hostinger MySQL save CMS error:', e);
+  }
+
+  // 2. Secondary: Mirror to Supabase
   if (supabase) {
     try {
       const { error } = await supabase
