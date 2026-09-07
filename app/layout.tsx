@@ -69,12 +69,14 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: '/favicon.ico', sizes: 'any' },
-      { url: '/icon.png', type: 'image/png', sizes: '512x512' },
+      { url: '/favicon-32x32.png?v=sami2026', sizes: '32x32', type: 'image/png' },
+      { url: '/favicon-16x16.png?v=sami2026', sizes: '16x16', type: 'image/png' },
+      { url: '/favicon.ico?v=sami2026', sizes: 'any' },
+      { url: '/icon.png?v=sami2026', type: 'image/png', sizes: '512x512' },
     ],
-    shortcut: '/favicon.ico',
+    shortcut: '/favicon.ico?v=sami2026',
     apple: [
-      { url: '/apple-icon.png', sizes: '180x180', type: 'image/png' },
+      { url: '/apple-icon.png?v=sami2026', sizes: '180x180', type: 'image/png' },
     ],
   },
   category: 'education',
@@ -106,6 +108,11 @@ export default async function RootLayout({
     <html lang="en" data-theme={activeTheme} className="scroll-smooth">
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+        {/* Immediate Browser Tab Favicon Invalidation (Cache Busting) */}
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=sami2026" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=sami2026" />
+        <link rel="shortcut icon" href="/favicon.ico?v=sami2026" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=sami2026" />
         <JsonLd />
         {/* Google tag (gtag.js) - Google Analytics */}
         <script async src="https://www.googletagmanager.com/gtag/js?id=G-FJBC4S9KM3" />
