@@ -5,7 +5,7 @@ import { MetadataRoute } from 'next';
  * Instructs search engine crawlers and points to the XML sitemap.
  */
 export default function robots(): MetadataRoute.Robots {
-  const baseUrl = 'https://www.samiecom.site';
+  const baseUrl = 'https://ecomwithsami.com';
 
   return {
     rules: [

@@ -6,7 +6,7 @@ import { MetadataRoute } from 'next';
  * to accelerate indexing and sitelinks generation.
  */
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = 'https://www.samiecom.site';
+  const baseUrl = 'https://ecomwithsami.com';
   const now = new Date();
 
   return [

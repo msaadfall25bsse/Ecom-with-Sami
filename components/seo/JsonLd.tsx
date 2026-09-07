@@ -10,7 +10,7 @@ import React from 'react';
  * 4. Rich Course Snippets (via Course & Offer)
  */
 export function JsonLd() {
-  const baseUrl = 'https://www.samiecom.site';
+  const baseUrl = 'https://ecomwithsami.com';
 
   // 1. WebSite Schema with Sitelinks Searchbox
   const websiteSchema = {
@@ -19,7 +19,7 @@ export function JsonLd() {
     '@id': `${baseUrl}/#website`,
     url: baseUrl,
     name: 'Ecom With Sami',
-    alternateName: ['EcomWithSami', 'Ecom With Sami Dropshipping', 'Sami Dropshipping Course'],
+    alternateName: ['EcomWithSami', 'Ecom With Sami Dropshipping', 'Sami Dropshipping Course', 'www.ecomwithsami.com'],
     description: 'Master UAE & KSA Shopify dropshipping step-by-step in Urdu with mentor Sami.',
     publisher: {
       '@id': `${baseUrl}/#organization`

@@ -11,14 +11,14 @@ import { JsonLd } from '@/components/seo/JsonLd';
 export const revalidate = 60;
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://www.samiecom.site'),
+  metadataBase: new URL('https://ecomwithsami.com'),
   title: {
     default: 'Master UAE & KSA Dropshipping | Ecom With Sami',
     template: '%s | Ecom With Sami'
   },
   description: 'Learn UAE & KSA Shopify dropshipping step-by-step in Urdu. 9,700+ students trained, lifetime mentorship, verified supplier directory, and high-ROI ads training. Start today for PKR 3,799.',
   applicationName: 'Ecom With Sami',
-  authors: [{ name: 'Sami Ullah', url: 'https://www.samiecom.site/about' }],
+  authors: [{ name: 'Sami Ullah', url: 'https://ecomwithsami.com/about' }],
   creator: 'Sami Ullah',
   publisher: 'Ecom With Sami',
   keywords: [
@@ -50,7 +50,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Master UAE & KSA Dropshipping | Ecom With Sami',
     description: 'Build a profitable online Shopify dropshipping business from scratch with mentor Sami. 9,700+ students trained across Pakistan, UAE, and KSA.',
-    url: 'https://www.samiecom.site',
+    url: 'https://ecomwithsami.com',
     siteName: 'Ecom With Sami',
     locale: 'en_US',
     type: 'website',
