@@ -277,6 +277,7 @@ export async function getTodayAnalytics(): Promise<{
   uniqueVisitors: number;
   homeViews: number;
   enrollmentViews: number;
+  checkoutViews: number;
   lmsViews: number;
   enrollmentRate: string;
 }> {
@@ -304,6 +305,7 @@ export async function getTodayAnalytics(): Promise<{
           uniqueVisitors: Number(r.unique_visitors || 0),
           homeViews: Number(r.home_views || 0),
           enrollmentViews,
+          checkoutViews: enrollmentViews,
           lmsViews: Number(r.lms_views || 0),
           enrollmentRate: rate,
         };
@@ -324,7 +326,59 @@ export async function getTodayAnalytics(): Promise<{
     uniqueVisitors: inMemoryDaily.uniqueVisitors,
     homeViews: inMemoryDaily.homeViews,
     enrollmentViews: inMemoryDaily.enrollmentViews,
+    checkoutViews: inMemoryDaily.enrollmentViews,
     lmsViews: inMemoryDaily.lmsViews,
     enrollmentRate: rate,
   };
 }
+
+/**
+ * Returns cumulative analytics for the last 30 days from Hostinger MySQL.
+ */
+export async function getLast30DaysAnalytics(): Promise<{
+  totalSessions: number;
+  uniqueVisitors: number;
+  homeViews: number;
+  checkoutViews: number;
+  lmsViews: number;
+}> {
+  const hasTables = await ensureAnalyticsTables();
+
+  if (hasTables && pool) {
+    try {
+      const [rows]: any = await pool.query(
+        `SELECT 
+          COALESCE(SUM(total_sessions), 0) as totalSessions,
+          COALESCE(SUM(unique_visitors), 0) as uniqueVisitors,
+          COALESCE(SUM(home_views), 0) as homeViews,
+          COALESCE(SUM(enrollment_views), 0) as checkoutViews,
+          COALESCE(SUM(lms_views), 0) as lmsViews
+        FROM analytics_daily 
+        WHERE report_date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)`
+      );
+
+      if (Array.isArray(rows) && rows.length > 0) {
+        const r = rows[0];
+        return {
+          totalSessions: Number(r.totalSessions || 0),
+          uniqueVisitors: Number(r.uniqueVisitors || 0),
+          homeViews: Number(r.homeViews || 0),
+          checkoutViews: Number(r.checkoutViews || 0),
+          lmsViews: Number(r.lmsViews || 0),
+        };
+      }
+    } catch {
+      // Fall through to memory
+    }
+  }
+
+  // In-memory fallback
+  return {
+    totalSessions: inMemoryDaily.totalSessions,
+    uniqueVisitors: inMemoryDaily.uniqueVisitors,
+    homeViews: inMemoryDaily.homeViews,
+    checkoutViews: inMemoryDaily.enrollmentViews,
+    lmsViews: inMemoryDaily.lmsViews,
+  };
+}
+

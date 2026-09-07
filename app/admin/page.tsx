@@ -138,18 +138,30 @@ export default function AdminDashboardPage() {
   });
 
   // Google Analytics & Hostinger MySQL Realtime State
+  const [analyticsTimeframe, setAnalyticsTimeframe] = useState<'today' | 'month'>('today');
   const [realtimeData, setRealtimeData] = useState<{
     configured: boolean;
     activeUsers: number;
     topPages: { path: string; activeUsers: number }[];
     today?: {
-      date: string;
+      date?: string;
       totalSessions: number;
       uniqueVisitors: number;
       homeViews: number;
+      checkoutViews: number;
       enrollmentViews: number;
-      lmsViews: number;
-      enrollmentRate: string;
+      purchases: number;
+      conversionRate: string;
+      enrollmentRate?: string;
+    };
+    last30Days?: {
+      totalSessions: number;
+      uniqueVisitors: number;
+      homeViews: number;
+      checkoutViews: number;
+      enrollmentViews: number;
+      purchases: number;
+      conversionRate: string;
     };
     loading: boolean;
     error?: string;
@@ -174,6 +186,7 @@ export default function AdminDashboardPage() {
           activeUsers: data.activeUsers || 0,
           topPages: data.topPages || [],
           today: data.today,
+          last30Days: data.last30Days,
           loading: false,
         });
       } else {
@@ -183,6 +196,7 @@ export default function AdminDashboardPage() {
           error: data.error,
         }));
       }
+
     } catch {
       setRealtimeData(prev => ({ ...prev, loading: false }));
     }
@@ -1043,7 +1057,7 @@ export default function AdminDashboardPage() {
           {/* TAB 1: OVERVIEW QUEUE */}
           {activeTab === 'overview' && (
             <div className="bg-[#111827] border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-2xl space-y-4">
-              {/* Shopify-Style Daily Performance Bar (Hostinger MySQL) */}
+              {/* Shopify-Style Daily & 30-Day Performance Bar (Hostinger MySQL) */}
               <div className="bg-[#0B0F19] border border-white/10 rounded-2xl p-3.5 sm:p-4 shadow-xl space-y-3">
                 <div className="flex flex-wrap items-center justify-between gap-2.5 border-b border-white/5 pb-3">
                   <div className="flex items-center gap-2">
@@ -1051,12 +1065,44 @@ export default function AdminDashboardPage() {
                       <TrendingUp size={14} />
                     </span>
                     <div>
-                      <h4 className="text-xs font-black text-white uppercase tracking-wider">Today&apos;s Store Performance (Shopify-Style)</h4>
-                      <p className="text-[11px] text-slate-400">Live traffic &amp; conversion funnel on Hostinger MySQL</p>
+                      <h4 className="text-xs font-black text-white uppercase tracking-wider">
+                        {analyticsTimeframe === 'today' ? "Today's" : "Last 30 Days"} Store Performance (Shopify-Style)
+                      </h4>
+                      <p className="text-[11px] text-slate-400">
+                        {analyticsTimeframe === 'today'
+                          ? "24-Hour live traffic & conversion funnel on Hostinger MySQL"
+                          : "Cumulative 30-day traffic & conversion funnel on Hostinger MySQL"}
+                      </p>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-2">
+                    {/* Timeframe Toggle: Today vs Last 30 Days */}
+                    <div className="flex items-center bg-slate-900 border border-white/10 rounded-lg p-0.5">
+                      <button
+                        type="button"
+                        onClick={() => setAnalyticsTimeframe('today')}
+                        className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all ${
+                          analyticsTimeframe === 'today'
+                            ? 'bg-[#00A0DF] text-white shadow-sm'
+                            : 'text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        Today
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setAnalyticsTimeframe('month')}
+                        className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all ${
+                          analyticsTimeframe === 'month'
+                            ? 'bg-[#00A0DF] text-white shadow-sm'
+                            : 'text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        Last 30 Days
+                      </button>
+                    </div>
+
                     <span className="text-[11px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2.5 py-1 rounded-full font-bold flex items-center gap-1.5">
                       <span className="relative flex h-2 w-2">
                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
@@ -1076,39 +1122,58 @@ export default function AdminDashboardPage() {
                 </div>
 
                 {/* 4 Mini Stat Blocks */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 pt-1">
-                  <div className="bg-slate-900/80 border border-white/5 rounded-xl p-2.5 sm:p-3">
-                    <span className="text-[10px] sm:text-[11px] text-slate-400 block font-medium">Total Sessions Today</span>
-                    <div className="text-base sm:text-xl font-black text-white mt-0.5">
-                      {realtimeData.today?.totalSessions || 0}
-                    </div>
-                    <span className="text-[9px] sm:text-[10px] text-slate-500 block mt-0.5">Unique visits today</span>
-                  </div>
+                {(() => {
+                  const currentPerf = analyticsTimeframe === 'today' ? realtimeData.today : realtimeData.last30Days;
+                  return (
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 pt-1">
+                      {/* 1. Total Sessions */}
+                      <div className="bg-slate-900/80 border border-white/5 rounded-xl p-2.5 sm:p-3">
+                        <span className="text-[10px] sm:text-[11px] text-slate-400 block font-medium">
+                          {analyticsTimeframe === 'today' ? "Total Sessions Today" : "Last 30 Days Sessions"}
+                        </span>
+                        <div className="text-base sm:text-xl font-black text-white mt-0.5">
+                          {currentPerf?.totalSessions || 0}
+                        </div>
+                        <span className="text-[9px] sm:text-[10px] text-slate-500 block mt-0.5">
+                          {analyticsTimeframe === 'today' ? "Unique visits today (24h)" : "Cumulative visits (30d)"}
+                        </span>
+                      </div>
 
-                  <div className="bg-slate-900/80 border border-white/5 rounded-xl p-2.5 sm:p-3">
-                    <span className="text-[10px] sm:text-[11px] text-slate-400 block font-medium">Home Page Views</span>
-                    <div className="text-base sm:text-xl font-black text-emerald-400 mt-0.5">
-                      {realtimeData.today?.homeViews || 0}
-                    </div>
-                    <span className="text-[9px] sm:text-[10px] text-slate-500 block mt-0.5">Landing impressions</span>
-                  </div>
+                      {/* 2. Home Page Views */}
+                      <div className="bg-slate-900/80 border border-white/5 rounded-xl p-2.5 sm:p-3">
+                        <span className="text-[10px] sm:text-[11px] text-slate-400 block font-medium">Home Page Views</span>
+                        <div className="text-base sm:text-xl font-black text-emerald-400 mt-0.5">
+                          {currentPerf?.homeViews || 0}
+                        </div>
+                        <span className="text-[9px] sm:text-[10px] text-slate-500 block mt-0.5">Landing impressions</span>
+                      </div>
 
-                  <div className="bg-slate-900/80 border border-white/5 rounded-xl p-2.5 sm:p-3">
-                    <span className="text-[10px] sm:text-[11px] text-slate-400 block font-medium">Enrollment Interest</span>
-                    <div className="text-base sm:text-xl font-black text-[#00A0DF] mt-0.5">
-                      {realtimeData.today?.enrollmentViews || 0}
-                    </div>
-                    <span className="text-[9px] sm:text-[10px] text-slate-500 block mt-0.5">Checked fee / pricing</span>
-                  </div>
+                      {/* 3. Checkout Page (Renamed from Enrollment Interest per user request) */}
+                      <div className="bg-slate-900/80 border border-white/5 rounded-xl p-2.5 sm:p-3">
+                        <span className="text-[10px] sm:text-[11px] text-slate-400 block font-medium">Checkout Page</span>
+                        <div className="text-base sm:text-xl font-black text-[#00A0DF] mt-0.5">
+                          {currentPerf?.checkoutViews || 0}
+                        </div>
+                        <span className="text-[9px] sm:text-[10px] text-slate-500 block mt-0.5">Proceeded to checkout</span>
+                      </div>
 
-                  <div className="bg-slate-900/80 border border-white/5 rounded-xl p-2.5 sm:p-3">
-                    <span className="text-[10px] sm:text-[11px] text-slate-400 block font-medium">Enrollment Rate</span>
-                    <div className="text-base sm:text-xl font-black text-indigo-400 mt-0.5">
-                      {realtimeData.today?.enrollmentRate || '0.0%'}
+                      {/* 4. Purchases (Replaces 50% rate per user request) */}
+                      <div className="bg-slate-900/80 border border-white/5 rounded-xl p-2.5 sm:p-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] sm:text-[11px] text-slate-400 block font-medium">Purchases</span>
+                          <span className="text-[9px] text-amber-400 font-bold bg-amber-400/10 px-1.5 py-0.5 rounded border border-amber-400/20">
+                            {currentPerf?.conversionRate || '0.0%'}
+                          </span>
+                        </div>
+                        <div className="text-base sm:text-xl font-black text-amber-400 mt-0.5 flex items-baseline gap-1">
+                          <span>{currentPerf?.purchases || 0}</span>
+                          <span className="text-[10px] text-slate-400 font-normal">enrolled</span>
+                        </div>
+                        <span className="text-[9px] sm:text-[10px] text-slate-500 block mt-0.5">Confirmed course orders</span>
+                      </div>
                     </div>
-                    <span className="text-[9px] sm:text-[10px] text-slate-500 block mt-0.5">Sessions &rarr; Enrollment</span>
-                  </div>
-                </div>
+                  );
+                })()}
 
                 {/* Active Pages Strip */}
                 {realtimeData.topPages.length > 0 && (
