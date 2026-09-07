@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 
 function getOrCreateVisitorId(): string {
@@ -17,28 +17,46 @@ function getOrCreateVisitorId(): string {
   }
 }
 
+function getOrCreateSessionId(): string {
+  if (typeof window === 'undefined') return '';
+  try {
+    let sid = sessionStorage.getItem('sami_sid');
+    if (!sid) {
+      sid = `s_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 9)}`;
+      sessionStorage.setItem('sami_sid', sid);
+    }
+    return sid;
+  } catch {
+    return `s_${Date.now()}`;
+  }
+}
+
 /**
- * Hostinger MySQL Realtime Live Visitor Tracker.
- * - Unique device identification (even on shared Wi-Fi).
- * - Instant increment on page open (+1).
- * - Instant decrement on tab close / leave (-1).
- * - Zero Supabase dependency.
+ * Hostinger MySQL Realtime Live Visitor & Shopify-Style Session Tracker.
+ * - Records unique live visitors (+1 on open, -1 on close).
+ * - Records Shopify-style daily sessions and funnel pageviews.
+ * - Zero Supabase. 100% Hostinger MySQL.
  */
 export function LiveVisitorTracker() {
   const pathname = usePathname();
+  const lastTrackedPath = useRef<string | null>(null);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
     const visitorId = getOrCreateVisitorId();
+    const sessionId = getOrCreateSessionId();
     if (!visitorId) return;
 
-    const sendPing = () => {
+    const currentPath = window.location.pathname;
+
+    const sendPayload = (action: 'ping' | 'leave' | 'pageview') => {
       try {
         const payload = JSON.stringify({
           visitorId,
-          page: window.location.pathname,
-          action: 'ping',
+          sessionId,
+          page: currentPath,
+          action,
         });
 
         if (navigator.sendBeacon) {
@@ -57,47 +75,31 @@ export function LiveVisitorTracker() {
       }
     };
 
-    const sendLeave = () => {
-      try {
-        const payload = JSON.stringify({
-          visitorId,
-          action: 'leave',
-        });
+    // 1. If user navigates to a new page or first load, send a pageview action
+    if (lastTrackedPath.current !== currentPath) {
+      lastTrackedPath.current = currentPath;
+      sendPayload('pageview');
+    }
 
-        if (navigator.sendBeacon) {
-          const blob = new Blob([payload], { type: 'application/json' });
-          navigator.sendBeacon('/api/analytics/heartbeat', blob);
-        } else {
-          fetch('/api/analytics/heartbeat', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: payload,
-            keepalive: true,
-          }).catch(() => {});
-        }
-      } catch {
-        // Silent catch
-      }
-    };
+    // 2. Initial live visitor ping
+    sendPayload('ping');
 
-    // 1. Initial Ping when device enters page
-    sendPing();
-
-    // 2. Periodic Ping every 8 seconds while tab is active
+    // 3. Periodic Ping every 8 seconds while tab is active
     const interval = setInterval(() => {
       if (document.visibilityState === 'visible') {
-        sendPing();
+        sendPayload('ping');
       }
     }, 8000);
 
-    // 3. Instant Leave trigger when tab is closed, navigated away, or phone browser closed
-    window.addEventListener('beforeunload', sendLeave);
-    window.addEventListener('pagehide', sendLeave);
+    // 4. Instant Leave trigger when tab is closed, navigated away, or phone browser closed
+    const onLeave = () => sendPayload('leave');
+    window.addEventListener('beforeunload', onLeave);
+    window.addEventListener('pagehide', onLeave);
 
     return () => {
       clearInterval(interval);
-      window.removeEventListener('beforeunload', sendLeave);
-      window.removeEventListener('pagehide', sendLeave);
+      window.removeEventListener('beforeunload', onLeave);
+      window.removeEventListener('pagehide', onLeave);
     };
   }, [pathname]);
 

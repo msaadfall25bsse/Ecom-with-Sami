@@ -137,19 +137,26 @@ export default function AdminDashboardPage() {
     password: 'studentpass2026'
   });
 
-  // Google Analytics Realtime State (Read-Only)
+  // Google Analytics & Hostinger MySQL Realtime State
   const [realtimeData, setRealtimeData] = useState<{
     configured: boolean;
     activeUsers: number;
     topPages: { path: string; activeUsers: number }[];
-    countries: { country: string; activeUsers: number }[];
+    today?: {
+      date: string;
+      totalSessions: number;
+      uniqueVisitors: number;
+      homeViews: number;
+      enrollmentViews: number;
+      lmsViews: number;
+      enrollmentRate: string;
+    };
     loading: boolean;
     error?: string;
   }>({
     configured: false,
     activeUsers: 0,
     topPages: [],
-    countries: [],
     loading: true,
   });
   const [showGaInfoModal, setShowGaInfoModal] = useState(false);
@@ -166,7 +173,7 @@ export default function AdminDashboardPage() {
           configured: data.configured,
           activeUsers: data.activeUsers || 0,
           topPages: data.topPages || [],
-          countries: data.countries || [],
+          today: data.today,
           loading: false,
         });
       } else {
@@ -1009,6 +1016,12 @@ export default function AdminDashboardPage() {
                 </div>
                 <span className="text-[10px] text-slate-400 font-medium">right now</span>
               </div>
+
+              <div className="flex items-center justify-between text-[10px] text-slate-400 mt-1 pt-1 border-t border-white/5">
+                <span>Today's Sessions:</span>
+                <strong className="text-white font-mono">{realtimeData.today?.totalSessions || 0}</strong>
+              </div>
+
               <div className="flex items-center justify-between mt-1 text-[9px] sm:text-[10px]">
                 <span className="text-emerald-400 font-bold flex items-center gap-1">
                   <Activity size={10} className={realtimeData.loading ? "animate-spin" : ""} />
@@ -1030,42 +1043,93 @@ export default function AdminDashboardPage() {
           {/* TAB 1: OVERVIEW QUEUE */}
           {activeTab === 'overview' && (
             <div className="bg-[#111827] border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-2xl space-y-4">
-              <div className="flex items-center justify-between">
+              {/* Shopify-Style Daily Performance Bar (Hostinger MySQL) */}
+              <div className="bg-[#0B0F19] border border-white/10 rounded-2xl p-3.5 sm:p-4 shadow-xl space-y-3">
+                <div className="flex flex-wrap items-center justify-between gap-2.5 border-b border-white/5 pb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="p-1.5 rounded-lg bg-[#00A0DF]/10 border border-[#00A0DF]/20 text-[#00A0DF]">
+                      <TrendingUp size={14} />
+                    </span>
+                    <div>
+                      <h4 className="text-xs font-black text-white uppercase tracking-wider">Today&apos;s Store Performance (Shopify-Style)</h4>
+                      <p className="text-[11px] text-slate-400">Live traffic &amp; conversion funnel on Hostinger MySQL</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <span className="text-[11px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2.5 py-1 rounded-full font-bold flex items-center gap-1.5">
+                      <span className="relative flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                      </span>
+                      {realtimeData.activeUsers} Live Now
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setShowGaInfoModal(true)}
+                      className="text-[11px] text-[#00A0DF] font-bold hover:underline inline-flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-slate-800 transition-colors"
+                    >
+                      <Sparkles size={11} />
+                      <span>Full Stats</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* 4 Mini Stat Blocks */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 pt-1">
+                  <div className="bg-slate-900/80 border border-white/5 rounded-xl p-2.5 sm:p-3">
+                    <span className="text-[10px] sm:text-[11px] text-slate-400 block font-medium">Total Sessions Today</span>
+                    <div className="text-base sm:text-xl font-black text-white mt-0.5">
+                      {realtimeData.today?.totalSessions || 0}
+                    </div>
+                    <span className="text-[9px] sm:text-[10px] text-slate-500 block mt-0.5">Unique visits today</span>
+                  </div>
+
+                  <div className="bg-slate-900/80 border border-white/5 rounded-xl p-2.5 sm:p-3">
+                    <span className="text-[10px] sm:text-[11px] text-slate-400 block font-medium">Home Page Views</span>
+                    <div className="text-base sm:text-xl font-black text-emerald-400 mt-0.5">
+                      {realtimeData.today?.homeViews || 0}
+                    </div>
+                    <span className="text-[9px] sm:text-[10px] text-slate-500 block mt-0.5">Landing impressions</span>
+                  </div>
+
+                  <div className="bg-slate-900/80 border border-white/5 rounded-xl p-2.5 sm:p-3">
+                    <span className="text-[10px] sm:text-[11px] text-slate-400 block font-medium">Enrollment Interest</span>
+                    <div className="text-base sm:text-xl font-black text-[#00A0DF] mt-0.5">
+                      {realtimeData.today?.enrollmentViews || 0}
+                    </div>
+                    <span className="text-[9px] sm:text-[10px] text-slate-500 block mt-0.5">Checked fee / pricing</span>
+                  </div>
+
+                  <div className="bg-slate-900/80 border border-white/5 rounded-xl p-2.5 sm:p-3">
+                    <span className="text-[10px] sm:text-[11px] text-slate-400 block font-medium">Enrollment Rate</span>
+                    <div className="text-base sm:text-xl font-black text-indigo-400 mt-0.5">
+                      {realtimeData.today?.enrollmentRate || '0.0%'}
+                    </div>
+                    <span className="text-[9px] sm:text-[10px] text-slate-500 block mt-0.5">Sessions &rarr; Enrollment</span>
+                  </div>
+                </div>
+
+                {/* Active Pages Strip */}
+                {realtimeData.topPages.length > 0 && (
+                  <div className="pt-2 border-t border-white/5 flex flex-wrap items-center gap-2 text-[11px] text-slate-400">
+                    <span className="font-bold text-slate-300">Active Pages Right Now:</span>
+                    {realtimeData.topPages.map((p, i) => (
+                      <span key={i} className="bg-slate-800 px-2 py-0.5 rounded font-mono text-slate-200 border border-white/5">
+                        {p.path}: <strong className="text-emerald-400">{p.activeUsers}</strong>
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="flex items-center justify-between pt-2">
                 <h3 className="text-sm sm:text-base font-bold text-white">Live Student Enrollment Requests</h3>
                 <button
                   onClick={() => setActiveTab('enrollments')}
                   className="text-xs text-[#00A0DF] font-bold hover:underline"
                 >
                   View All ({enrollments.length}) &rarr;
-                </button>
-              </div>
-
-              {/* Live Traffic Strip (Hostinger MySQL) */}
-              <div className="bg-[#0B0F19] border border-white/5 rounded-xl p-3 flex flex-wrap items-center justify-between gap-3 text-xs">
-                <div className="flex items-center gap-2 text-slate-300">
-                  <Globe size={14} className="text-emerald-400 flex-shrink-0" />
-                  <span className="font-bold text-white">Live Traffic (Hostinger MySQL):</span>
-                  {realtimeData.topPages.length > 0 ? (
-                    <div className="flex flex-wrap items-center gap-2">
-                      {realtimeData.topPages.map((p, i) => (
-                        <span key={i} className="bg-slate-800 px-2 py-0.5 rounded text-[11px] font-mono text-slate-300 border border-white/5">
-                          {p.path}: <strong className="text-emerald-400">{p.activeUsers}</strong>
-                        </span>
-                      ))}
-                    </div>
-                  ) : (
-                    <span className="text-slate-400 text-[11px]">
-                      Monitoring active visitors on ecomwithsami.com
-                    </span>
-                  )}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setShowGaInfoModal(true)}
-                  className="text-[11px] text-[#00A0DF] font-bold hover:underline inline-flex items-center gap-1"
-                >
-                  <Sparkles size={11} />
-                  <span>Real-Time Details</span>
                 </button>
               </div>
 
