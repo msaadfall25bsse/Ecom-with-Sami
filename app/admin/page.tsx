@@ -210,10 +210,10 @@ export default function AdminDashboardPage() {
         router.replace('/admin/login?redirect=/admin');
       });
 
-    // 3. Poll Realtime Visitors every 20 seconds (Read-Only)
+    // 3. Poll Realtime Visitors every 4 seconds (Hostinger MySQL)
     const analyticsInterval = setInterval(() => {
       fetchRealtimeAnalytics();
-    }, 20000);
+    }, 4000);
 
     return () => clearInterval(analyticsInterval);
   }, []);
@@ -1010,9 +1010,9 @@ export default function AdminDashboardPage() {
                 <span className="text-[10px] text-slate-400 font-medium">right now</span>
               </div>
               <div className="flex items-center justify-between mt-1 text-[9px] sm:text-[10px]">
-                <span className={realtimeData.configured ? "text-emerald-400 font-bold flex items-center gap-1" : "text-amber-400 font-bold flex items-center gap-1"}>
+                <span className="text-emerald-400 font-bold flex items-center gap-1">
                   <Activity size={10} className={realtimeData.loading ? "animate-spin" : ""} />
-                  {realtimeData.configured ? "GA4 Realtime Active" : "GA4 Ready to Link"}
+                  <span>MySQL Real-Time Active</span>
                 </span>
                 <button
                   type="button"
@@ -1040,11 +1040,11 @@ export default function AdminDashboardPage() {
                 </button>
               </div>
 
-              {/* Live Traffic Strip (Read-Only) */}
+              {/* Live Traffic Strip (Hostinger MySQL) */}
               <div className="bg-[#0B0F19] border border-white/5 rounded-xl p-3 flex flex-wrap items-center justify-between gap-3 text-xs">
                 <div className="flex items-center gap-2 text-slate-300">
                   <Globe size={14} className="text-emerald-400 flex-shrink-0" />
-                  <span className="font-bold text-white">Google Analytics Live Traffic:</span>
+                  <span className="font-bold text-white">Live Traffic (Hostinger MySQL):</span>
                   {realtimeData.topPages.length > 0 ? (
                     <div className="flex flex-wrap items-center gap-2">
                       {realtimeData.topPages.map((p, i) => (
@@ -1055,7 +1055,7 @@ export default function AdminDashboardPage() {
                     </div>
                   ) : (
                     <span className="text-slate-400 text-[11px]">
-                      {realtimeData.configured ? "Monitoring live pageviews on ecomwithsami.com" : "Measurement ID G-FJBC4S9KM3 active in header. Connect Data API for live server counts."}
+                      Monitoring active visitors on ecomwithsami.com
                     </span>
                   )}
                 </div>
@@ -1065,7 +1065,7 @@ export default function AdminDashboardPage() {
                   className="text-[11px] text-[#00A0DF] font-bold hover:underline inline-flex items-center gap-1"
                 >
                   <Sparkles size={11} />
-                  <span>{realtimeData.configured ? "API Connected" : "View GA4 API Settings"}</span>
+                  <span>Real-Time Details</span>
                 </button>
               </div>
 
