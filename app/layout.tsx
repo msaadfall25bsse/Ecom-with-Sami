@@ -6,18 +6,76 @@ import { StickyMobileCta } from '@/components/layout';
 import { dbGetCmsSettings } from '@/lib/database';
 import { generateThemeCss, DEFAULT_THEME_COLORS } from '@/utils/cmsStore';
 
+import { JsonLd } from '@/components/seo/JsonLd';
+
 export const revalidate = 60;
 
 export const metadata: Metadata = {
-  title: 'Master UAE & KSA Dropshipping | Ecom With Sami',
-  description: 'Learn UAE & KSA Shopify dropshipping step-by-step in Urdu. 9,700+ students trained, lifetime mentorship, verified supplier directory, and ads training. Start today for PKR 3,799.',
-  keywords: ['Shopify dropshipping Pakistan', 'UAE dropshipping', 'KSA dropshipping', 'Ecom With Sami', 'Shopify Course in Urdu'],
+  metadataBase: new URL('https://www.samiecom.site'),
+  title: {
+    default: 'Master UAE & KSA Dropshipping | Ecom With Sami',
+    template: '%s | Ecom With Sami'
+  },
+  description: 'Learn UAE & KSA Shopify dropshipping step-by-step in Urdu. 9,700+ students trained, lifetime mentorship, verified supplier directory, and high-ROI ads training. Start today for PKR 3,799.',
+  applicationName: 'Ecom With Sami',
+  authors: [{ name: 'Sami Ullah', url: 'https://www.samiecom.site/about' }],
+  creator: 'Sami Ullah',
+  publisher: 'Ecom With Sami',
+  keywords: [
+    'Ecom With Sami',
+    'Shopify dropshipping Pakistan',
+    'UAE dropshipping course',
+    'KSA dropshipping training',
+    'Shopify Course in Urdu',
+    'GCC Wholesale Suppliers',
+    'TikTok Ads Pakistan',
+    'Cash on Delivery UAE',
+    'Ecom Sami LMS',
+    'Sami Ullah dropshipping mentor'
+  ],
+  alternates: {
+    canonical: '/',
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
   openGraph: {
     title: 'Master UAE & KSA Dropshipping | Ecom With Sami',
-    description: 'Build a profitable online Shopify dropshipping business from scratch with mentor Sami.',
+    description: 'Build a profitable online Shopify dropshipping business from scratch with mentor Sami. 9,700+ students trained across Pakistan, UAE, and KSA.',
+    url: 'https://www.samiecom.site',
+    siteName: 'Ecom With Sami',
+    locale: 'en_US',
     type: 'website',
-    locale: 'en_US'
-  }
+    images: [
+      {
+        url: '/sami-logo.jpg',
+        width: 800,
+        height: 800,
+        alt: 'Ecom With Sami - UAE & KSA Shopify Dropshipping Mentorship',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Master UAE & KSA Dropshipping | Ecom With Sami',
+    description: 'Build a profitable online Shopify dropshipping business from scratch with mentor Sami. 9,700+ students trained.',
+    images: ['/sami-logo.jpg'],
+    creator: '@ecomwithsami',
+  },
+  icons: {
+    icon: '/favicon.ico',
+    shortcut: '/favicon.ico',
+    apple: '/sami-logo.jpg',
+  },
+  category: 'education',
 };
 
 export default async function RootLayout({
@@ -46,6 +104,7 @@ export default async function RootLayout({
     <html lang="en" data-theme={activeTheme} className="scroll-smooth">
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+        <JsonLd />
         <link rel="preconnect" href="https://img.youtube.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://img.youtube.com" />
         <link rel="preconnect" href="https://www.youtube.com" />
