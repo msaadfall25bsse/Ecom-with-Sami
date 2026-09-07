@@ -45,7 +45,9 @@ export function DynamicPixels() {
       } else if (pixel.platform_name === 'TikTok Pixel' && pixel.pixel_id) {
         injectTikTokPixel(pixel.pixel_id, scriptTagId, targetElement);
       } else if (pixel.platform_name === 'Google Analytics 4' && pixel.pixel_id) {
-        injectGA4(pixel.pixel_id, scriptTagId, targetElement);
+        if (pixel.pixel_id !== 'G-FJBC4S9KM3') {
+          injectGA4(pixel.pixel_id, scriptTagId, targetElement);
+        }
       } else if (pixel.platform_name === 'Snapchat Pixel' && pixel.pixel_id) {
         injectSnapchatPixel(pixel.pixel_id, scriptTagId, targetElement);
       } else if (pixel.platform_name === 'Google Tag Manager' && pixel.pixel_id) {
