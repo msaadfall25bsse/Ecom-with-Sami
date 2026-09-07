@@ -31,7 +31,9 @@ import {
   Lock,
   RefreshCw,
   Trash2,
-  Loader2
+  Loader2,
+  Activity,
+  Globe
 } from 'lucide-react';
 import { Enrollment, Student } from '@/utils/db';
 
@@ -135,6 +137,50 @@ export default function AdminDashboardPage() {
     password: 'studentpass2026'
   });
 
+  // Google Analytics Realtime State (Read-Only)
+  const [realtimeData, setRealtimeData] = useState<{
+    configured: boolean;
+    activeUsers: number;
+    topPages: { path: string; activeUsers: number }[];
+    countries: { country: string; activeUsers: number }[];
+    loading: boolean;
+    error?: string;
+  }>({
+    configured: false,
+    activeUsers: 0,
+    topPages: [],
+    countries: [],
+    loading: true,
+  });
+  const [showGaInfoModal, setShowGaInfoModal] = useState(false);
+
+  const fetchRealtimeAnalytics = async () => {
+    try {
+      setRealtimeData(prev => ({ ...prev, loading: true }));
+      const res = await fetch('/api/admin/analytics/realtime?t=' + Date.now(), {
+        cache: 'no-store'
+      });
+      const data = await res.json();
+      if (data.success) {
+        setRealtimeData({
+          configured: data.configured,
+          activeUsers: data.activeUsers || 0,
+          topPages: data.topPages || [],
+          countries: data.countries || [],
+          loading: false,
+        });
+      } else {
+        setRealtimeData(prev => ({
+          ...prev,
+          loading: false,
+          error: data.error,
+        }));
+      }
+    } catch {
+      setRealtimeData(prev => ({ ...prev, loading: false }));
+    }
+  };
+
   useEffect(() => {
     // 1. Instant Cache Hydration: If admin visited before, immediately display cached stats with 0ms delay
     try {
@@ -157,11 +203,19 @@ export default function AdminDashboardPage() {
         } else {
           setAuthChecking(false);
           fetchDashboardData();
+          fetchRealtimeAnalytics();
         }
       })
       .catch(() => {
         router.replace('/admin/login?redirect=/admin');
       });
+
+    // 3. Poll Realtime Visitors every 20 seconds (Read-Only)
+    const analyticsInterval = setInterval(() => {
+      fetchRealtimeAnalytics();
+    }, 20000);
+
+    return () => clearInterval(analyticsInterval);
   }, []);
 
   const handleLogout = async () => {
@@ -889,7 +943,7 @@ export default function AdminDashboardPage() {
           </div>
 
           {/* Metric Cards Grid */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
             <div className="bg-[#111827] border border-white/10 rounded-2xl p-4 sm:p-5 shadow-xl">
               <div className="flex items-center justify-between text-xs text-slate-400 mb-1 sm:mb-2">
                 <span className="text-[11px] sm:text-xs">Students</span>
@@ -925,6 +979,52 @@ export default function AdminDashboardPage() {
               <div className="text-base sm:text-2xl font-black text-white">{stats.totalRevenueFormatted}</div>
               <span className="text-[9px] sm:text-[10px] text-indigo-400 font-bold mt-1 block">Fee: PKR 3,799</span>
             </div>
+
+            {/* Read-Only Google Analytics Live Visitors Card */}
+            <div className="bg-[#111827] border border-emerald-500/20 bg-gradient-to-b from-[#111827] via-[#111827] to-emerald-950/20 rounded-2xl p-4 sm:p-5 shadow-xl relative overflow-hidden group hover:border-emerald-500/40 transition-all col-span-2 sm:col-span-1">
+              <div className="flex items-center justify-between text-xs text-slate-400 mb-1 sm:mb-2">
+                <span className="text-[11px] sm:text-xs flex items-center gap-1.5 font-bold text-slate-200">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                  </span>
+                  Live Visitors
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setShowGaInfoModal(true)}
+                  className="text-slate-400 hover:text-white transition-colors p-1"
+                  title="Google Analytics Data API Status & Settings"
+                >
+                  <Sparkles size={13} className="text-[#00A0DF]" />
+                </button>
+              </div>
+              <div className="flex items-baseline gap-2">
+                <div className="text-lg sm:text-2xl font-black text-white">
+                  {realtimeData.loading && realtimeData.activeUsers === 0 ? (
+                    <span className="text-slate-500 text-sm animate-pulse">Counting...</span>
+                  ) : (
+                    realtimeData.activeUsers
+                  )}
+                </div>
+                <span className="text-[10px] text-slate-400 font-medium">right now</span>
+              </div>
+              <div className="flex items-center justify-between mt-1 text-[9px] sm:text-[10px]">
+                <span className={realtimeData.configured ? "text-emerald-400 font-bold flex items-center gap-1" : "text-amber-400 font-bold flex items-center gap-1"}>
+                  <Activity size={10} className={realtimeData.loading ? "animate-spin" : ""} />
+                  {realtimeData.configured ? "GA4 Realtime Active" : "GA4 Ready to Link"}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => fetchRealtimeAnalytics()}
+                  disabled={realtimeData.loading}
+                  className="text-slate-400 hover:text-white transition-colors"
+                  title="Refresh visitor count"
+                >
+                  <RefreshCw size={10} className={realtimeData.loading ? "animate-spin text-[#00A0DF]" : ""} />
+                </button>
+              </div>
+            </div>
           </div>
 
           {/* TAB 1: OVERVIEW QUEUE */}
@@ -937,6 +1037,35 @@ export default function AdminDashboardPage() {
                   className="text-xs text-[#00A0DF] font-bold hover:underline"
                 >
                   View All ({enrollments.length}) &rarr;
+                </button>
+              </div>
+
+              {/* Live Traffic Strip (Read-Only) */}
+              <div className="bg-[#0B0F19] border border-white/5 rounded-xl p-3 flex flex-wrap items-center justify-between gap-3 text-xs">
+                <div className="flex items-center gap-2 text-slate-300">
+                  <Globe size={14} className="text-emerald-400 flex-shrink-0" />
+                  <span className="font-bold text-white">Google Analytics Live Traffic:</span>
+                  {realtimeData.topPages.length > 0 ? (
+                    <div className="flex flex-wrap items-center gap-2">
+                      {realtimeData.topPages.map((p, i) => (
+                        <span key={i} className="bg-slate-800 px-2 py-0.5 rounded text-[11px] font-mono text-slate-300 border border-white/5">
+                          {p.path}: <strong className="text-emerald-400">{p.activeUsers}</strong>
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <span className="text-slate-400 text-[11px]">
+                      {realtimeData.configured ? "Monitoring live pageviews on ecomwithsami.com" : "Measurement ID G-FJBC4S9KM3 active in header. Connect Data API for live server counts."}
+                    </span>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowGaInfoModal(true)}
+                  className="text-[11px] text-[#00A0DF] font-bold hover:underline inline-flex items-center gap-1"
+                >
+                  <Sparkles size={11} />
+                  <span>{realtimeData.configured ? "API Connected" : "View GA4 API Settings"}</span>
                 </button>
               </div>
 
@@ -1854,6 +1983,115 @@ export default function AdminDashboardPage() {
               </div>
             </div>
 
+          </div>
+        </div>
+      )}
+
+      {/* Google Analytics 4 & Realtime Data API Info Modal */}
+      {showGaInfoModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-[#111827] border border-white/10 rounded-2xl sm:rounded-3xl max-w-lg w-full p-5 sm:p-6 shadow-2xl space-y-5 text-left animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between border-b border-white/10 pb-4">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
+                  <Activity size={18} />
+                </div>
+                <div>
+                  <h3 className="text-base font-black text-white">Google Analytics 4 &amp; Realtime API</h3>
+                  <p className="text-xs text-slate-400">Read-Only Live Visitor Integration</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowGaInfoModal(false)}
+                className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Current Status Cards */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-[#0B0F19] border border-white/5 rounded-xl p-3.5 space-y-1">
+                <span className="text-[11px] text-slate-400 block font-medium">Tracking Code (gtag.js)</span>
+                <span className="text-xs font-mono font-bold text-emerald-400 flex items-center gap-1.5">
+                  <CheckCircle2 size={13} /> G-FJBC4S9KM3
+                </span>
+                <span className="text-[10px] text-slate-500 block">Active in website header</span>
+              </div>
+
+              <div className="bg-[#0B0F19] border border-white/5 rounded-xl p-3.5 space-y-1">
+                <span className="text-[11px] text-slate-400 block font-medium">Data API Connection</span>
+                <span className={`text-xs font-bold flex items-center gap-1.5 ${realtimeData.configured ? 'text-emerald-400' : 'text-amber-400'}`}>
+                  {realtimeData.configured ? <CheckCircle2 size={13} /> : <Clock size={13} />}
+                  {realtimeData.configured ? 'Connected' : 'Ready to Link'}
+                </span>
+                <span className="text-[10px] text-slate-500 block">
+                  {realtimeData.configured ? 'Direct Google Server Sync' : 'Read-Only Mode Active'}
+                </span>
+              </div>
+            </div>
+
+            {/* Live Metrics Summary */}
+            <div className="bg-slate-900/60 border border-white/10 rounded-xl p-3.5 space-y-2">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-slate-400 font-medium">Current Live Active Users:</span>
+                <span className="text-emerald-400 font-mono font-black text-sm">{realtimeData.activeUsers} online</span>
+              </div>
+              {realtimeData.topPages.length > 0 && (
+                <div className="pt-2 border-t border-white/5 space-y-1">
+                  <span className="text-[11px] text-slate-400 font-bold block">Top Active Pages:</span>
+                  <div className="space-y-1">
+                    {realtimeData.topPages.map((p, i) => (
+                      <div key={i} className="flex justify-between text-[11px] text-slate-300 font-mono">
+                        <span className="truncate max-w-[280px]">{p.path}</span>
+                        <span className="text-emerald-400 font-bold">{p.activeUsers} users</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* How to Connect Google Cloud Service Account */}
+            {!realtimeData.configured && (
+              <div className="bg-amber-500/5 border border-amber-500/20 rounded-xl p-3.5 space-y-2 text-xs">
+                <h4 className="font-bold text-amber-400 flex items-center gap-1.5">
+                  <Sparkles size={13} />
+                  <span>How to connect Google Analytics Data API:</span>
+                </h4>
+                <ol className="list-decimal list-inside text-slate-300 space-y-1 text-[11px] leading-relaxed">
+                  <li>In <strong className="text-white">Google Cloud Console</strong>, create a Service Account and download the JSON key.</li>
+                  <li>In <strong className="text-white">Google Analytics 4</strong>, add the service account email as a <em>Viewer</em> in Property Access Management.</li>
+                  <li>Add these 3 variables to your <code className="bg-slate-800 px-1 py-0.5 rounded text-amber-300">.env</code>:</li>
+                </ol>
+                <div className="bg-[#0B0F19] p-2.5 rounded-lg font-mono text-[10px] text-slate-300 space-y-0.5 border border-white/5">
+                  <div>GA_PROPERTY_ID=123456789</div>
+                  <div>GA_CLIENT_EMAIL=your-sa@project.iam.gserviceaccount.com</div>
+                  <div>GA_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n..."</div>
+                </div>
+              </div>
+            )}
+
+            <div className="flex items-center justify-between pt-1">
+              <button
+                type="button"
+                onClick={() => fetchRealtimeAnalytics()}
+                disabled={realtimeData.loading}
+                className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold inline-flex items-center gap-1.5 transition-colors border border-white/10"
+              >
+                <RefreshCw size={12} className={realtimeData.loading ? "animate-spin" : ""} />
+                <span>Refresh Live Count</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setShowGaInfoModal(false)}
+                className="px-4 py-2 rounded-xl bg-[#00A0DF] hover:bg-[#0090c8] text-white text-xs font-black transition-colors"
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}
