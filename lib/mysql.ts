@@ -1,4 +1,5 @@
 import mysql from 'mysql2/promise';
+import { defaultCmsContent } from '@/utils/cmsStore';
 
 let pool: mysql.Pool | null = null;
 let tablesInitialized = false;
@@ -80,6 +81,19 @@ export async function ensureAnalyticsTables(): Promise<boolean> {
         \`updated_at\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
     `);
+
+    // Auto-seed main_cms if not present
+    try {
+      const [cmsRows]: any = await p.query(`SELECT \`key\` FROM cms_settings WHERE \`key\` = 'main_cms' LIMIT 1`);
+      if (!Array.isArray(cmsRows) || cmsRows.length === 0) {
+        await p.query(
+          `INSERT INTO cms_settings (\`key\`, \`value_json\`) VALUES ('main_cms', ?)`,
+          [JSON.stringify(defaultCmsContent)]
+        );
+      }
+    } catch {
+      // Ignore seed error
+    }
 
     tablesInitialized = true;
     return true;
