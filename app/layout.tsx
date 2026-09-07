@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
-import { DynamicPixels } from '@/components/tracking';
+import { DynamicPixels, LiveVisitorTracker } from '@/components/tracking';
 import { WhatsAppWidget } from '@/components/common';
 import { StickyMobileCta } from '@/components/layout';
 import { dbGetCmsSettings } from '@/lib/database';
@@ -139,6 +139,7 @@ export default async function RootLayout({
       </head>
       <body className="min-h-screen flex flex-col bg-white text-slate-900 antialiased selection:bg-[#00A0DF] selection:text-white">
         <DynamicPixels />
+        <LiveVisitorTracker />
         {children}
         <WhatsAppWidget />
         <StickyMobileCta />
