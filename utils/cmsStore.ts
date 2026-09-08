@@ -753,24 +753,7 @@ export const defaultCmsContent: CmsContentSchema = {
     badge: 'REAL STUDENT RESULTS',
     title: 'Join 9,700+ Happy Students',
     subtitle: 'Real, unedited screenshots from our students — results & feedback.',
-    images: [
-      'https://learnwithafaq.com/wp-content/uploads/2025/11/image-312-1.webp',
-      'https://learnwithafaq.com/wp-content/uploads/2025/11/image-309.webp',
-      'https://learnwithafaq.com/wp-content/uploads/2025/11/image-311.webp',
-      'https://learnwithafaq.com/wp-content/uploads/2025/11/image-315.jpg',
-      'https://learnwithafaq.com/wp-content/uploads/2025/11/image-353.jpg',
-      'https://learnwithafaq.com/wp-content/uploads/2025/11/image-351.jpg',
-      'https://learnwithafaq.com/wp-content/uploads/2025/11/image-356.jpg',
-      'https://learnwithafaq.com/wp-content/uploads/2025/11/image-349.jpg',
-      'https://learnwithafaq.com/wp-content/uploads/2025/11/image-313.jpg',
-      'https://learnwithafaq.com/wp-content/uploads/2025/11/image-310.webp',
-      'https://learnwithafaq.com/wp-content/uploads/2025/11/image-314.jpg',
-      'https://learnwithafaq.com/wp-content/uploads/2025/11/image-362.jpg',
-      'https://learnwithafaq.com/wp-content/uploads/2025/11/image-352.jpg',
-      'https://learnwithafaq.com/wp-content/uploads/2025/11/image-360.jpg',
-      'https://learnwithafaq.com/wp-content/uploads/2025/11/image-354.jpg',
-      'https://learnwithafaq.com/wp-content/uploads/2025/11/image-350.jpg'
-    ]
+    images: []
   }
 };
 

@@ -76,9 +76,9 @@ function parseCmsSchema(parsed: any): CmsContentSchema {
       ? {
           ...defaultCmsContent.screenshot_reviews,
           ...parsed.screenshot_reviews,
-          images: Array.isArray(parsed.screenshot_reviews.images) && parsed.screenshot_reviews.images.length > 0
+          images: Array.isArray(parsed.screenshot_reviews.images)
             ? parsed.screenshot_reviews.images
-            : defaultCmsContent.screenshot_reviews?.images || []
+            : []
         }
       : defaultCmsContent.screenshot_reviews
   };
@@ -147,6 +147,7 @@ export async function dbSaveCmsSettings(patch: Partial<CmsContentSchema>): Promi
     faqs: patch.faqs !== undefined ? patch.faqs : existing.faqs,
     payment_methods: patch.payment_methods !== undefined ? patch.payment_methods : existing.payment_methods,
     pixels: patch.pixels !== undefined ? patch.pixels : existing.pixels,
+    screenshot_reviews: patch.screenshot_reviews !== undefined ? patch.screenshot_reviews : existing.screenshot_reviews,
     theme: patch.theme !== undefined 
       ? { 
           ...(existing.theme || defaultCmsContent.theme), 

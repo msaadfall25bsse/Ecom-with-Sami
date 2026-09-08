@@ -14,6 +14,18 @@ interface ScrollingScreenshotReviewsProps {
   };
 }
 
+// Helper to duplicate array items until they exceed minCount, then double for seamless -50% loop.
+// This prevents black screen / gap even if only 1, 2, or 3 screenshots are added.
+function buildInfiniteColumn(items: string[], minCount: number = 8): string[] {
+  if (!items || items.length === 0) return [];
+  let base: string[] = [];
+  while (base.length < minCount) {
+    base = base.concat(items);
+  }
+  // Double the base array so translateY(-50%) loops indefinitely with zero empty gaps
+  return [...base, ...base];
+}
+
 export function ScrollingScreenshotReviews({ data }: ScrollingScreenshotReviewsProps) {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
@@ -30,28 +42,33 @@ export function ScrollingScreenshotReviews({ data }: ScrollingScreenshotReviewsP
   
   const rawImages = (data?.images && data.images.length > 0) ? data.images : (fallback.images || []);
 
+  // If no images exist (e.g. user removed all screenshots), hide section gracefully
+  if (!rawImages || rawImages.length === 0) {
+    return null;
+  }
+
   // Split images into two columns for natural vertical parallax
-  const col1Images: string[] = [];
-  const col2Images: string[] = [];
+  const col1Raw: string[] = [];
+  const col2Raw: string[] = [];
 
   rawImages.forEach((img, idx) => {
     if (idx % 2 === 0) {
-      col1Images.push(img);
+      col1Raw.push(img);
     } else {
-      col2Images.push(img);
+      col2Raw.push(img);
     }
   });
 
   // If one column is empty (e.g. only 1 image provided), share evenly
-  if (col1Images.length === 0 && col2Images.length > 0) {
-    col1Images.push(...col2Images);
-  } else if (col2Images.length === 0 && col1Images.length > 0) {
-    col2Images.push(...col1Images);
+  if (col1Raw.length === 0 && col2Raw.length > 0) {
+    col1Raw.push(...col2Raw);
+  } else if (col2Raw.length === 0 && col1Raw.length > 0) {
+    col2Raw.push(...col1Raw);
   }
 
-  // Duplicate each column array so animation repeats continuously with zero jumps
-  const loopCol1 = [...col1Images, ...col1Images];
-  const loopCol2 = [...col2Images, ...col2Images];
+  // Duplicate each column array so animation repeats continuously with zero jumps or blank space
+  const loopCol1 = buildInfiniteColumn(col1Raw, 8);
+  const loopCol2 = buildInfiniteColumn(col2Raw, 8);
 
   // Close modal on Escape key
   useEffect(() => {
@@ -100,7 +117,7 @@ export function ScrollingScreenshotReviews({ data }: ScrollingScreenshotReviewsP
             
             {/* Column 1 (Scrolling Upwards Speed A) */}
             <div className="overflow-hidden relative h-full">
-              <div className="flex flex-col gap-3 sm:gap-4 animate-scroll-vertical-col1">
+              <div className="flex flex-col gap-3 sm:gap-4 animate-scroll-vertical-col1 [transform:translate3d(0,0,0)] will-change-transform">
                 {loopCol1.map((src, i) => (
                   <div
                     key={`col1-${i}`}
@@ -132,7 +149,7 @@ export function ScrollingScreenshotReviews({ data }: ScrollingScreenshotReviewsP
 
             {/* Column 2 (Scrolling Upwards Speed B - Parallax) */}
             <div className="overflow-hidden relative h-full">
-              <div className="flex flex-col gap-3 sm:gap-4 animate-scroll-vertical-col2">
+              <div className="flex flex-col gap-3 sm:gap-4 animate-scroll-vertical-col2 [transform:translate3d(0,0,0)] will-change-transform">
                 {loopCol2.map((src, i) => (
                   <div
                     key={`col2-${i}`}

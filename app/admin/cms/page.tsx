@@ -3594,10 +3594,10 @@ export default function AdminCmsPage() {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <h4 className="text-xs sm:text-sm font-black text-white uppercase tracking-wider">
-                        Active Reviews ({ (cmsData.screenshot_reviews?.images || defaultCmsContent.screenshot_reviews?.images || []).length })
+                        Active Reviews ({ (cmsData.screenshot_reviews?.images || []).length })
                       </h4>
                       <span className="text-[10px] text-slate-400 hidden sm:inline">
-                        • Recommended: 15–20 for smooth infinite looping
+                        • Recommended: 5–20 for smooth infinite looping
                       </span>
                     </div>
 
@@ -3611,74 +3611,77 @@ export default function AdminCmsPage() {
                     </button>
                   </div>
 
-                  {/* Grid of Screenshot Cards */}
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-                    {(cmsData.screenshot_reviews?.images || defaultCmsContent.screenshot_reviews?.images || []).map((imgUrl, idx) => (
-                      <div
-                        key={idx}
-                        className="group relative bg-[#0B0F19] border border-white/10 hover:border-[#00A0DF]/60 rounded-2xl overflow-hidden shadow-lg transition-all flex flex-col"
-                      >
-                        {/* Image Preview */}
-                        <div className="relative aspect-[9/16] w-full bg-slate-950 overflow-hidden">
-                          <img
-                            src={imgUrl}
-                            alt={`Review ${idx + 1}`}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                            loading="lazy"
-                          />
+                  {/* Grid of Screenshot Cards or Empty State */}
+                  {(cmsData.screenshot_reviews?.images || []).length === 0 ? (
+                    <div className="text-center py-12 px-4 border border-dashed border-white/10 rounded-2xl bg-white/[0.02]">
+                      <Award className="w-10 h-10 text-slate-600 mx-auto mb-3" />
+                      <p className="text-sm font-bold text-slate-300">No review screenshots uploaded yet</p>
+                      <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
+                        Click &quot;Browse Device Files&quot; above to upload WhatsApp student chats or earnings proof.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                      {(cmsData.screenshot_reviews?.images || []).map((imgUrl, idx) => (
+                        <div
+                          key={idx}
+                          className="group relative bg-[#0B0F19] border border-white/10 hover:border-[#00A0DF]/60 rounded-2xl overflow-hidden shadow-lg transition-all flex flex-col"
+                        >
+                          {/* Image Preview */}
+                          <div className="relative aspect-[9/16] w-full bg-slate-950 overflow-hidden">
+                            <img
+                              src={imgUrl}
+                              alt={`Review ${idx + 1}`}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                              loading="lazy"
+                            />
 
-                          {/* Index Badge */}
-                          <span className="absolute top-1.5 left-1.5 px-2 py-0.5 rounded-md bg-black/70 backdrop-blur-md text-[10px] font-black text-white border border-white/20">
-                            #{idx + 1}
-                          </span>
+                            {/* Index Badge */}
+                            <span className="absolute top-1.5 left-1.5 px-2 py-0.5 rounded-md bg-black/70 backdrop-blur-md text-[10px] font-black text-white border border-white/20">
+                              #{idx + 1}
+                            </span>
 
-                          {/* Top-Right Delete Action */}
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteScreenshot(idx)}
-                            className="absolute top-1.5 right-1.5 p-1.5 rounded-md bg-red-600/80 hover:bg-red-600 text-white transition-colors shadow-md"
-                            title="Delete this screenshot"
-                          >
-                            <Trash2 size={13} />
-                          </button>
-                        </div>
-
-                        {/* Card Footer with Reorder Controls */}
-                        <div className="p-1.5 bg-[#111827] border-t border-white/5 flex items-center justify-between">
-                          <div className="flex items-center gap-1">
+                            {/* Top-Right Delete Action */}
                             <button
                               type="button"
-                              onClick={() => handleMoveScreenshot(idx, 'up')}
-                              disabled={idx === 0}
-                              className="p-1 rounded bg-[#0B0F19] hover:bg-slate-800 disabled:opacity-30 text-slate-300 text-[10px] font-bold"
-                              title="Move Left/Up"
+                              onClick={() => handleDeleteScreenshot(idx)}
+                              className="absolute top-1.5 right-1.5 p-1.5 rounded-md bg-red-600/80 hover:bg-red-600 text-white transition-colors shadow-md"
+                              title="Delete this screenshot"
                             >
-                              ◀
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleMoveScreenshot(idx, 'down')}
-                              disabled={idx === (cmsData.screenshot_reviews?.images || []).length - 1}
-                              className="p-1 rounded bg-[#0B0F19] hover:bg-slate-800 disabled:opacity-30 text-slate-300 text-[10px] font-bold"
-                              title="Move Right/Down"
-                            >
-                              ▶
+                              <Trash2 size={13} />
                             </button>
                           </div>
 
-                          <a
-                            href={imgUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-slate-400 hover:text-[#00A0DF] p-1"
-                            title="View Full Size"
-                          >
-                            <ExternalLink size={12} />
-                          </a>
+                          {/* Card Footer with Reorder Controls */}
+                          <div className="p-1.5 bg-[#111827] border-t border-white/5 flex items-center justify-between">
+                            <div className="flex items-center gap-1">
+                              <button
+                                type="button"
+                                onClick={() => handleMoveScreenshot(idx, 'up')}
+                                disabled={idx === 0}
+                                className="p-1 rounded bg-[#0B0F19] hover:bg-slate-800 disabled:opacity-30 text-slate-300 text-[10px] font-bold"
+                                title="Move Left / Earlier"
+                              >
+                                ◀
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleMoveScreenshot(idx, 'down')}
+                                disabled={idx === (cmsData.screenshot_reviews?.images || []).length - 1}
+                                className="p-1 rounded bg-[#0B0F19] hover:bg-slate-800 disabled:opacity-30 text-slate-300 text-[10px] font-bold"
+                                title="Move Right / Later"
+                              >
+                                ▶
+                              </button>
+                            </div>
+                            <span className="text-[10px] text-slate-500 font-mono">
+                              #{idx + 1}
+                            </span>
+                          </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  )}
 
                   <div className="pt-2 flex justify-end">
                     <button

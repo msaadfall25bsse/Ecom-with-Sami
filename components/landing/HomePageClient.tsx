@@ -13,6 +13,7 @@ import {
   CountdownTimer, 
   CurriculumAccordion, 
   ProofWall, 
+  ScrollingScreenshotReviews,
   VideoModal 
 } from '@/components/landing';
 import { 
@@ -1196,6 +1197,13 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
 
         </div>
       </section>
+
+      {/* ========================================================================= */}
+      {/* REAL STUDENT RESULTS SCREENSHOT REVIEWS (LEARNWITHAFAQ MARQUEE STYLE)     */}
+      {/* ========================================================================= */}
+      {content.screenshot_reviews?.images && content.screenshot_reviews.images.length > 0 && (
+        <ScrollingScreenshotReviews data={content.screenshot_reviews} />
+      )}
 
       {/* ========================================================================= */}
       {/* 11. 2 OPTIONS LEFT COMPARISON (LEARNWITHAFAQ STYLE) */}
