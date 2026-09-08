@@ -776,38 +776,24 @@ input[type="submit"] {
   pointer-events: none !important;
 }
 
-/* Vertical Scrolling Screenshot Reviews (Seamless Loop & iOS Hardware Accelerated) */
+/* Vertical Scrolling Screenshot Reviews (LearnWithAfaq Style) */
 @keyframes scrollReviewsUp {
   0% {
-    transform: translate3d(0, 0, 0);
-    -webkit-transform: translate3d(0, 0, 0);
+    transform: translateY(0);
   }
   100% {
-    transform: translate3d(0, -50%, 0);
-    -webkit-transform: translate3d(0, -50%, 0);
+    transform: translateY(-50%);
   }
 }
 
 .animate-scroll-vertical-col1 {
   animation: scrollReviewsUp 38s linear infinite;
   will-change: transform;
-  -webkit-transform: translate3d(0, 0, 0);
-  transform: translate3d(0, 0, 0);
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
-  -webkit-perspective: 1000px;
-  perspective: 1000px;
 }
 
 .animate-scroll-vertical-col2 {
   animation: scrollReviewsUp 30s linear infinite;
   will-change: transform;
-  -webkit-transform: translate3d(0, 0, 0);
-  transform: translate3d(0, 0, 0);
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
-  -webkit-perspective: 1000px;
-  perspective: 1000px;
 }
 
 .animate-scroll-vertical-col1:hover,

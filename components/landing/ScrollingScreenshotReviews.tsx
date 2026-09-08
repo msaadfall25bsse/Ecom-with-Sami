@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { X, ZoomIn, Sparkles } from 'lucide-react';
+import Image from 'next/image';
+import { X, ZoomIn, MessageSquare, Sparkles, CheckCircle2 } from 'lucide-react';
 import { defaultCmsContent } from '@/utils/cmsStore';
 
 interface ScrollingScreenshotReviewsProps {
@@ -13,22 +14,7 @@ interface ScrollingScreenshotReviewsProps {
   };
 }
 
-// Helper to duplicate array items until they reach minCount, then double for seamless -50% loop.
-// This prevents black screen / gaps even if only 1, 2, or 3 screenshots are added.
-function buildInfiniteColumn(items: string[], minCount: number = 8): string[] {
-  if (!items || !Array.isArray(items) || items.length === 0) return [];
-  const cleanItems = items.filter(img => typeof img === 'string' && img.trim().length > 0);
-  if (cleanItems.length === 0) return [];
-
-  let base: string[] = [];
-  while (base.length < minCount) {
-    base = base.concat(cleanItems);
-  }
-  // Double the base array so translateY(-50%) loops indefinitely with zero empty gaps
-  return [...base, ...base];
-}
-
-function ScrollingScreenshotReviewsInner({ data }: ScrollingScreenshotReviewsProps) {
+export function ScrollingScreenshotReviews({ data }: ScrollingScreenshotReviewsProps) {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   const fallback = defaultCmsContent.screenshot_reviews || {
@@ -42,42 +28,34 @@ function ScrollingScreenshotReviewsInner({ data }: ScrollingScreenshotReviewsPro
   const title = data?.title || fallback.title || 'Join 9,700+ Happy Students';
   const subtitle = data?.subtitle || fallback.subtitle || 'Real, unedited screenshots from our students — results & feedback.';
   
-  // Safely extract and sanitize image URLs
-  const rawImages = (Array.isArray(data?.images) && data!.images.length > 0)
-    ? data!.images.filter(img => typeof img === 'string' && img.trim().length > 0)
-    : (Array.isArray(fallback.images) ? fallback.images.filter(img => typeof img === 'string' && img.trim().length > 0) : []);
+  const rawImages = (data?.images && data.images.length > 0) ? data.images : (fallback.images || []);
 
-  // If no valid images exist, hide section gracefully without rendering anything
   if (!rawImages || rawImages.length === 0) {
     return null;
   }
 
   // Split images into two columns for natural vertical parallax
-  const col1Raw: string[] = [];
-  const col2Raw: string[] = [];
+  const col1Images: string[] = [];
+  const col2Images: string[] = [];
 
   rawImages.forEach((img, idx) => {
     if (idx % 2 === 0) {
-      col1Raw.push(img);
+      col1Images.push(img);
     } else {
-      col2Raw.push(img);
+      col2Images.push(img);
     }
   });
 
   // If one column is empty (e.g. only 1 image provided), share evenly
-  if (col1Raw.length === 0 && col2Raw.length > 0) {
-    col1Raw.push(...col2Raw);
-  } else if (col2Raw.length === 0 && col1Raw.length > 0) {
-    col2Raw.push(...col1Raw);
+  if (col1Images.length === 0 && col2Images.length > 0) {
+    col1Images.push(...col2Images);
+  } else if (col2Images.length === 0 && col1Images.length > 0) {
+    col2Images.push(...col1Images);
   }
 
-  // Duplicate each column array so animation repeats continuously with zero jumps or blank space
-  const loopCol1 = buildInfiniteColumn(col1Raw, 8);
-  const loopCol2 = buildInfiniteColumn(col2Raw, 8);
-
-  if (loopCol1.length === 0 && loopCol2.length === 0) {
-    return null;
-  }
+  // Duplicate each column array so animation repeats continuously with zero jumps
+  const loopCol1 = [...col1Images, ...col1Images];
+  const loopCol2 = [...col2Images, ...col2Images];
 
   // Close modal on Escape key
   useEffect(() => {
@@ -129,7 +107,7 @@ function ScrollingScreenshotReviewsInner({ data }: ScrollingScreenshotReviewsPro
               <div className="flex flex-col gap-3 sm:gap-4 animate-scroll-vertical-col1">
                 {loopCol1.map((src, i) => (
                   <div
-                    key={`col1-${i}-${src.slice(-10)}`}
+                    key={`col1-${i}`}
                     role="button"
                     tabIndex={0}
                     style={{ touchAction: 'manipulation' }}
@@ -145,9 +123,6 @@ function ScrollingScreenshotReviewsInner({ data }: ScrollingScreenshotReviewsPro
                       alt="Student Result Review"
                       loading="lazy"
                       decoding="async"
-                      onError={(e) => {
-                        (e.target as HTMLElement).style.display = 'none';
-                      }}
                       className="w-full h-auto object-cover rounded-2xl block pointer-events-none"
                     />
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5 text-white text-[11px] font-bold pointer-events-none">
@@ -164,7 +139,7 @@ function ScrollingScreenshotReviewsInner({ data }: ScrollingScreenshotReviewsPro
               <div className="flex flex-col gap-3 sm:gap-4 animate-scroll-vertical-col2">
                 {loopCol2.map((src, i) => (
                   <div
-                    key={`col2-${i}-${src.slice(-10)}`}
+                    key={`col2-${i}`}
                     role="button"
                     tabIndex={0}
                     style={{ touchAction: 'manipulation' }}
@@ -180,9 +155,6 @@ function ScrollingScreenshotReviewsInner({ data }: ScrollingScreenshotReviewsPro
                       alt="Student Result Review"
                       loading="lazy"
                       decoding="async"
-                      onError={(e) => {
-                        (e.target as HTMLElement).style.display = 'none';
-                      }}
                       className="w-full h-auto object-cover rounded-2xl block pointer-events-none"
                     />
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5 text-white text-[11px] font-bold pointer-events-none">
@@ -236,14 +208,4 @@ function ScrollingScreenshotReviewsInner({ data }: ScrollingScreenshotReviewsPro
       )}
     </section>
   );
-}
-
-// Top-level crash-proof wrapper that protects the parent checkout page from any runtime errors
-export function ScrollingScreenshotReviews(props: ScrollingScreenshotReviewsProps) {
-  try {
-    return <ScrollingScreenshotReviewsInner {...props} />;
-  } catch (err) {
-    console.warn('ScrollingScreenshotReviews internal error suppressed:', err);
-    return null;
-  }
 }
