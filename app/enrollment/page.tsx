@@ -667,7 +667,9 @@ export default function EnrollmentPage() {
       {/* ========================================================================= */}
       {/* REAL STUDENT RESULTS SCREENSHOT REVIEWS MARQUEE (LEARNWITHAFAQ STYLE)     */}
       {/* ========================================================================= */}
-      <ScrollingScreenshotReviews data={screenshotReviews} />
+      {screenshotReviews && Array.isArray(screenshotReviews.images) && screenshotReviews.images.length > 0 && (
+        <ScrollingScreenshotReviews data={screenshotReviews} />
+      )}
 
       {/* ========================================================================= */}
       {/* POPUP CONFIRMATION MODAL WINDOW */}

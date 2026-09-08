@@ -1,8 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import Image from 'next/image';
-import { X, ZoomIn, MessageSquare, Sparkles, CheckCircle2 } from 'lucide-react';
+import { X, ZoomIn, Sparkles } from 'lucide-react';
 import { defaultCmsContent } from '@/utils/cmsStore';
 
 interface ScrollingScreenshotReviewsProps {
@@ -15,7 +14,27 @@ interface ScrollingScreenshotReviewsProps {
 }
 
 export function ScrollingScreenshotReviews({ data }: ScrollingScreenshotReviewsProps) {
+  const [mounted, setMounted] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Close modal on Escape key
+  useEffect(() => {
+    if (!selectedImage) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setSelectedImage(null);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedImage]);
+
+  // CRITICAL: Guarantee 0 hydration mismatches by returning null until client mount
+  if (!mounted) {
+    return null;
+  }
 
   const fallback = defaultCmsContent.screenshot_reviews || {
     badge: 'REAL STUDENT RESULTS',
@@ -28,9 +47,12 @@ export function ScrollingScreenshotReviews({ data }: ScrollingScreenshotReviewsP
   const title = data?.title || fallback.title || 'Join 9,700+ Happy Students';
   const subtitle = data?.subtitle || fallback.subtitle || 'Real, unedited screenshots from our students — results & feedback.';
   
-  const rawImages = (data?.images && data.images.length > 0) ? data.images : (fallback.images || []);
+  // Safely extract and sanitize image URLs
+  const rawImages: string[] = (Array.isArray(data?.images) && data!.images.length > 0)
+    ? data!.images.filter((img): img is string => typeof img === 'string' && img.trim().length > 0)
+    : (Array.isArray(fallback.images) ? fallback.images.filter((img): img is string => typeof img === 'string' && img.trim().length > 0) : []);
 
-  if (!rawImages || rawImages.length === 0) {
+  if (rawImages.length === 0) {
     return null;
   }
 
@@ -53,22 +75,18 @@ export function ScrollingScreenshotReviews({ data }: ScrollingScreenshotReviewsP
     col2Images.push(...col1Images);
   }
 
-  // Duplicate each column array so animation repeats continuously with zero jumps
-  const loopCol1 = [...col1Images, ...col1Images];
-  const loopCol2 = [...col2Images, ...col2Images];
+  // Multiply items safely so height fills the container without any gaps
+  let baseCol1: string[] = [];
+  while (baseCol1.length < 6 && col1Images.length > 0) {
+    baseCol1 = baseCol1.concat(col1Images);
+  }
+  let baseCol2: string[] = [];
+  while (baseCol2.length < 6 && col2Images.length > 0) {
+    baseCol2 = baseCol2.concat(col2Images);
+  }
 
-  // Close modal on Escape key
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        setSelectedImage(null);
-      }
-    };
-    if (selectedImage) {
-      window.addEventListener('keydown', handleKeyDown);
-    }
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedImage]);
+  const loopCol1 = [...baseCol1, ...baseCol1];
+  const loopCol2 = [...baseCol2, ...baseCol2];
 
   return (
     <section className="relative w-full py-12 sm:py-16 overflow-hidden border-t border-white/10 bg-gradient-to-b from-[#0B0F19] via-[#0D1322] to-[#0B0F19]">
@@ -123,6 +141,9 @@ export function ScrollingScreenshotReviews({ data }: ScrollingScreenshotReviewsP
                       alt="Student Result Review"
                       loading="lazy"
                       decoding="async"
+                      onError={(e) => {
+                        (e.target as HTMLElement).style.display = 'none';
+                      }}
                       className="w-full h-auto object-cover rounded-2xl block pointer-events-none"
                     />
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5 text-white text-[11px] font-bold pointer-events-none">
@@ -155,6 +176,9 @@ export function ScrollingScreenshotReviews({ data }: ScrollingScreenshotReviewsP
                       alt="Student Result Review"
                       loading="lazy"
                       decoding="async"
+                      onError={(e) => {
+                        (e.target as HTMLElement).style.display = 'none';
+                      }}
                       className="w-full h-auto object-cover rounded-2xl block pointer-events-none"
                     />
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5 text-white text-[11px] font-bold pointer-events-none">
