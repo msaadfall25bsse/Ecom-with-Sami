@@ -826,34 +826,6 @@ input[type="submit"] {
   animation-play-state: paused;
 }
 
-/* Homepage Proof Wall - Ultra-Slow & Relaxed Continuous Glide (iOS Safari WebKit Optimized) */
-.animate-homepage-proof-col1 {
-  animation: scrollReviewsUp 95s linear infinite;
-  -webkit-animation: scrollReviewsUp 95s linear infinite;
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
-  -webkit-perspective: 1000px;
-  perspective: 1000px;
-  -webkit-transform: translate3d(0, 0, 0);
-  transform: translate3d(0, 0, 0);
-  transform-style: preserve-3d;
-  -webkit-transform-style: preserve-3d;
-  will-change: transform;
-}
-
-.animate-homepage-proof-col2 {
-  animation: scrollReviewsUp 80s linear infinite;
-  -webkit-animation: scrollReviewsUp 80s linear infinite;
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
-  -webkit-perspective: 1000px;
-  perspective: 1000px;
-  -webkit-transform: translate3d(0, 0, 0);
-  transform: translate3d(0, 0, 0);
-  transform-style: preserve-3d;
-  -webkit-transform-style: preserve-3d;
-  will-change: transform;
-}
 
 
 

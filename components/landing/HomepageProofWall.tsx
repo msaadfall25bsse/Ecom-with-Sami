@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, ZoomIn, X } from 'lucide-react';
 import { defaultCmsContent } from '@/utils/cmsStore';
 
 interface HomepageProofWallProps {
@@ -15,10 +15,21 @@ interface HomepageProofWallProps {
 
 export function HomepageProofWall({ data }: HomepageProofWallProps) {
   const [mounted, setMounted] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Close modal on Escape key
+  useEffect(() => {
+    if (!selectedImage) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setSelectedImage(null);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedImage]);
 
   // CRITICAL: Guarantee 0 hydration mismatches by returning null until client mount
   if (!mounted) {
@@ -63,13 +74,12 @@ export function HomepageProofWall({ data }: HomepageProofWallProps) {
   }
 
   // Multiply items safely so height fills the container without any gaps
-  // Capped at length 4 to keep DOM and texture height safe for iOS Safari memory limits
   let baseCol1: string[] = [];
-  while (baseCol1.length < 4 && col1Images.length > 0) {
+  while (baseCol1.length < 5 && col1Images.length > 0) {
     baseCol1 = baseCol1.concat(col1Images);
   }
   let baseCol2: string[] = [];
-  while (baseCol2.length < 4 && col2Images.length > 0) {
+  while (baseCol2.length < 5 && col2Images.length > 0) {
     baseCol2 = baseCol2.concat(col2Images);
   }
 
@@ -102,25 +112,33 @@ export function HomepageProofWall({ data }: HomepageProofWallProps) {
         </p>
       </div>
 
-      {/* Viewport Frame with Gradient Fading Masks (Top & Bottom) */}
-      <div className="relative h-[620px] xs:h-[680px] sm:h-[740px] w-full max-w-3xl mx-auto overflow-hidden rounded-3xl border border-slate-800 bg-[#070B14] shadow-2xl select-none isolate transform-gpu">
+      {/* Viewport Frame with Gradient Fading Masks (Top & Bottom) - Matched 1-to-1 with working Checkout Page */}
+      <div className="relative h-[560px] xs:h-[620px] sm:h-[680px] w-full max-w-3xl mx-auto overflow-hidden rounded-3xl border border-white/10 bg-[#070B14]/80 shadow-2xl group-scroll">
         
         {/* Top Soft Gradient Fade Mask */}
-        <div className="absolute top-0 inset-x-0 h-24 sm:h-32 bg-gradient-to-b from-[#070B14] via-[#070B14]/85 to-transparent pointer-events-none z-20" />
+        <div className="absolute top-0 inset-x-0 h-20 sm:h-28 bg-gradient-to-b from-[#070B14] via-[#070B14]/80 to-transparent pointer-events-none z-20" />
         
         {/* Bottom Soft Gradient Fade Mask */}
-        <div className="absolute bottom-0 inset-x-0 h-24 sm:h-32 bg-gradient-to-t from-[#070B14] via-[#070B14]/85 to-transparent pointer-events-none z-20" />
+        <div className="absolute bottom-0 inset-x-0 h-20 sm:h-28 bg-gradient-to-t from-[#070B14] via-[#070B14]/80 to-transparent pointer-events-none z-20" />
 
         {/* 2-Column Marquee Grid */}
-        <div className="grid grid-cols-2 gap-3.5 sm:gap-5 p-3.5 sm:p-5 h-full">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 p-3 sm:p-4 h-full">
           
-          {/* Column 1 (Ultra-slow continuous vertical scroll) */}
+          {/* Column 1 (Scrolling Upwards Speed A - Proven 38s) */}
           <div className="overflow-hidden relative h-full">
-            <div className="flex flex-col gap-3.5 sm:gap-5 animate-homepage-proof-col1">
+            <div className="flex flex-col gap-3 sm:gap-4 animate-scroll-vertical-col1">
               {loopCol1.map((src, i) => (
                 <div
                   key={`home-col1-${i}`}
-                  className="relative rounded-2xl overflow-hidden border border-white/10 bg-[#111827] shadow-lg flex-shrink-0 max-h-[360px] xs:max-h-[400px] sm:max-h-[440px]"
+                  role="button"
+                  tabIndex={0}
+                  style={{ touchAction: 'manipulation' }}
+                  onClick={() => setSelectedImage(src)}
+                  onTouchEnd={(e) => {
+                    e.stopPropagation();
+                    setSelectedImage(src);
+                  }}
+                  className="relative group rounded-2xl overflow-hidden border border-white/10 hover:border-[#00A0DF]/60 bg-[#111827] shadow-lg cursor-pointer transition-transform duration-200 active:opacity-90 flex-shrink-0 select-none"
                 >
                   <img
                     src={src}
@@ -130,20 +148,32 @@ export function HomepageProofWall({ data }: HomepageProofWallProps) {
                     onError={(e) => {
                       (e.target as HTMLElement).style.display = 'none';
                     }}
-                    className="w-full h-auto max-h-[360px] xs:max-h-[400px] sm:max-h-[440px] object-cover object-top rounded-2xl block pointer-events-none"
+                    className="w-full h-auto object-cover rounded-2xl block pointer-events-none"
                   />
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5 text-white text-[11px] font-bold pointer-events-none">
+                    <ZoomIn size={16} className="text-[#00A0DF]" />
+                    <span>Click to Zoom</span>
+                  </div>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Column 2 (Ultra-slow continuous parallax vertical scroll) */}
+          {/* Column 2 (Scrolling Upwards Speed B - Proven 30s Parallax) */}
           <div className="overflow-hidden relative h-full">
-            <div className="flex flex-col gap-3.5 sm:gap-5 animate-homepage-proof-col2">
+            <div className="flex flex-col gap-3 sm:gap-4 animate-scroll-vertical-col2">
               {loopCol2.map((src, i) => (
                 <div
                   key={`home-col2-${i}`}
-                  className="relative rounded-2xl overflow-hidden border border-white/10 bg-[#111827] shadow-lg flex-shrink-0 max-h-[360px] xs:max-h-[400px] sm:max-h-[440px]"
+                  role="button"
+                  tabIndex={0}
+                  style={{ touchAction: 'manipulation' }}
+                  onClick={() => setSelectedImage(src)}
+                  onTouchEnd={(e) => {
+                    e.stopPropagation();
+                    setSelectedImage(src);
+                  }}
+                  className="relative group rounded-2xl overflow-hidden border border-white/10 hover:border-[#00A0DF]/60 bg-[#111827] shadow-lg cursor-pointer transition-transform duration-200 active:opacity-90 flex-shrink-0 select-none"
                 >
                   <img
                     src={src}
@@ -153,8 +183,12 @@ export function HomepageProofWall({ data }: HomepageProofWallProps) {
                     onError={(e) => {
                       (e.target as HTMLElement).style.display = 'none';
                     }}
-                    className="w-full h-auto max-h-[360px] xs:max-h-[400px] sm:max-h-[440px] object-cover object-top rounded-2xl block pointer-events-none"
+                    className="w-full h-auto object-cover rounded-2xl block pointer-events-none"
                   />
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5 text-white text-[11px] font-bold pointer-events-none">
+                    <ZoomIn size={16} className="text-[#00A0DF]" />
+                    <span>Click to Zoom</span>
+                  </div>
                 </div>
               ))}
             </div>
@@ -162,8 +196,45 @@ export function HomepageProofWall({ data }: HomepageProofWallProps) {
 
         </div>
       </div>
+
+      {/* Caption Hint below reviews */}
+      <p className="text-center text-[11px] text-slate-500 mt-4 flex items-center justify-center gap-1.5">
+        <span>👆 Click any screenshot to view full-size earnings proof &amp; WhatsApp chat</span>
+      </p>
+
+      {/* Lightbox Modal for Enlarged View */}
+      {selectedImage && (
+        <div
+          onClick={() => setSelectedImage(null)}
+          className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 animate-in fade-in duration-200"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="relative max-w-2xl max-h-[90vh] bg-[#111827] border border-white/20 rounded-3xl overflow-hidden shadow-2xl flex flex-col items-center"
+          >
+            {/* Modal Close Button */}
+            <button
+              onClick={() => setSelectedImage(null)}
+              className="absolute top-3 right-3 z-10 p-2.5 rounded-full bg-black/70 hover:bg-black text-white hover:text-[#00A0DF] transition-colors border border-white/20"
+              title="Close Preview (Esc)"
+            >
+              <X size={20} />
+            </button>
+
+            {/* Enlarged Image */}
+            <div className="overflow-y-auto max-h-[85vh] p-2 sm:p-4">
+              <img
+                src={selectedImage}
+                alt="Enlarged Student Review"
+                className="max-w-full h-auto rounded-2xl shadow-2xl mx-auto block"
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
 export default HomepageProofWall;
+
