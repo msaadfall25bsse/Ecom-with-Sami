@@ -819,12 +819,37 @@ input[type="submit"] {
   will-change: transform;
 }
 
-.animate-scroll-vertical-col1:hover,
-.animate-scroll-vertical-col2:hover,
-.group-scroll:hover .animate-scroll-vertical-col1,
-.group-scroll:hover .animate-scroll-vertical-col2 {
-  animation-play-state: paused;
+/* Desktop-only hover pause for checkout reviews (Prevents mobile/iPhone Safari touch from sticking paused) */
+@media (hover: hover) and (pointer: fine) {
+  .animate-scroll-vertical-col1:hover,
+  .animate-scroll-vertical-col2:hover,
+  .group-scroll:hover .animate-scroll-vertical-col1,
+  .group-scroll:hover .animate-scroll-vertical-col2 {
+    animation-play-state: paused;
+  }
 }
+
+/* Homepage & Success Stories Proof Wall: Dedicated Slow Continuous Infinite Scroll (No Pause, Cross-Platform Safe) */
+.animate-proofwall-col1 {
+  animation: scrollReviewsUp 65s linear infinite;
+  -webkit-animation: scrollReviewsUp 65s linear infinite;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  -webkit-transform: translate3d(0, 0, 0);
+  transform: translate3d(0, 0, 0);
+  will-change: transform;
+}
+
+.animate-proofwall-col2 {
+  animation: scrollReviewsUp 55s linear infinite;
+  -webkit-animation: scrollReviewsUp 55s linear infinite;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  -webkit-transform: translate3d(0, 0, 0);
+  transform: translate3d(0, 0, 0);
+  will-change: transform;
+}
+
 
 
 
