@@ -36,28 +36,41 @@ export function CountdownTimer({
   );
 
   const calculateGlobalRemaining = () => {
-    const anchor = Number(timerAnchorTime) || 0;
+    const anchor = Number(timerAnchorTime) || 1773100000000;
     const now = Date.now();
     const elapsed = Math.max(0, Math.floor((now - anchor) / 1000)) % configuredDuration;
     return Math.max(0, configuredDuration - elapsed);
   };
 
-  const [totalSeconds, setTotalSeconds] = useState<number>(() => {
-    if (typeof serverRemainingSeconds === 'number' && serverRemainingSeconds >= 0) {
-      return serverRemainingSeconds;
-    }
-    return calculateGlobalRemaining();
-  });
+  const baseRemaining = typeof serverRemainingSeconds === 'number' && serverRemainingSeconds >= 0
+    ? serverRemainingSeconds
+    : calculateGlobalRemaining();
+
+  const [totalSeconds, setTotalSeconds] = useState<number>(baseRemaining);
 
   useEffect(() => {
-    const updateRemaining = () => {
-      setTotalSeconds(calculateGlobalRemaining());
+    // Record mount moment via high-resolution monotonic timer (100% immune to phone clock differences!)
+    const mountTime = typeof performance !== 'undefined' ? performance.now() : Date.now();
+    const startSeconds = baseRemaining;
+
+    const tick = () => {
+      const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
+      const elapsedSinceMount = Math.floor((now - mountTime) / 1000);
+      let remaining = startSeconds - elapsedSinceMount;
+
+      // Auto-restart loop when reaching 00:00:00
+      if (remaining <= 0) {
+        const overtime = Math.abs(remaining);
+        remaining = configuredDuration - (overtime % configuredDuration);
+      }
+
+      setTotalSeconds(Math.max(0, remaining));
     };
 
-    updateRemaining();
-    const timer = setInterval(updateRemaining, 1000);
+    tick();
+    const timer = setInterval(tick, 1000);
     return () => clearInterval(timer);
-  }, [configuredDuration, timerAnchorTime]);
+  }, [baseRemaining, configuredDuration]);
 
   const hours = Math.floor(totalSeconds / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);
