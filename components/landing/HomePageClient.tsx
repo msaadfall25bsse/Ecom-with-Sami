@@ -12,7 +12,7 @@ import {
   BonusStack, 
   CountdownTimer, 
   CurriculumAccordion, 
-  ProofWall, 
+  HomepageProofWall, 
   VideoModal 
 } from '@/components/landing';
 import { 
@@ -1135,55 +1135,12 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
       </section>
 
       {/* ========================================================================= */}
-      {/* 10. REAL STUDENT SUCCESS & MOVING REVIEWS STREAM */}
+      {/* 10. REAL STUDENT SUCCESS & HOMEPAGE PROOF WALL */}
       {/* ========================================================================= */}
       <section className="py-14 sm:py-20 bg-white">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           
-          <div className="text-center max-w-3xl mx-auto mb-8 sm:mb-12">
-            <span className="section-tag-pill">STUDENT RESULTS</span>
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 tracking-tight mb-3">
-              Students <span className="text-[#00A0DF]">Success</span>
-            </h2>
-            <p className="text-xs sm:text-sm md:text-base text-slate-600 font-medium">
-              Real screenshots and verified reviews shared by our students — unedited and unfiltered.
-            </p>
-          </div>
-
-          {/* Continuous Moving Proof Wall Component */}
-          <ProofWall customTestimonials={content.testimonials} />
-
-          {/* Continuous Moving Live Profit Dashboard Streams */}
-          <div className="mt-12 pt-10 border-t border-gray-200">
-            <div className="text-center mb-6">
-              <span className="text-xs font-black uppercase tracking-wider text-[#00A0DF] bg-[#00A0DF]/10 px-3.5 py-1 rounded-full border border-[#00A0DF]/20 shadow-xs">
-                ⚡ LIVE STORE DASHBOARD WINS
-              </span>
-            </div>
-
-            <div className="overflow-hidden py-3 marquee-fade-mask touch-pan-x">
-              <div className="animate-marquee flex items-center gap-3 sm:gap-6">
-                {[...studentEarningsScreenshots, ...studentEarningsScreenshots, ...studentEarningsScreenshots, ...studentEarningsScreenshots].map((s, idx) => (
-                  <div
-                    key={idx}
-                    className="bg-[#0B0F19] text-white border border-slate-800 rounded-2xl p-3.5 sm:p-5 w-[215px] xs:w-[240px] sm:w-[270px] flex-shrink-0 shadow-lg hover:border-[#00A0DF] transition-colors card-hover-lift cursor-pointer"
-                  >
-                    <div className="flex items-center justify-between mb-1.5 sm:mb-2">
-                      <span className="text-[9px] sm:text-[10px] font-bold text-slate-400">{s.label}</span>
-                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-                    </div>
-                    <div className="text-base sm:text-xl font-black text-emerald-400 mb-1">
-                      {s.profit}
-                    </div>
-                    <div className="flex items-center justify-between text-[10px] sm:text-[11px] text-slate-300 font-semibold">
-                      <span>{s.name}</span>
-                      <span className="text-[#00A0DF] font-bold">{s.orders}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
+          <HomepageProofWall data={content.homepage_proof_wall} />
 
           <div className="text-center mt-10">
             <Link

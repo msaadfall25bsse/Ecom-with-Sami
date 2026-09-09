@@ -181,6 +181,12 @@ export interface CmsContentSchema {
     subtitle: string;
     images: string[];
   };
+  homepage_proof_wall?: {
+    badge: string;
+    title: string;
+    subtitle: string;
+    images: string[];
+  };
 }
 
 export interface ThemeCustomColors {
@@ -754,6 +760,12 @@ export const defaultCmsContent: CmsContentSchema = {
     title: 'Join 9,700+ Happy Students',
     subtitle: 'Real, unedited screenshots from our students — results & feedback.',
     images: []
+  },
+  homepage_proof_wall: {
+    badge: 'STUDENT RESULTS',
+    title: 'Students Success',
+    subtitle: 'Real screenshots and verified reviews shared by our students — unedited and unfiltered.',
+    images: ['/uploads/reviews/whatsapp_review_sample.jpg']
   }
 };
 

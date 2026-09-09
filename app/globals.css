@@ -803,3 +803,22 @@ input[type="submit"] {
   animation-play-state: paused;
 }
 
+/* Homepage Proof Wall - Slower & Relaxed for easy reading */
+.animate-homepage-proof-col1 {
+  animation: scrollReviewsUp 58s linear infinite;
+  will-change: transform;
+}
+
+.animate-homepage-proof-col2 {
+  animation: scrollReviewsUp 46s linear infinite;
+  will-change: transform;
+}
+
+.animate-homepage-proof-col1:hover,
+.animate-homepage-proof-col2:hover,
+.group-scroll:hover .animate-homepage-proof-col1,
+.group-scroll:hover .animate-homepage-proof-col2 {
+  animation-play-state: paused;
+}
+
+

@@ -58,7 +58,7 @@ export default function AdminCmsPage() {
   const router = useRouter();
   const [authChecking, setAuthChecking] = useState(true);
   const [activeTab, setActiveTab] = useState<
-    'marquee' | 'hero' | 'stats' | 'why' | 'what' | 'mentor' | 'video_reviews' | 'who' | 'lms' | 'bonuses' | 'reviews' | 'options' | 'cost' | 'faqs' | 'cta' | 'contact' | 'payments' | 'themes' | 'pixels'
+    'marquee' | 'hero' | 'stats' | 'why' | 'what' | 'mentor' | 'video_reviews' | 'who' | 'lms' | 'bonuses' | 'reviews' | 'proofwall_home' | 'options' | 'cost' | 'faqs' | 'cta' | 'contact' | 'payments' | 'themes' | 'pixels'
   >('hero');
   const [cmsData, setCmsData] = useState<CmsContentSchema>(defaultCmsContent);
   const [modules, setModules] = useState<Module[]>(initialModules);
@@ -142,6 +142,13 @@ export default function AdminCmsPage() {
   const [screenshotUploadError, setScreenshotUploadError] = useState('');
   const [newScreenshotUrl, setNewScreenshotUrl] = useState('');
   const screenshotFileInputRef = useRef<HTMLInputElement>(null);
+
+  // Homepage Proof Wall State (Vertical Scrolling Screenshots on Homepage)
+  const [homeProofUploading, setHomeProofUploading] = useState(false);
+  const [homeProofUploadStatus, setHomeProofUploadStatus] = useState('');
+  const [homeProofUploadError, setHomeProofUploadError] = useState('');
+  const [newHomeProofUrl, setNewHomeProofUrl] = useState('');
+  const homeProofFileInputRef = useRef<HTMLInputElement>(null);
 
   // Mentor Profile State
   const [mentorUploading, setMentorUploading] = useState(false);
@@ -1098,6 +1105,108 @@ export default function AdminCmsPage() {
     });
   };
 
+  // --- HOMEPAGE PROOF WALL ACTIONS ---
+  const handleHomeProofUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setHomeProofUploading(true);
+    setHomeProofUploadStatus(`Uploading ${files.length} screenshot(s)...`);
+    setHomeProofUploadError('');
+
+    try {
+      const uploadedUrls: string[] = [];
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const res = await fetch('/api/admin/cms/upload-review-image', {
+          method: 'POST',
+          body: formData
+        });
+
+        const data = await res.json();
+        if (!res.ok || !data.success || !data.url) {
+          throw new Error(data.message || `Failed to upload ${file.name}`);
+        }
+        uploadedUrls.push(data.url);
+      }
+
+      setCmsData(prev => {
+        const current = prev.homepage_proof_wall || defaultCmsContent.homepage_proof_wall!;
+        const existingImages = current.images || [];
+        return {
+          ...prev,
+          homepage_proof_wall: {
+            ...current,
+            images: [...existingImages, ...uploadedUrls]
+          }
+        };
+      });
+
+      setHomeProofUploadStatus(`Successfully added ${files.length} screenshot(s) to Homepage Proof Wall!`);
+      setTimeout(() => setHomeProofUploadStatus(''), 4000);
+    } catch (err: any) {
+      setHomeProofUploadError(err.message || 'Failed to upload screenshot');
+    } finally {
+      setHomeProofUploading(false);
+      if (homeProofFileInputRef.current) {
+        homeProofFileInputRef.current.value = '';
+      }
+    }
+  };
+
+  const handleAddHomeProofUrl = () => {
+    if (!newHomeProofUrl.trim()) return;
+    setCmsData(prev => {
+      const current = prev.homepage_proof_wall || defaultCmsContent.homepage_proof_wall!;
+      const existingImages = current.images || [];
+      return {
+        ...prev,
+        homepage_proof_wall: {
+          ...current,
+          images: [...existingImages, newHomeProofUrl.trim()]
+        }
+      };
+    });
+    setNewHomeProofUrl('');
+  };
+
+  const handleDeleteHomeProof = (idx: number) => {
+    setCmsData(prev => {
+      const current = prev.homepage_proof_wall || defaultCmsContent.homepage_proof_wall!;
+      const updated = [...(current.images || [])];
+      updated.splice(idx, 1);
+      return {
+        ...prev,
+        homepage_proof_wall: {
+          ...current,
+          images: updated
+        }
+      };
+    });
+  };
+
+  const handleMoveHomeProof = (idx: number, direction: 'up' | 'down') => {
+    setCmsData(prev => {
+      const current = prev.homepage_proof_wall || defaultCmsContent.homepage_proof_wall!;
+      const updated = [...(current.images || [])];
+      const targetIdx = direction === 'up' ? idx - 1 : idx + 1;
+      if (targetIdx < 0 || targetIdx >= updated.length) return prev;
+      const temp = updated[idx];
+      updated[idx] = updated[targetIdx];
+      updated[targetIdx] = temp;
+      return {
+        ...prev,
+        homepage_proof_wall: {
+          ...current,
+          images: updated
+        }
+      };
+    });
+  };
+
   const handleAddFaq = () => {
     if (!newFaq.q || !newFaq.a) return;
     const updated = [...cmsData.faqs, newFaq];
@@ -1271,7 +1380,8 @@ export default function AdminCmsPage() {
             { id: 'who', label: '8. 🎯 Who Is This For', icon: ShieldCheck },
             { id: 'lms', label: '9. 📚 Curriculum LMS', icon: BookOpen },
             { id: 'bonuses', label: '10. 🎁 6 Bonuses', icon: Gift },
-            { id: 'reviews', label: '11. 🏆 Proof Wall', icon: Award },
+            { id: 'reviews', label: '11A. 🏆 Proof Wall (Checkout)', icon: Award },
+            { id: 'proofwall_home', label: '11B. 🌟 Proof Wall (Homepage)', icon: Star },
             { id: 'options', label: '12. ⚖️ 2 Options Left', icon: SlidersHorizontal },
             { id: 'cost', label: '13. ⏳ Cost of Waiting', icon: Clock },
             { id: 'faqs', label: '14. ❓ FAQs', icon: HelpCircle },
@@ -3760,6 +3870,274 @@ export default function AdminCmsPage() {
                 </div>
               </div>
             )}
+
+          </div>
+        )}
+
+        {/* ========================================================================= */}
+        {/* TAB 11B: 11B. PROOF WALL (HOMEPAGE - STUDENTS SUCCESS) */}
+        {/* ========================================================================= */}
+        {activeTab === 'proofwall_home' && (
+          <div className="space-y-6">
+            
+            {/* Section Header & Settings Box */}
+            <div className="bg-[#111827] border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-8 space-y-6 shadow-xl">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-white/5 pb-4">
+                <div>
+                  <h3 className="text-sm sm:text-lg font-black text-white flex items-center gap-2">
+                    <span>Homepage Proof Wall (Students Success)</span>
+                    <span className="text-[10px] bg-[#00A0DF]/20 text-[#00A0DF] border border-[#00A0DF]/30 px-2 py-0.5 rounded-full font-bold">
+                      Continuous Vertical Stream
+                    </span>
+                  </h3>
+                  <p className="text-[11px] sm:text-xs text-slate-400 mt-1">
+                    Manage the 2-column continuous vertical scrolling screenshot wall on the Homepage under &ldquo;Students Success&rdquo;. Upload full WhatsApp chat reviews and student proofs.
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleSaveAll}
+                  disabled={loading}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs font-black shadow-lg shadow-emerald-600/30 transition-all active:scale-95 flex-shrink-0"
+                >
+                  <Save size={14} />
+                  <span>{loading ? 'Saving...' : 'Save Homepage Proof'}</span>
+                </button>
+              </div>
+
+              {/* Title & Subtitle Config */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                    Pill Badge
+                  </label>
+                  <input
+                    type="text"
+                    value={cmsData.homepage_proof_wall?.badge ?? 'STUDENT RESULTS'}
+                    onChange={(e) => {
+                      const current = cmsData.homepage_proof_wall || defaultCmsContent.homepage_proof_wall!;
+                      setCmsData({
+                        ...cmsData,
+                        homepage_proof_wall: { ...current, badge: e.target.value }
+                      });
+                    }}
+                    className="w-full px-3 py-2 rounded-xl bg-[#0B0F19] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                    Section Heading
+                  </label>
+                  <input
+                    type="text"
+                    value={cmsData.homepage_proof_wall?.title ?? 'Students Success'}
+                    onChange={(e) => {
+                      const current = cmsData.homepage_proof_wall || defaultCmsContent.homepage_proof_wall!;
+                      setCmsData({
+                        ...cmsData,
+                        homepage_proof_wall: { ...current, title: e.target.value }
+                      });
+                    }}
+                    className="w-full px-3 py-2 rounded-xl bg-[#0B0F19] border border-white/10 text-xs font-bold text-white focus:outline-none focus:border-[#00A0DF]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                    Subtitle
+                  </label>
+                  <input
+                    type="text"
+                    value={cmsData.homepage_proof_wall?.subtitle ?? 'Real screenshots and verified reviews shared by our students — unedited and unfiltered.'}
+                    onChange={(e) => {
+                      const current = cmsData.homepage_proof_wall || defaultCmsContent.homepage_proof_wall!;
+                      setCmsData({
+                        ...cmsData,
+                        homepage_proof_wall: { ...current, subtitle: e.target.value }
+                      });
+                    }}
+                    className="w-full px-3 py-2 rounded-xl bg-[#0B0F19] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF]"
+                  />
+                </div>
+              </div>
+
+              {/* Upload Screenshots Section */}
+              <div className="pt-2">
+                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                  Upload New WhatsApp Reviews &amp; Chat Screenshots
+                </label>
+
+                <div className="relative border-2 border-dashed border-[#00A0DF]/30 hover:border-[#00A0DF] bg-[#0B0F19] rounded-2xl p-5 sm:p-7 text-center transition-all group cursor-pointer">
+                  <input
+                    ref={homeProofFileInputRef}
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    disabled={homeProofUploading}
+                    onChange={handleHomeProofUpload}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed z-10"
+                  />
+                  <div className="flex flex-col items-center justify-center pointer-events-none">
+                    <div className="w-12 h-12 rounded-2xl bg-[#00A0DF]/10 group-hover:bg-[#00A0DF]/20 text-[#00A0DF] flex items-center justify-center mb-3 transition-colors">
+                      {homeProofUploading ? (
+                        <Loader2 size={24} className="animate-spin" />
+                      ) : (
+                        <UploadCloud size={24} />
+                      )}
+                    </div>
+
+                    <p className="text-xs sm:text-sm font-bold text-white mb-1">
+                      {homeProofUploading ? 'Uploading Screenshot...' : 'Click or Drag & Drop Images Here'}
+                    </p>
+                    <p className="text-[11px] text-slate-400 max-w-sm">
+                      Supports JPG, PNG, WEBP (multiple files allowed). Images will be added to the continuous vertical scrolling stream.
+                    </p>
+                  </div>
+                </div>
+
+                {homeProofUploadStatus && (
+                  <div className="mt-3 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs flex items-center gap-2">
+                    <CheckCircle2 size={14} className="flex-shrink-0" />
+                    <span>{homeProofUploadStatus}</span>
+                  </div>
+                )}
+
+                {homeProofUploadError && (
+                  <div className="mt-3 p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs flex items-center gap-2">
+                    <X size={14} className="flex-shrink-0" />
+                    <span>{homeProofUploadError}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Or Add Image by Direct URL */}
+              <div className="pt-2 border-t border-white/5">
+                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                  Or Add Screenshot via Direct Image URL
+                </label>
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <Link2 size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                    <input
+                      type="url"
+                      placeholder="https://.../screenshot.jpg or /uploads/reviews/..."
+                      value={newHomeProofUrl}
+                      onChange={(e) => setNewHomeProofUrl(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleAddHomeProofUrl();
+                        }
+                      }}
+                      className="w-full pl-9 pr-3 py-2 rounded-xl bg-[#0B0F19] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF]"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleAddHomeProofUrl}
+                    disabled={!newHomeProofUrl.trim()}
+                    className="px-4 py-2 rounded-xl bg-[#00A0DF] hover:bg-[#008AC2] disabled:opacity-40 text-white text-xs font-bold transition-all flex items-center gap-1.5 flex-shrink-0"
+                  >
+                    <Plus size={14} />
+                    <span>Add URL</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Active Screenshots Gallery / Reorder / Delete */}
+            <div className="bg-[#111827] border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-8 space-y-4 shadow-xl">
+              <div className="flex items-center justify-between border-b border-white/5 pb-3">
+                <div className="flex items-center gap-2">
+                  <h4 className="text-xs sm:text-sm font-black text-white uppercase tracking-wider">
+                    Active Homepage Screenshots
+                  </h4>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#00A0DF]/20 text-[#00A0DF] border border-[#00A0DF]/30 font-bold">
+                    {(cmsData.homepage_proof_wall?.images || defaultCmsContent.homepage_proof_wall?.images || []).length} Total
+                  </span>
+                </div>
+                <span className="text-[11px] text-slate-400">
+                  Displayed in 2 continuous vertical scrolling columns
+                </span>
+              </div>
+
+              {(cmsData.homepage_proof_wall?.images || defaultCmsContent.homepage_proof_wall?.images || []).length === 0 ? (
+                <div className="text-center py-10 text-slate-500 text-xs">
+                  No screenshots added yet. Upload WhatsApp chats or paste an image URL above to activate the stream.
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
+                  {(cmsData.homepage_proof_wall?.images || defaultCmsContent.homepage_proof_wall?.images || []).map((imgUrl, idx) => (
+                    <div
+                      key={`hp-review-${idx}`}
+                      className="group relative bg-[#0B0F19] border border-white/10 hover:border-[#00A0DF]/60 rounded-2xl overflow-hidden flex flex-col shadow-md transition-all"
+                    >
+                      {/* Image Thumbnail Preview */}
+                      <div className="relative aspect-[3/4] bg-black/40 overflow-hidden flex items-center justify-center">
+                        <img
+                          src={imgUrl}
+                          alt={`Homepage Review ${idx + 1}`}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          onError={(e) => {
+                            (e.target as HTMLElement).style.opacity = '0.3';
+                          }}
+                        />
+                        {/* Overlay Badge */}
+                        <div className="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-black/70 backdrop-blur-xs text-[10px] font-bold text-white border border-white/10">
+                          #{idx + 1}
+                        </div>
+                      </div>
+
+                      {/* Action Bar (Reorder & Delete) */}
+                      <div className="p-2 bg-[#111827] border-t border-white/5 flex items-center justify-between gap-1 text-xs">
+                        <div className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            title="Move Earlier in Stream"
+                            disabled={idx === 0}
+                            onClick={() => handleMoveHomeProof(idx, 'up')}
+                            className="p-1 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-30 text-white transition-colors"
+                          >
+                            ▲
+                          </button>
+                          <button
+                            type="button"
+                            title="Move Later in Stream"
+                            disabled={idx === (cmsData.homepage_proof_wall?.images || []).length - 1}
+                            onClick={() => handleMoveHomeProof(idx, 'down')}
+                            className="p-1 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-30 text-white transition-colors"
+                          >
+                            ▼
+                          </button>
+                        </div>
+
+                        <button
+                          type="button"
+                          title="Delete Screenshot"
+                          onClick={() => handleDeleteHomeProof(idx)}
+                          className="p-1 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-colors"
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Bottom Quick Save */}
+              <div className="pt-4 border-t border-white/5 flex justify-end">
+                <button
+                  type="button"
+                  onClick={handleSaveAll}
+                  disabled={loading}
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs sm:text-sm font-black shadow-lg shadow-emerald-600/30 transition-all active:scale-95"
+                >
+                  <Save size={15} />
+                  <span>{loading ? 'Saving...' : 'Save Homepage Proof Changes'}</span>
+                </button>
+              </div>
+            </div>
 
           </div>
         )}
