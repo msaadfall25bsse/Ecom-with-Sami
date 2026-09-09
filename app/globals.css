@@ -779,44 +779,34 @@ input[type="submit"] {
 /* Vertical Scrolling Screenshot Reviews (LearnWithAfaq Style with WebKit 3D GPU Fix) */
 @keyframes scrollReviewsUp {
   0% {
-    -webkit-transform: translate3d(0, 0, 0);
-    transform: translate3d(0, 0, 0);
+    -webkit-transform: translateY(0);
+    transform: translateY(0);
   }
   100% {
-    -webkit-transform: translate3d(0, -50%, 0);
-    transform: translate3d(0, -50%, 0);
+    -webkit-transform: translateY(-50%);
+    transform: translateY(-50%);
   }
 }
 
 @-webkit-keyframes scrollReviewsUp {
   0% {
-    -webkit-transform: translate3d(0, 0, 0);
-    transform: translate3d(0, 0, 0);
+    -webkit-transform: translateY(0);
+    transform: translateY(0);
   }
   100% {
-    -webkit-transform: translate3d(0, -50%, 0);
-    transform: translate3d(0, -50%, 0);
+    -webkit-transform: translateY(-50%);
+    transform: translateY(-50%);
   }
 }
 
 .animate-scroll-vertical-col1 {
   animation: scrollReviewsUp 38s linear infinite;
   -webkit-animation: scrollReviewsUp 38s linear infinite;
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
-  -webkit-transform: translate3d(0, 0, 0);
-  transform: translate3d(0, 0, 0);
-  will-change: transform;
 }
 
 .animate-scroll-vertical-col2 {
   animation: scrollReviewsUp 30s linear infinite;
   -webkit-animation: scrollReviewsUp 30s linear infinite;
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
-  -webkit-transform: translate3d(0, 0, 0);
-  transform: translate3d(0, 0, 0);
-  will-change: transform;
 }
 
 /* Desktop-only hover pause for checkout reviews (Prevents mobile/iPhone Safari touch from sticking paused) */
@@ -831,24 +821,15 @@ input[type="submit"] {
 
 /* Homepage & Success Stories Proof Wall: Dedicated Slow Continuous Infinite Scroll (No Pause, Cross-Platform Safe) */
 .animate-proofwall-col1 {
-  animation: scrollReviewsUp 65s linear infinite;
-  -webkit-animation: scrollReviewsUp 65s linear infinite;
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
-  -webkit-transform: translate3d(0, 0, 0);
-  transform: translate3d(0, 0, 0);
-  will-change: transform;
+  animation: scrollReviewsUp 75s linear infinite;
+  -webkit-animation: scrollReviewsUp 75s linear infinite;
 }
 
 .animate-proofwall-col2 {
-  animation: scrollReviewsUp 55s linear infinite;
-  -webkit-animation: scrollReviewsUp 55s linear infinite;
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
-  -webkit-transform: translate3d(0, 0, 0);
-  transform: translate3d(0, 0, 0);
-  will-change: transform;
+  animation: scrollReviewsUp 65s linear infinite;
+  -webkit-animation: scrollReviewsUp 65s linear infinite;
 }
+
 
 
 

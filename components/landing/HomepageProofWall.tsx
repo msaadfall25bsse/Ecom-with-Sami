@@ -106,7 +106,7 @@ export function HomepageProofWall({ data }: HomepageProofWallProps) {
       </div>
 
       {/* Viewport Frame: 100% Non-clickable, Pure Display, Touch-Safe for iPhone Safari & All Devices */}
-      <div className="relative h-[560px] xs:h-[620px] sm:h-[680px] w-full max-w-3xl mx-auto overflow-hidden rounded-3xl border border-white/10 bg-[#070B14]/80 shadow-2xl pointer-events-none select-none">
+      <div className="relative h-[640px] xs:h-[720px] sm:h-[800px] w-full max-w-3xl mx-auto overflow-hidden rounded-3xl border border-white/10 bg-[#070B14]/80 shadow-2xl pointer-events-none select-none">
         
         {/* Top Soft Gradient Fade Mask */}
         <div className="absolute top-0 inset-x-0 h-20 sm:h-28 bg-gradient-to-b from-[#070B14] via-[#070B14]/80 to-transparent z-20 pointer-events-none" />
@@ -117,13 +117,13 @@ export function HomepageProofWall({ data }: HomepageProofWallProps) {
         {/* 2-Column Continuous Infinite Vertical Marquee */}
         <div className="grid grid-cols-2 gap-3 sm:gap-4 p-3 sm:p-4 h-full pointer-events-none">
           
-          {/* Column 1 (Slow Continuous Infinite Vertical Scroll 65s) */}
+          {/* Column 1 (Slow Continuous Infinite Vertical Scroll 75s - 100% Full-Size Uncropped) */}
           <div className="overflow-hidden relative h-full">
             <div className="flex flex-col gap-3 sm:gap-4 animate-proofwall-col1">
               {loopCol1.map((src, i) => (
                 <div
                   key={`home-col1-${i}`}
-                  className="relative w-full h-[220px] xs:h-[240px] sm:h-[270px] rounded-2xl overflow-hidden border border-white/10 bg-[#111827] shadow-lg flex-shrink-0"
+                  className="relative w-full rounded-2xl overflow-hidden border border-white/10 bg-[#111827] shadow-lg flex-shrink-0"
                 >
                   <img
                     src={src}
@@ -133,20 +133,20 @@ export function HomepageProofWall({ data }: HomepageProofWallProps) {
                     onError={(e) => {
                       (e.target as HTMLElement).style.display = 'none';
                     }}
-                    className="w-full h-full object-cover object-top rounded-2xl block pointer-events-none"
+                    className="w-full h-auto object-cover rounded-2xl block pointer-events-none"
                   />
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Column 2 (Slow Continuous Infinite Vertical Scroll 55s - Parallax) */}
+          {/* Column 2 (Slow Continuous Infinite Vertical Scroll 65s - 100% Full-Size Uncropped Parallax) */}
           <div className="overflow-hidden relative h-full">
             <div className="flex flex-col gap-3 sm:gap-4 animate-proofwall-col2">
               {loopCol2.map((src, i) => (
                 <div
                   key={`home-col2-${i}`}
-                  className="relative w-full h-[220px] xs:h-[240px] sm:h-[270px] rounded-2xl overflow-hidden border border-white/10 bg-[#111827] shadow-lg flex-shrink-0"
+                  className="relative w-full rounded-2xl overflow-hidden border border-white/10 bg-[#111827] shadow-lg flex-shrink-0"
                 >
                   <img
                     src={src}
@@ -156,7 +156,7 @@ export function HomepageProofWall({ data }: HomepageProofWallProps) {
                     onError={(e) => {
                       (e.target as HTMLElement).style.display = 'none';
                     }}
-                    className="w-full h-full object-cover object-top rounded-2xl block pointer-events-none"
+                    className="w-full h-auto object-cover rounded-2xl block pointer-events-none"
                   />
                 </div>
               ))}
