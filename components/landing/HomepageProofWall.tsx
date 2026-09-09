@@ -62,14 +62,18 @@ export function HomepageProofWall({ data }: HomepageProofWallProps) {
     col2Images.push(...col1Images);
   }
 
-  // Multiply items safely so height fills the container without any gaps
-  let baseCol1: string[] = [];
-  while (baseCol1.length < 5 && col1Images.length > 0) {
-    baseCol1 = baseCol1.concat(col1Images);
+  // Cap unique items per column to 4 (duplicated once = 8 items total)
+  // With cards at ~240px, total height is ~2,050px — perfectly filling viewport and well under iOS Safari's 4,096px GPU limit
+  const col1Slice = col1Images.slice(0, 4);
+  const col2Slice = col2Images.slice(0, 4);
+
+  let baseCol1: string[] = [...col1Slice];
+  while (baseCol1.length < 4 && col1Slice.length > 0) {
+    baseCol1 = baseCol1.concat(col1Slice);
   }
-  let baseCol2: string[] = [];
-  while (baseCol2.length < 5 && col2Images.length > 0) {
-    baseCol2 = baseCol2.concat(col2Images);
+  let baseCol2: string[] = [...col2Slice];
+  while (baseCol2.length < 4 && col2Slice.length > 0) {
+    baseCol2 = baseCol2.concat(col2Slice);
   }
 
   const loopCol1 = [...baseCol1, ...baseCol1];
@@ -119,17 +123,17 @@ export function HomepageProofWall({ data }: HomepageProofWallProps) {
               {loopCol1.map((src, i) => (
                 <div
                   key={`home-col1-${i}`}
-                  className="relative rounded-2xl overflow-hidden border border-white/10 bg-[#111827] shadow-lg flex-shrink-0"
+                  className="relative w-full h-[220px] xs:h-[240px] sm:h-[270px] rounded-2xl overflow-hidden border border-white/10 bg-[#111827] shadow-lg flex-shrink-0"
                 >
                   <img
                     src={src}
                     alt="Student Result Review"
-                    loading="lazy"
-                    decoding="async"
+                    loading="eager"
+                    decoding="auto"
                     onError={(e) => {
                       (e.target as HTMLElement).style.display = 'none';
                     }}
-                    className="w-full h-auto object-cover rounded-2xl block"
+                    className="w-full h-full object-cover object-top rounded-2xl block pointer-events-none"
                   />
                 </div>
               ))}
@@ -142,17 +146,17 @@ export function HomepageProofWall({ data }: HomepageProofWallProps) {
               {loopCol2.map((src, i) => (
                 <div
                   key={`home-col2-${i}`}
-                  className="relative rounded-2xl overflow-hidden border border-white/10 bg-[#111827] shadow-lg flex-shrink-0"
+                  className="relative w-full h-[220px] xs:h-[240px] sm:h-[270px] rounded-2xl overflow-hidden border border-white/10 bg-[#111827] shadow-lg flex-shrink-0"
                 >
                   <img
                     src={src}
                     alt="Student Result Review"
-                    loading="lazy"
-                    decoding="async"
+                    loading="eager"
+                    decoding="auto"
                     onError={(e) => {
                       (e.target as HTMLElement).style.display = 'none';
                     }}
-                    className="w-full h-auto object-cover rounded-2xl block"
+                    className="w-full h-full object-cover object-top rounded-2xl block pointer-events-none"
                   />
                 </div>
               ))}
