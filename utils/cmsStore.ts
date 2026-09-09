@@ -187,6 +187,23 @@ export interface CmsContentSchema {
     subtitle: string;
     images: string[];
   };
+  success_page?: {
+    badge: string;
+    title_line1: string;
+    title_highlight: string;
+    subtitle: string;
+    stat1_value: string;
+    stat1_label: string;
+    stat2_value: string;
+    stat2_label: string;
+    stat3_value: string;
+    stat3_label: string;
+    stat4_value: string;
+    stat4_label: string;
+    section_badge: string;
+    section_title: string;
+    section_subtitle: string;
+  };
 }
 
 export interface ThemeCustomColors {
@@ -766,6 +783,23 @@ export const defaultCmsContent: CmsContentSchema = {
     title: 'Students Success',
     subtitle: 'Real screenshots and verified reviews shared by our students — unedited and unfiltered.',
     images: ['/uploads/reviews/whatsapp_review_sample.jpg']
+  },
+  success_page: {
+    badge: 'VERIFIED STUDENT PROOF',
+    title_line1: 'Real Students. Real Stores.',
+    title_highlight: 'Real Results.',
+    subtitle: 'Explore real earnings screenshots, case studies, and reviews from over 9,700 students who joined the Ecom With Sami mentorship.',
+    stat1_value: '9,700+',
+    stat1_label: 'Total Students',
+    stat2_value: '89%',
+    stat2_label: 'First Sale in 14 Days',
+    stat3_value: '4.9 / 5.0',
+    stat3_label: 'Student Rating',
+    stat4_value: 'PKR 3,799',
+    stat4_label: 'One-Time Fee',
+    section_badge: 'STUDENT PROOF',
+    section_title: 'Featured Case Studies & Results',
+    section_subtitle: 'Real screenshots and verified reviews shared by our students — unedited and unfiltered.'
   }
 };
 

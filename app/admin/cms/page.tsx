@@ -58,7 +58,7 @@ export default function AdminCmsPage() {
   const router = useRouter();
   const [authChecking, setAuthChecking] = useState(true);
   const [activeTab, setActiveTab] = useState<
-    'marquee' | 'hero' | 'stats' | 'why' | 'what' | 'mentor' | 'video_reviews' | 'who' | 'lms' | 'bonuses' | 'reviews' | 'proofwall_home' | 'options' | 'cost' | 'faqs' | 'cta' | 'contact' | 'payments' | 'themes' | 'pixels'
+    'marquee' | 'hero' | 'stats' | 'why' | 'what' | 'mentor' | 'video_reviews' | 'who' | 'lms' | 'bonuses' | 'reviews' | 'proofwall_home' | 'options' | 'cost' | 'faqs' | 'cta' | 'contact' | 'payments' | 'themes' | 'pixels' | 'success_page'
   >('hero');
   const [cmsData, setCmsData] = useState<CmsContentSchema>(defaultCmsContent);
   const [modules, setModules] = useState<Module[]>(initialModules);
@@ -1389,7 +1389,8 @@ export default function AdminCmsPage() {
             { id: 'contact', label: '16. 📱 Contact & Footer', icon: Globe2 },
             { id: 'payments', label: '17. 💳 Bank Accounts', icon: CreditCard },
             { id: 'themes', label: '18. 🎨 Theme Colors', icon: Palette },
-            { id: 'pixels', label: '19. 🎯 Pixels & Code', icon: Settings }
+            { id: 'pixels', label: '19. 🎯 Pixels & Code', icon: Settings },
+            { id: 'success_page', label: '20. 🏆 Success Stories Page', icon: Award }
           ].map((t) => {
             const Icon = t.icon;
             return (
@@ -5286,6 +5287,357 @@ export default function AdminCmsPage() {
               </div>
 
             </div>
+          </div>
+        )}
+
+        {/* ========================================================================= */}
+        {/* TAB 20: SUCCESS STORIES PAGE (/success) */}
+        {/* ========================================================================= */}
+        {activeTab === 'success_page' && (
+          <div className="space-y-6">
+            
+            {/* Top Settings Bar */}
+            <div className="bg-[#111827] border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-8 space-y-6 shadow-xl">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-white/5 pb-4">
+                <div>
+                  <h3 className="text-sm sm:text-lg font-black text-white flex items-center gap-2">
+                    <Award size={20} className="text-[#00A0DF]" />
+                    <span>Success Stories Page Configuration (/success)</span>
+                  </h3>
+                  <p className="text-[11px] sm:text-xs text-slate-400 mt-1">
+                    Manage the header hero banner, 4 key metrics, and reviews stream settings shown when visitors click &ldquo;Success Stories&rdquo; in the navbar.
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleSaveAll}
+                  disabled={loading}
+                  className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs font-black shadow-lg shadow-emerald-600/30 transition-all active:scale-95 flex-shrink-0"
+                >
+                  <Save size={14} />
+                  <span>{loading ? 'Saving...' : 'Save Success Page'}</span>
+                </button>
+              </div>
+
+              {/* 1. Header Hero Banner */}
+              <div className="space-y-4">
+                <h4 className="text-xs font-black uppercase tracking-wider text-[#00A0DF]">
+                  1. Top Header Banner Content
+                </h4>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                      Pill Badge
+                    </label>
+                    <input
+                      type="text"
+                      value={cmsData.success_page?.badge ?? defaultCmsContent.success_page?.badge}
+                      onChange={(e) => {
+                        const current = cmsData.success_page || defaultCmsContent.success_page!;
+                        setCmsData({
+                          ...cmsData,
+                          success_page: { ...current, badge: e.target.value }
+                        });
+                      }}
+                      className="w-full px-3 py-2 rounded-xl bg-[#0B0F19] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                      Title Line 1
+                    </label>
+                    <input
+                      type="text"
+                      value={cmsData.success_page?.title_line1 ?? defaultCmsContent.success_page?.title_line1}
+                      onChange={(e) => {
+                        const current = cmsData.success_page || defaultCmsContent.success_page!;
+                        setCmsData({
+                          ...cmsData,
+                          success_page: { ...current, title_line1: e.target.value }
+                        });
+                      }}
+                      className="w-full px-3 py-2 rounded-xl bg-[#0B0F19] border border-white/10 text-xs font-bold text-white focus:outline-none focus:border-[#00A0DF]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                      Title Highlight (Cyan Text)
+                    </label>
+                    <input
+                      type="text"
+                      value={cmsData.success_page?.title_highlight ?? defaultCmsContent.success_page?.title_highlight}
+                      onChange={(e) => {
+                        const current = cmsData.success_page || defaultCmsContent.success_page!;
+                        setCmsData({
+                          ...cmsData,
+                          success_page: { ...current, title_highlight: e.target.value }
+                        });
+                      }}
+                      className="w-full px-3 py-2 rounded-xl bg-[#0B0F19] border border-white/10 text-xs font-bold text-[#00A0DF] focus:outline-none focus:border-[#00A0DF]"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                    Subtitle Description
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={cmsData.success_page?.subtitle ?? defaultCmsContent.success_page?.subtitle}
+                    onChange={(e) => {
+                      const current = cmsData.success_page || defaultCmsContent.success_page!;
+                      setCmsData({
+                        ...cmsData,
+                        success_page: { ...current, subtitle: e.target.value }
+                      });
+                    }}
+                    className="w-full px-3 py-2 rounded-xl bg-[#0B0F19] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF] resize-none"
+                  />
+                </div>
+              </div>
+
+              {/* 2. 4 Key Metric Stat Boxes */}
+              <div className="pt-4 border-t border-white/5 space-y-4">
+                <h4 className="text-xs font-black uppercase tracking-wider text-emerald-400">
+                  2. 4 Key Metric Highlight Boxes
+                </h4>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                  {/* Stat 1 */}
+                  <div className="bg-[#0B0F19] border border-white/10 rounded-2xl p-3.5 space-y-2">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Metric #1</span>
+                    <div>
+                      <label className="block text-[9.5px] text-slate-500 mb-0.5">Value</label>
+                      <input
+                        type="text"
+                        value={cmsData.success_page?.stat1_value ?? defaultCmsContent.success_page?.stat1_value}
+                        onChange={(e) => {
+                          const current = cmsData.success_page || defaultCmsContent.success_page!;
+                          setCmsData({
+                            ...cmsData,
+                            success_page: { ...current, stat1_value: e.target.value }
+                          });
+                        }}
+                        className="w-full px-2.5 py-1.5 rounded-lg bg-[#111827] border border-white/10 text-xs font-black text-[#00A0DF]"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[9.5px] text-slate-500 mb-0.5">Label</label>
+                      <input
+                        type="text"
+                        value={cmsData.success_page?.stat1_label ?? defaultCmsContent.success_page?.stat1_label}
+                        onChange={(e) => {
+                          const current = cmsData.success_page || defaultCmsContent.success_page!;
+                          setCmsData({
+                            ...cmsData,
+                            success_page: { ...current, stat1_label: e.target.value }
+                          });
+                        }}
+                        className="w-full px-2.5 py-1.5 rounded-lg bg-[#111827] border border-white/10 text-xs text-white"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Stat 2 */}
+                  <div className="bg-[#0B0F19] border border-white/10 rounded-2xl p-3.5 space-y-2">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Metric #2</span>
+                    <div>
+                      <label className="block text-[9.5px] text-slate-500 mb-0.5">Value</label>
+                      <input
+                        type="text"
+                        value={cmsData.success_page?.stat2_value ?? defaultCmsContent.success_page?.stat2_value}
+                        onChange={(e) => {
+                          const current = cmsData.success_page || defaultCmsContent.success_page!;
+                          setCmsData({
+                            ...cmsData,
+                            success_page: { ...current, stat2_value: e.target.value }
+                          });
+                        }}
+                        className="w-full px-2.5 py-1.5 rounded-lg bg-[#111827] border border-white/10 text-xs font-black text-emerald-400"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[9.5px] text-slate-500 mb-0.5">Label</label>
+                      <input
+                        type="text"
+                        value={cmsData.success_page?.stat2_label ?? defaultCmsContent.success_page?.stat2_label}
+                        onChange={(e) => {
+                          const current = cmsData.success_page || defaultCmsContent.success_page!;
+                          setCmsData({
+                            ...cmsData,
+                            success_page: { ...current, stat2_label: e.target.value }
+                          });
+                        }}
+                        className="w-full px-2.5 py-1.5 rounded-lg bg-[#111827] border border-white/10 text-xs text-white"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Stat 3 */}
+                  <div className="bg-[#0B0F19] border border-white/10 rounded-2xl p-3.5 space-y-2">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Metric #3</span>
+                    <div>
+                      <label className="block text-[9.5px] text-slate-500 mb-0.5">Value</label>
+                      <input
+                        type="text"
+                        value={cmsData.success_page?.stat3_value ?? defaultCmsContent.success_page?.stat3_value}
+                        onChange={(e) => {
+                          const current = cmsData.success_page || defaultCmsContent.success_page!;
+                          setCmsData({
+                            ...cmsData,
+                            success_page: { ...current, stat3_value: e.target.value }
+                          });
+                        }}
+                        className="w-full px-2.5 py-1.5 rounded-lg bg-[#111827] border border-white/10 text-xs font-black text-amber-400"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[9.5px] text-slate-500 mb-0.5">Label</label>
+                      <input
+                        type="text"
+                        value={cmsData.success_page?.stat3_label ?? defaultCmsContent.success_page?.stat3_label}
+                        onChange={(e) => {
+                          const current = cmsData.success_page || defaultCmsContent.success_page!;
+                          setCmsData({
+                            ...cmsData,
+                            success_page: { ...current, stat3_label: e.target.value }
+                          });
+                        }}
+                        className="w-full px-2.5 py-1.5 rounded-lg bg-[#111827] border border-white/10 text-xs text-white"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Stat 4 */}
+                  <div className="bg-[#0B0F19] border border-white/10 rounded-2xl p-3.5 space-y-2">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Metric #4</span>
+                    <div>
+                      <label className="block text-[9.5px] text-slate-500 mb-0.5">Value</label>
+                      <input
+                        type="text"
+                        value={cmsData.success_page?.stat4_value ?? defaultCmsContent.success_page?.stat4_value}
+                        onChange={(e) => {
+                          const current = cmsData.success_page || defaultCmsContent.success_page!;
+                          setCmsData({
+                            ...cmsData,
+                            success_page: { ...current, stat4_value: e.target.value }
+                          });
+                        }}
+                        className="w-full px-2.5 py-1.5 rounded-lg bg-[#111827] border border-white/10 text-xs font-black text-indigo-400"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[9.5px] text-slate-500 mb-0.5">Label</label>
+                      <input
+                        type="text"
+                        value={cmsData.success_page?.stat4_label ?? defaultCmsContent.success_page?.stat4_label}
+                        onChange={(e) => {
+                          const current = cmsData.success_page || defaultCmsContent.success_page!;
+                          setCmsData({
+                            ...cmsData,
+                            success_page: { ...current, stat4_label: e.target.value }
+                          });
+                        }}
+                        className="w-full px-2.5 py-1.5 rounded-lg bg-[#111827] border border-white/10 text-xs text-white"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* 3. Proof Wall Section Headers */}
+              <div className="pt-4 border-t border-white/5 space-y-4">
+                <h4 className="text-xs font-black uppercase tracking-wider text-amber-400">
+                  3. Proof Wall Section Headings (on /success)
+                </h4>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                      Section Pill Badge
+                    </label>
+                    <input
+                      type="text"
+                      value={cmsData.success_page?.section_badge ?? defaultCmsContent.success_page?.section_badge}
+                      onChange={(e) => {
+                        const current = cmsData.success_page || defaultCmsContent.success_page!;
+                        setCmsData({
+                          ...cmsData,
+                          success_page: { ...current, section_badge: e.target.value }
+                        });
+                      }}
+                      className="w-full px-3 py-2 rounded-xl bg-[#0B0F19] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                      Section Title
+                    </label>
+                    <input
+                      type="text"
+                      value={cmsData.success_page?.section_title ?? defaultCmsContent.success_page?.section_title}
+                      onChange={(e) => {
+                        const current = cmsData.success_page || defaultCmsContent.success_page!;
+                        setCmsData({
+                          ...cmsData,
+                          success_page: { ...current, section_title: e.target.value }
+                        });
+                      }}
+                      className="w-full px-3 py-2 rounded-xl bg-[#0B0F19] border border-white/10 text-xs font-bold text-white focus:outline-none focus:border-[#00A0DF]"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                    Section Subtitle
+                  </label>
+                  <input
+                    type="text"
+                    value={cmsData.success_page?.section_subtitle ?? defaultCmsContent.success_page?.section_subtitle}
+                    onChange={(e) => {
+                      const current = cmsData.success_page || defaultCmsContent.success_page!;
+                      setCmsData({
+                        ...cmsData,
+                        success_page: { ...current, section_subtitle: e.target.value }
+                      });
+                    }}
+                    className="w-full px-3 py-2 rounded-xl bg-[#0B0F19] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF]"
+                  />
+                </div>
+              </div>
+
+              {/* 4. Linked Review Stream Notice Box */}
+              <div className="p-4 rounded-2xl bg-[#00A0DF]/10 border border-[#00A0DF]/30 text-xs text-slate-300 space-y-1.5">
+                <div className="flex items-center gap-2 font-bold text-[#00A0DF]">
+                  <Sparkles size={16} />
+                  <span>Real WhatsApp Reviews Stream Is Automatically Synchronized</span>
+                </div>
+                <p className="text-[11px] text-slate-400 leading-relaxed">
+                  The vertical scrolling review screenshots on the Success Stories page are directly linked to your uploads in <strong>Tab 11B. Proof Wall (Homepage)</strong> ({ (cmsData.homepage_proof_wall?.images || []).length } screenshots active). Any image you upload, reorder, or delete in Tab 11B will automatically appear on the Success Stories page.
+                </p>
+              </div>
+
+              {/* Bottom Save Button */}
+              <div className="pt-3 border-t border-white/5 flex justify-end">
+                <button
+                  type="button"
+                  onClick={handleSaveAll}
+                  disabled={loading}
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs sm:text-sm font-black shadow-lg shadow-emerald-600/30 transition-all active:scale-95"
+                >
+                  <Save size={15} />
+                  <span>{loading ? 'Saving...' : 'Save Success Stories Page'}</span>
+                </button>
+              </div>
+            </div>
+
           </div>
         )}
 
