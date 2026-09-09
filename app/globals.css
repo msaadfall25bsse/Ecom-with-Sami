@@ -776,23 +776,46 @@ input[type="submit"] {
   pointer-events: none !important;
 }
 
-/* Vertical Scrolling Screenshot Reviews (LearnWithAfaq Style) */
+/* Vertical Scrolling Screenshot Reviews (LearnWithAfaq Style with WebKit 3D GPU Fix) */
 @keyframes scrollReviewsUp {
   0% {
-    transform: translateY(0);
+    -webkit-transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0);
   }
   100% {
-    transform: translateY(-50%);
+    -webkit-transform: translate3d(0, -50%, 0);
+    transform: translate3d(0, -50%, 0);
+  }
+}
+
+@-webkit-keyframes scrollReviewsUp {
+  0% {
+    -webkit-transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    -webkit-transform: translate3d(0, -50%, 0);
+    transform: translate3d(0, -50%, 0);
   }
 }
 
 .animate-scroll-vertical-col1 {
   animation: scrollReviewsUp 38s linear infinite;
+  -webkit-animation: scrollReviewsUp 38s linear infinite;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  -webkit-transform: translate3d(0, 0, 0);
+  transform: translate3d(0, 0, 0);
   will-change: transform;
 }
 
 .animate-scroll-vertical-col2 {
   animation: scrollReviewsUp 30s linear infinite;
+  -webkit-animation: scrollReviewsUp 30s linear infinite;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  -webkit-transform: translate3d(0, 0, 0);
+  transform: translate3d(0, 0, 0);
   will-change: transform;
 }
 
@@ -803,15 +826,34 @@ input[type="submit"] {
   animation-play-state: paused;
 }
 
-/* Homepage Proof Wall - Ultra-Slow & Relaxed Continuous Glide */
+/* Homepage Proof Wall - Ultra-Slow & Relaxed Continuous Glide (iOS Safari WebKit Optimized) */
 .animate-homepage-proof-col1 {
   animation: scrollReviewsUp 95s linear infinite;
+  -webkit-animation: scrollReviewsUp 95s linear infinite;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  -webkit-perspective: 1000px;
+  perspective: 1000px;
+  -webkit-transform: translate3d(0, 0, 0);
+  transform: translate3d(0, 0, 0);
+  transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
   will-change: transform;
 }
 
 .animate-homepage-proof-col2 {
   animation: scrollReviewsUp 80s linear infinite;
+  -webkit-animation: scrollReviewsUp 80s linear infinite;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  -webkit-perspective: 1000px;
+  perspective: 1000px;
+  -webkit-transform: translate3d(0, 0, 0);
+  transform: translate3d(0, 0, 0);
+  transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
   will-change: transform;
 }
+
 
 

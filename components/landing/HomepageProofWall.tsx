@@ -63,12 +63,13 @@ export function HomepageProofWall({ data }: HomepageProofWallProps) {
   }
 
   // Multiply items safely so height fills the container without any gaps
+  // Capped at length 4 to keep DOM and texture height safe for iOS Safari memory limits
   let baseCol1: string[] = [];
-  while (baseCol1.length < 6 && col1Images.length > 0) {
+  while (baseCol1.length < 4 && col1Images.length > 0) {
     baseCol1 = baseCol1.concat(col1Images);
   }
   let baseCol2: string[] = [];
-  while (baseCol2.length < 6 && col2Images.length > 0) {
+  while (baseCol2.length < 4 && col2Images.length > 0) {
     baseCol2 = baseCol2.concat(col2Images);
   }
 
@@ -102,7 +103,7 @@ export function HomepageProofWall({ data }: HomepageProofWallProps) {
       </div>
 
       {/* Viewport Frame with Gradient Fading Masks (Top & Bottom) */}
-      <div className="relative h-[640px] xs:h-[700px] sm:h-[760px] w-full max-w-3xl mx-auto overflow-hidden rounded-3xl border border-slate-800 bg-[#070B14] shadow-2xl select-none">
+      <div className="relative h-[620px] xs:h-[680px] sm:h-[740px] w-full max-w-3xl mx-auto overflow-hidden rounded-3xl border border-slate-800 bg-[#070B14] shadow-2xl select-none isolate transform-gpu">
         
         {/* Top Soft Gradient Fade Mask */}
         <div className="absolute top-0 inset-x-0 h-24 sm:h-32 bg-gradient-to-b from-[#070B14] via-[#070B14]/85 to-transparent pointer-events-none z-20" />
@@ -111,7 +112,7 @@ export function HomepageProofWall({ data }: HomepageProofWallProps) {
         <div className="absolute bottom-0 inset-x-0 h-24 sm:h-32 bg-gradient-to-t from-[#070B14] via-[#070B14]/85 to-transparent pointer-events-none z-20" />
 
         {/* 2-Column Marquee Grid */}
-        <div className="grid grid-cols-2 gap-3.5 sm:gap-5 p-3.5 sm:p-5 h-full pointer-events-none">
+        <div className="grid grid-cols-2 gap-3.5 sm:gap-5 p-3.5 sm:p-5 h-full">
           
           {/* Column 1 (Ultra-slow continuous vertical scroll) */}
           <div className="overflow-hidden relative h-full">
@@ -119,7 +120,7 @@ export function HomepageProofWall({ data }: HomepageProofWallProps) {
               {loopCol1.map((src, i) => (
                 <div
                   key={`home-col1-${i}`}
-                  className="relative rounded-2xl overflow-hidden border border-white/10 bg-[#111827] shadow-lg flex-shrink-0"
+                  className="relative rounded-2xl overflow-hidden border border-white/10 bg-[#111827] shadow-lg flex-shrink-0 max-h-[360px] xs:max-h-[400px] sm:max-h-[440px]"
                 >
                   <img
                     src={src}
@@ -129,7 +130,7 @@ export function HomepageProofWall({ data }: HomepageProofWallProps) {
                     onError={(e) => {
                       (e.target as HTMLElement).style.display = 'none';
                     }}
-                    className="w-full h-auto object-cover rounded-2xl block"
+                    className="w-full h-auto max-h-[360px] xs:max-h-[400px] sm:max-h-[440px] object-cover object-top rounded-2xl block pointer-events-none"
                   />
                 </div>
               ))}
@@ -142,7 +143,7 @@ export function HomepageProofWall({ data }: HomepageProofWallProps) {
               {loopCol2.map((src, i) => (
                 <div
                   key={`home-col2-${i}`}
-                  className="relative rounded-2xl overflow-hidden border border-white/10 bg-[#111827] shadow-lg flex-shrink-0"
+                  className="relative rounded-2xl overflow-hidden border border-white/10 bg-[#111827] shadow-lg flex-shrink-0 max-h-[360px] xs:max-h-[400px] sm:max-h-[440px]"
                 >
                   <img
                     src={src}
@@ -152,7 +153,7 @@ export function HomepageProofWall({ data }: HomepageProofWallProps) {
                     onError={(e) => {
                       (e.target as HTMLElement).style.display = 'none';
                     }}
-                    className="w-full h-auto object-cover rounded-2xl block"
+                    className="w-full h-auto max-h-[360px] xs:max-h-[400px] sm:max-h-[440px] object-cover object-top rounded-2xl block pointer-events-none"
                   />
                 </div>
               ))}
