@@ -95,7 +95,13 @@ function parseCmsSchema(parsed: any): CmsContentSchema {
           ...defaultCmsContent.success_page,
           ...parsed.success_page,
         }
-      : defaultCmsContent.success_page
+      : defaultCmsContent.success_page,
+    checkout_page: parsed.checkout_page
+      ? {
+          ...defaultCmsContent.checkout_page,
+          ...parsed.checkout_page,
+        }
+      : defaultCmsContent.checkout_page
   };
 }
 
@@ -165,6 +171,7 @@ export async function dbSaveCmsSettings(patch: Partial<CmsContentSchema>): Promi
     screenshot_reviews: patch.screenshot_reviews !== undefined ? patch.screenshot_reviews : existing.screenshot_reviews,
     homepage_proof_wall: patch.homepage_proof_wall !== undefined ? patch.homepage_proof_wall : existing.homepage_proof_wall,
     success_page: patch.success_page !== undefined ? patch.success_page : existing.success_page,
+    checkout_page: patch.checkout_page !== undefined ? { ...existing.checkout_page, ...patch.checkout_page } : existing.checkout_page,
     theme: patch.theme !== undefined 
       ? { 
           ...(existing.theme || defaultCmsContent.theme), 

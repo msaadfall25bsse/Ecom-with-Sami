@@ -204,6 +204,20 @@ export interface CmsContentSchema {
     section_title: string;
     section_subtitle: string;
   };
+  checkout_page?: {
+    badge: string;
+    title: string;
+    subtitle: string;
+    timer_heading: string;
+    timer_hours: number;
+    timer_minutes: number;
+    timer_seconds: number;
+    seats_left_text: string;
+    seats_filled_percent: number;
+    trust_badge1: string;
+    trust_badge2: string;
+    trust_badge3: string;
+  };
 }
 
 export interface ThemeCustomColors {
@@ -800,6 +814,20 @@ export const defaultCmsContent: CmsContentSchema = {
     section_badge: 'STUDENT PROOF',
     section_title: 'Featured Case Studies & Results',
     section_subtitle: 'Real screenshots and verified reviews shared by our students — unedited and unfiltered.'
+  },
+  checkout_page: {
+    badge: 'OFFICIAL ENROLLMENT • 88% DISCOUNT APPLIED',
+    title: 'UAE & KSA Shopify Dropshipping Mentorship',
+    subtitle: 'Get lifetime access to 11 video modules, verified GCC suppliers directory & WhatsApp ad mentorship.',
+    timer_heading: 'Discount Offer Ends In:',
+    timer_hours: 2,
+    timer_minutes: 27,
+    timer_seconds: 38,
+    seats_left_text: 'Only 12 seats left at this price',
+    seats_filled_percent: 88,
+    trust_badge1: 'Lifetime Access',
+    trust_badge2: 'Instant LMS Activation',
+    trust_badge3: '9,700+ Students'
   }
 };
 

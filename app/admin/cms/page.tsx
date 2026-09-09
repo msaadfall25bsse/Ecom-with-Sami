@@ -58,7 +58,7 @@ export default function AdminCmsPage() {
   const router = useRouter();
   const [authChecking, setAuthChecking] = useState(true);
   const [activeTab, setActiveTab] = useState<
-    'marquee' | 'hero' | 'stats' | 'why' | 'what' | 'mentor' | 'video_reviews' | 'who' | 'lms' | 'bonuses' | 'reviews' | 'proofwall_home' | 'options' | 'cost' | 'faqs' | 'cta' | 'contact' | 'payments' | 'themes' | 'pixels' | 'success_page'
+    'marquee' | 'hero' | 'stats' | 'why' | 'what' | 'mentor' | 'video_reviews' | 'who' | 'lms' | 'bonuses' | 'reviews' | 'proofwall_home' | 'options' | 'cost' | 'faqs' | 'cta' | 'contact' | 'payments' | 'themes' | 'pixels' | 'success_page' | 'checkout_page'
   >('hero');
   const [cmsData, setCmsData] = useState<CmsContentSchema>(defaultCmsContent);
   const [modules, setModules] = useState<Module[]>(initialModules);
@@ -1390,7 +1390,8 @@ export default function AdminCmsPage() {
             { id: 'payments', label: '17. 💳 Bank Accounts', icon: CreditCard },
             { id: 'themes', label: '18. 🎨 Theme Colors', icon: Palette },
             { id: 'pixels', label: '19. 🎯 Pixels & Code', icon: Settings },
-            { id: 'success_page', label: '20. 🏆 Success Stories Page', icon: Award }
+            { id: 'success_page', label: '20. 🏆 Success Stories Page', icon: Award },
+            { id: 'checkout_page', label: '21. 🛒 Checkout Page Header & Timer', icon: ShoppingBag }
           ].map((t) => {
             const Icon = t.icon;
             return (
@@ -5636,6 +5637,361 @@ export default function AdminCmsPage() {
                   <span>{loading ? 'Saving...' : 'Save Success Stories Page'}</span>
                 </button>
               </div>
+            </div>
+
+          </div>
+        )}
+
+        {/* ========================================================================= */}
+        {/* TAB 21: CHECKOUT PAGE HEADER & TIMER MANAGER */}
+        {/* ========================================================================= */}
+        {activeTab === 'checkout_page' && (
+          <div className="space-y-6 sm:space-y-8">
+            
+            {/* Header Description */}
+            <div className="bg-[#111827] border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xl">
+              <div>
+                <h2 className="text-base sm:text-2xl font-black text-white flex items-center gap-2">
+                  <ShoppingBag size={20} className="text-[#00A0DF]" />
+                  <span>Checkout Page Header &amp; Urgency Timer Settings</span>
+                </h2>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  Customize the top banner, countdown timer clock, remaining seats alert, progress bar fill line, and trust badges on the Checkout page (/enrollment).
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <Link
+                  href="/enrollment"
+                  target="_blank"
+                  className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-300 transition-colors"
+                >
+                  <Eye size={14} />
+                  <span>View Live Checkout</span>
+                </Link>
+                <button
+                  type="button"
+                  onClick={handleSaveAll}
+                  disabled={loading}
+                  className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-5 py-2 sm:py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs sm:text-sm font-black shadow-lg shadow-emerald-600/30 transition-all active:scale-95"
+                >
+                  <Save size={15} />
+                  <span>{loading ? 'Saving...' : 'Save All'}</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Main Form Container */}
+            <div className="bg-[#111827] border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-8 shadow-xl space-y-6">
+              
+              {/* 1. Header Banner */}
+              <div className="space-y-4">
+                <h3 className="text-xs font-black uppercase tracking-wider text-[#00A0DF] flex items-center gap-2">
+                  <span>1. Top Header Banner Content</span>
+                </h3>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                  <div className="sm:col-span-2">
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                      Top Pill Badge (Discount Tag)
+                    </label>
+                    <input
+                      type="text"
+                      value={cmsData.checkout_page?.badge ?? defaultCmsContent.checkout_page?.badge}
+                      onChange={(e) => {
+                        const current = cmsData.checkout_page || defaultCmsContent.checkout_page!;
+                        setCmsData({
+                          ...cmsData,
+                          checkout_page: { ...current, badge: e.target.value }
+                        });
+                      }}
+                      className="w-full px-3 py-2 rounded-xl bg-[#0B0F19] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF]"
+                    />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                      Main Program Title
+                    </label>
+                    <input
+                      type="text"
+                      value={cmsData.checkout_page?.title ?? defaultCmsContent.checkout_page?.title}
+                      onChange={(e) => {
+                        const current = cmsData.checkout_page || defaultCmsContent.checkout_page!;
+                        setCmsData({
+                          ...cmsData,
+                          checkout_page: { ...current, title: e.target.value }
+                        });
+                      }}
+                      className="w-full px-3 py-2 rounded-xl bg-[#0B0F19] border border-white/10 text-xs font-black text-white focus:outline-none focus:border-[#00A0DF]"
+                    />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                      Subtitle / Mentorship Highlights
+                    </label>
+                    <textarea
+                      rows={2}
+                      value={cmsData.checkout_page?.subtitle ?? defaultCmsContent.checkout_page?.subtitle}
+                      onChange={(e) => {
+                        const current = cmsData.checkout_page || defaultCmsContent.checkout_page!;
+                        setCmsData({
+                          ...cmsData,
+                          checkout_page: { ...current, subtitle: e.target.value }
+                        });
+                      }}
+                      className="w-full px-3 py-2 rounded-xl bg-[#0B0F19] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF] resize-none"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* 2. Urgency Countdown Timer */}
+              <div className="pt-5 border-t border-white/5 space-y-4">
+                <h3 className="text-xs font-black uppercase tracking-wider text-red-400 flex items-center gap-2">
+                  <Clock size={16} />
+                  <span>2. Urgency Countdown Timer Clock</span>
+                </h3>
+
+                <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 sm:gap-4">
+                  <div className="sm:col-span-4">
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                      Timer Heading / Offer Text
+                    </label>
+                    <input
+                      type="text"
+                      value={cmsData.checkout_page?.timer_heading ?? defaultCmsContent.checkout_page?.timer_heading}
+                      onChange={(e) => {
+                        const current = cmsData.checkout_page || defaultCmsContent.checkout_page!;
+                        setCmsData({
+                          ...cmsData,
+                          checkout_page: { ...current, timer_heading: e.target.value }
+                        });
+                      }}
+                      className="w-full px-3 py-2 rounded-xl bg-[#0B0F19] border border-white/10 text-xs font-bold text-white focus:outline-none focus:border-[#00A0DF]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                      Hours
+                    </label>
+                    <input
+                      type="number"
+                      min={0}
+                      max={99}
+                      value={cmsData.checkout_page?.timer_hours ?? defaultCmsContent.checkout_page?.timer_hours}
+                      onChange={(e) => {
+                        const current = cmsData.checkout_page || defaultCmsContent.checkout_page!;
+                        setCmsData({
+                          ...cmsData,
+                          checkout_page: { ...current, timer_hours: Number(e.target.value) || 0 }
+                        });
+                      }}
+                      className="w-full px-3 py-2 rounded-xl bg-[#0B0F19] border border-white/10 text-xs font-mono font-black text-[#00A0DF] focus:outline-none focus:border-[#00A0DF]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                      Minutes
+                    </label>
+                    <input
+                      type="number"
+                      min={0}
+                      max={59}
+                      value={cmsData.checkout_page?.timer_minutes ?? defaultCmsContent.checkout_page?.timer_minutes}
+                      onChange={(e) => {
+                        const current = cmsData.checkout_page || defaultCmsContent.checkout_page!;
+                        setCmsData({
+                          ...cmsData,
+                          checkout_page: { ...current, timer_minutes: Number(e.target.value) || 0 }
+                        });
+                      }}
+                      className="w-full px-3 py-2 rounded-xl bg-[#0B0F19] border border-white/10 text-xs font-mono font-black text-[#00A0DF] focus:outline-none focus:border-[#00A0DF]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                      Seconds
+                    </label>
+                    <input
+                      type="number"
+                      min={0}
+                      max={59}
+                      value={cmsData.checkout_page?.timer_seconds ?? defaultCmsContent.checkout_page?.timer_seconds}
+                      onChange={(e) => {
+                        const current = cmsData.checkout_page || defaultCmsContent.checkout_page!;
+                        setCmsData({
+                          ...cmsData,
+                          checkout_page: { ...current, timer_seconds: Number(e.target.value) || 0 }
+                        });
+                      }}
+                      className="w-full px-3 py-2 rounded-xl bg-[#0B0F19] border border-white/10 text-xs font-mono font-black text-[#00A0DF] focus:outline-none focus:border-[#00A0DF]"
+                    />
+                  </div>
+
+                  <div className="flex items-end">
+                    <div className="px-3.5 py-2 rounded-xl bg-[#0B0F19] border border-white/10 text-[11px] text-slate-400 w-full flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+                      <span>Live Countdown Active</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* 3. Seats Left & Dynamic Progress Line */}
+              <div className="pt-5 border-t border-white/5 space-y-4">
+                <h3 className="text-xs font-black uppercase tracking-wider text-amber-400 flex items-center gap-2">
+                  <span>3. Seats Remaining &amp; Dynamic Progress Bar Line</span>
+                </h3>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+                  <div className="sm:col-span-2">
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                      Seats Remaining Alert Text
+                    </label>
+                    <input
+                      type="text"
+                      value={cmsData.checkout_page?.seats_left_text ?? defaultCmsContent.checkout_page?.seats_left_text}
+                      onChange={(e) => {
+                        const current = cmsData.checkout_page || defaultCmsContent.checkout_page!;
+                        setCmsData({
+                          ...cmsData,
+                          checkout_page: { ...current, seats_left_text: e.target.value }
+                        });
+                      }}
+                      className="w-full px-3 py-2 rounded-xl bg-[#0B0F19] border border-white/10 text-xs font-bold text-white focus:outline-none focus:border-[#00A0DF]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                      Percentage Filled (0 - 100%)
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        min={0}
+                        max={100}
+                        value={cmsData.checkout_page?.seats_filled_percent ?? defaultCmsContent.checkout_page?.seats_filled_percent}
+                        onChange={(e) => {
+                          const current = cmsData.checkout_page || defaultCmsContent.checkout_page!;
+                          setCmsData({
+                            ...cmsData,
+                            checkout_page: { ...current, seats_filled_percent: Number(e.target.value) || 0 }
+                          });
+                        }}
+                        className="w-full px-3 py-2 rounded-xl bg-[#0B0F19] border border-white/10 text-xs font-mono font-black text-amber-400 focus:outline-none focus:border-[#00A0DF]"
+                      />
+                      <span className="absolute right-3 top-2 text-xs font-bold text-slate-500">%</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Interactive Dynamic Line Preview */}
+                <div className="p-4 rounded-2xl bg-[#0B0F19] border border-white/10 space-y-2">
+                  <div className="flex items-center justify-between text-xs font-bold">
+                    <span className="text-red-400">
+                      🔥 {cmsData.checkout_page?.seats_left_text || 'Only 12 seats left at this price'}
+                    </span>
+                    <span className="text-[#00A0DF] font-black">
+                      {cmsData.checkout_page?.seats_filled_percent ?? 88}% Filled (Live Preview)
+                    </span>
+                  </div>
+                  <div className="h-3 bg-slate-900 rounded-full overflow-hidden p-0.5 border border-white/10">
+                    <div
+                      style={{ width: `${Math.min(100, Math.max(0, cmsData.checkout_page?.seats_filled_percent ?? 88))}%` }}
+                      className="h-full bg-gradient-to-r from-[#00A0DF] to-red-500 rounded-full transition-all duration-300"
+                    />
+                  </div>
+                  <p className="text-[10px] text-slate-500">
+                    💡 Changing the percentage above automatically expands or shrinks this colored progress bar line on the live Checkout page.
+                  </p>
+                </div>
+              </div>
+
+              {/* 4. Trust Badges */}
+              <div className="pt-5 border-t border-white/5 space-y-4">
+                <h3 className="text-xs font-black uppercase tracking-wider text-emerald-400 flex items-center gap-2">
+                  <span>4. Trust Badges (Below Countdown Timer)</span>
+                </h3>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                      Badge 1 (Lifetime Access)
+                    </label>
+                    <input
+                      type="text"
+                      value={cmsData.checkout_page?.trust_badge1 ?? defaultCmsContent.checkout_page?.trust_badge1}
+                      onChange={(e) => {
+                        const current = cmsData.checkout_page || defaultCmsContent.checkout_page!;
+                        setCmsData({
+                          ...cmsData,
+                          checkout_page: { ...current, trust_badge1: e.target.value }
+                        });
+                      }}
+                      className="w-full px-3 py-2 rounded-xl bg-[#0B0F19] border border-white/10 text-xs font-bold text-white focus:outline-none focus:border-[#00A0DF]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                      Badge 2 (LMS Activation)
+                    </label>
+                    <input
+                      type="text"
+                      value={cmsData.checkout_page?.trust_badge2 ?? defaultCmsContent.checkout_page?.trust_badge2}
+                      onChange={(e) => {
+                        const current = cmsData.checkout_page || defaultCmsContent.checkout_page!;
+                        setCmsData({
+                          ...cmsData,
+                          checkout_page: { ...current, trust_badge2: e.target.value }
+                        });
+                      }}
+                      className="w-full px-3 py-2 rounded-xl bg-[#0B0F19] border border-white/10 text-xs font-bold text-white focus:outline-none focus:border-[#00A0DF]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                      Badge 3 (Students Count)
+                    </label>
+                    <input
+                      type="text"
+                      value={cmsData.checkout_page?.trust_badge3 ?? defaultCmsContent.checkout_page?.trust_badge3}
+                      onChange={(e) => {
+                        const current = cmsData.checkout_page || defaultCmsContent.checkout_page!;
+                        setCmsData({
+                          ...cmsData,
+                          checkout_page: { ...current, trust_badge3: e.target.value }
+                        });
+                      }}
+                      className="w-full px-3 py-2 rounded-xl bg-[#0B0F19] border border-white/10 text-xs font-bold text-white focus:outline-none focus:border-[#00A0DF]"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Bottom Save Button */}
+              <div className="pt-4 border-t border-white/5 flex items-center justify-between">
+                <p className="text-xs text-slate-400">
+                  Changes will update live on <strong>/enrollment</strong> immediately upon saving.
+                </p>
+                <button
+                  type="button"
+                  onClick={handleSaveAll}
+                  disabled={loading}
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs sm:text-sm font-black shadow-lg shadow-emerald-600/30 transition-all active:scale-95"
+                >
+                  <Save size={15} />
+                  <span>{loading ? 'Saving...' : 'Save Checkout Page'}</span>
+                </button>
+              </div>
+
             </div>
 
           </div>

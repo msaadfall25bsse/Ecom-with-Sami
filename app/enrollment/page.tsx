@@ -49,6 +49,20 @@ export default function EnrollmentPage() {
   });
 
   const [screenshotReviews, setScreenshotReviews] = useState(defaultCmsContent.screenshot_reviews);
+  const [checkoutContent, setCheckoutContent] = useState(defaultCmsContent.checkout_page || {
+    badge: 'OFFICIAL ENROLLMENT • 88% DISCOUNT APPLIED',
+    title: 'UAE & KSA Shopify Dropshipping Mentorship',
+    subtitle: 'Get lifetime access to 11 video modules, verified GCC suppliers directory & WhatsApp ad mentorship.',
+    timer_heading: 'Discount Offer Ends In:',
+    timer_hours: 2,
+    timer_minutes: 27,
+    timer_seconds: 38,
+    seats_left_text: 'Only 12 seats left at this price',
+    seats_filled_percent: 88,
+    trust_badge1: 'Lifetime Access',
+    trust_badge2: 'Instant LMS Activation',
+    trust_badge3: '9,700+ Students'
+  });
   const [paymentMethods, setPaymentMethods] = useState(() => {
     return defaultCmsContent.payment_methods.map(pm => ({
       ...pm,
@@ -84,6 +98,9 @@ export default function EnrollmentPage() {
         if (res.ok) {
           const data = await res.json();
           if (data.success && data.sections) {
+            if (data.sections.checkout_page) {
+              setCheckoutContent(data.sections.checkout_page);
+            }
             if (data.sections.screenshot_reviews) {
               setScreenshotReviews(data.sections.screenshot_reviews);
             }
@@ -116,6 +133,9 @@ export default function EnrollmentPage() {
 
           if (!error && data && data.value_json) {
             const parsed = typeof data.value_json === 'string' ? JSON.parse(data.value_json) : data.value_json;
+            if (parsed && parsed.checkout_page) {
+              setCheckoutContent(parsed.checkout_page);
+            }
             if (parsed && parsed.screenshot_reviews) {
               setScreenshotReviews(parsed.screenshot_reviews);
             }
@@ -285,18 +305,28 @@ export default function EnrollmentPage() {
       <section className="pt-8 pb-10 sm:pt-12 sm:pb-14 bg-gradient-to-b from-[#111827] to-[#0B0F19] text-white text-center border-b border-white/10">
         <div className="max-w-4xl mx-auto px-4 sm:px-6">
           <span className="inline-block bg-[#00A0DF]/20 text-[#00A0DF] border border-[#00A0DF]/40 text-xs font-black uppercase tracking-wider px-4 py-1 rounded-full mb-3 shadow-md shadow-[#00A0DF]/10">
-            OFFICIAL ENROLLMENT &bull; 88% DISCOUNT APPLIED
+            {checkoutContent.badge || 'OFFICIAL ENROLLMENT • 88% DISCOUNT APPLIED'}
           </span>
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-white tracking-tight leading-tight mb-2">
-            UAE &amp; KSA Shopify Dropshipping Mentorship
+            {checkoutContent.title || 'UAE & KSA Shopify Dropshipping Mentorship'}
           </h1>
           <p className="text-xs sm:text-sm text-slate-300 max-w-xl mx-auto mb-6">
-            Get lifetime access to 11 video modules, verified GCC suppliers directory &amp; WhatsApp ad mentorship.
+            {checkoutContent.subtitle || 'Get lifetime access to 11 video modules, verified GCC suppliers directory & WhatsApp ad mentorship.'}
           </p>
 
           {/* Moved Urgency Countdown Timer Here */}
           <div className="w-full max-w-xl mx-auto">
-            <CountdownTimer />
+            <CountdownTimer
+              timerHeading={checkoutContent.timer_heading}
+              initialHours={checkoutContent.timer_hours}
+              initialMinutes={checkoutContent.timer_minutes}
+              initialSeconds={checkoutContent.timer_seconds}
+              seatsLeftText={checkoutContent.seats_left_text}
+              seatsFilledPercent={checkoutContent.seats_filled_percent}
+              trustBadge1={checkoutContent.trust_badge1}
+              trustBadge2={checkoutContent.trust_badge2}
+              trustBadge3={checkoutContent.trust_badge3}
+            />
           </div>
         </div>
       </section>

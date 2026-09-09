@@ -3,20 +3,42 @@
 import React, { useState, useEffect } from 'react';
 import { Clock, Flame, ShieldCheck, Zap, Users } from 'lucide-react';
 
-export function CountdownTimer({
-  initialHours = 2,
-  initialMinutes = 27,
-  initialSeconds = 38
-}: {
+export interface CountdownTimerProps {
   initialHours?: number;
   initialMinutes?: number;
   initialSeconds?: number;
-}) {
-  const [totalSeconds, setTotalSeconds] = useState(initialHours * 3600 + initialMinutes * 60 + initialSeconds);
+  timerHeading?: string;
+  seatsLeftText?: string;
+  seatsFilledPercent?: number;
+  trustBadge1?: string;
+  trustBadge2?: string;
+  trustBadge3?: string;
+}
+
+export function CountdownTimer({
+  initialHours = 2,
+  initialMinutes = 27,
+  initialSeconds = 38,
+  timerHeading = 'Discount Offer Ends In:',
+  seatsLeftText = 'Only 12 seats left at this price',
+  seatsFilledPercent = 88,
+  trustBadge1 = 'Lifetime Access',
+  trustBadge2 = 'Instant LMS Activation',
+  trustBadge3 = '9,700+ Students'
+}: CountdownTimerProps) {
+  const [totalSeconds, setTotalSeconds] = useState(
+    Number(initialHours || 0) * 3600 + Number(initialMinutes || 0) * 60 + Number(initialSeconds || 0)
+  );
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
+    setTotalSeconds(
+      Number(initialHours || 0) * 3600 + Number(initialMinutes || 0) * 60 + Number(initialSeconds || 0)
+    );
+  }, [initialHours, initialMinutes, initialSeconds]);
+
+  useEffect(() => {
     const timer = setInterval(() => {
       setTotalSeconds(prev => (prev > 0 ? prev - 1 : 0));
     }, 1000);
@@ -29,13 +51,15 @@ export function CountdownTimer({
 
   const pad = (n: number) => String(n).padStart(2, '0');
 
+  const fillPercent = Math.min(100, Math.max(0, Number(seatsFilledPercent) || 88));
+
   return (
     <div className="w-full max-w-2xl mx-auto bg-white rounded-2xl border-2 border-[#00A0DF]/30 shadow-xl shadow-[#00A0DF]/10 p-4 sm:p-6 md:p-7 mb-8">
       {/* Clock Header Row */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4 mb-5">
         <div className="flex items-center gap-2 text-red-600 font-extrabold text-sm sm:text-base">
           <Clock size={20} className="animate-pulse flex-shrink-0" />
-          <span>Discount Offer Ends In:</span>
+          <span>{timerHeading}</span>
         </div>
 
         {/* 3 Box Digital Countdown Timer */}
@@ -65,12 +89,15 @@ export function CountdownTimer({
         <div className="flex items-center justify-between text-xs sm:text-sm font-bold mb-2">
           <span className="flex items-center gap-1.5 text-red-600">
             <Flame size={16} className="text-red-500 flex-shrink-0" />
-            <span>Only 12 seats left at this price</span>
+            <span>{seatsLeftText}</span>
           </span>
-          <span className="text-[#00A0DF]">88% Filled</span>
+          <span className="text-[#00A0DF] font-black">{fillPercent}% Filled</span>
         </div>
         <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden p-0.5 border border-slate-200">
-          <div className="h-full w-[88%] bg-gradient-to-r from-[#00A0DF] to-red-500 rounded-full animate-pulse" />
+          <div
+            style={{ width: `${fillPercent}%` }}
+            className="h-full bg-gradient-to-r from-[#00A0DF] to-red-500 rounded-full animate-pulse transition-all duration-500"
+          />
         </div>
       </div>
 
@@ -78,15 +105,15 @@ export function CountdownTimer({
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-4 border-t border-slate-100 text-xs sm:text-sm font-bold text-slate-700 text-center sm:text-left">
         <div className="flex items-center justify-center sm:justify-start gap-2">
           <ShieldCheck size={18} className="text-emerald-500 flex-shrink-0" />
-          <span>Lifetime Access</span>
+          <span>{trustBadge1}</span>
         </div>
         <div className="flex items-center justify-center sm:justify-start gap-2">
           <Zap size={18} className="text-[#00A0DF] flex-shrink-0" />
-          <span>Instant LMS Activation</span>
+          <span>{trustBadge2}</span>
         </div>
         <div className="flex items-center justify-center sm:justify-start gap-2">
           <Users size={18} className="text-amber-500 flex-shrink-0" />
-          <span>9,700+ Students</span>
+          <span>{trustBadge3}</span>
         </div>
       </div>
     </div>
