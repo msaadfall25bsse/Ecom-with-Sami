@@ -385,6 +385,19 @@ export default function AdminCmsPage() {
       } catch (e) {}
     }
 
+    let dataToSave = cmsData;
+    if (activeTab === 'checkout_page') {
+      const currentCp = dataToSave.checkout_page || defaultCmsContent.checkout_page!;
+      dataToSave = {
+        ...dataToSave,
+        checkout_page: {
+          ...currentCp,
+          timer_anchor_time: Date.now()
+        }
+      };
+      setCmsData(dataToSave);
+    }
+
     try {
       // 1. Persist main CMS content to server API & trigger revalidation
       const res = await fetch('/api/cms/content', {
@@ -393,7 +406,7 @@ export default function AdminCmsPage() {
           'Content-Type': 'application/json',
           'Cache-Control': 'no-cache, no-store, must-revalidate'
         },
-        body: JSON.stringify(cmsData)
+        body: JSON.stringify(dataToSave)
       });
       if (res.ok) {
         const json = await res.json();
@@ -409,7 +422,7 @@ export default function AdminCmsPage() {
           'Content-Type': 'application/json',
           'Cache-Control': 'no-cache, no-store, must-revalidate'
         },
-        body: JSON.stringify({ payment_methods: cmsData.payment_methods })
+        body: JSON.stringify({ payment_methods: dataToSave.payment_methods })
       });
       if (pmRes.ok) saved = true;
     } catch (e) {}
@@ -419,7 +432,7 @@ export default function AdminCmsPage() {
       try {
         const { error } = await supabase.from('cms_settings').upsert({
           key: 'main_cms',
-          value_json: JSON.stringify(cmsData),
+          value_json: JSON.stringify(dataToSave),
           updated_at: new Date().toISOString()
         });
         if (!error) saved = true;
@@ -430,12 +443,12 @@ export default function AdminCmsPage() {
 
     if (saved) {
       try {
-        localStorage.setItem('sami_cms_payment_methods', JSON.stringify(cmsData.payment_methods));
-        localStorage.setItem('sami_cms_content', JSON.stringify(cmsData));
-        if (cmsData.checkout_page) {
-          localStorage.setItem('sami_cms_checkout_page', JSON.stringify(cmsData.checkout_page));
+        localStorage.setItem('sami_cms_payment_methods', JSON.stringify(dataToSave.payment_methods));
+        localStorage.setItem('sami_cms_content', JSON.stringify(dataToSave));
+        if (dataToSave.checkout_page) {
+          localStorage.setItem('sami_cms_checkout_page', JSON.stringify(dataToSave.checkout_page));
         }
-        updateCmsContent(cmsData);
+        updateCmsContent(dataToSave);
       } catch (e) {}
       setSavedSuccess(true);
       window.dispatchEvent(new Event('sami_cms_updated'));
@@ -5837,10 +5850,22 @@ export default function AdminCmsPage() {
                   </div>
 
                   <div className="flex items-end">
-                    <div className="px-3.5 py-2 rounded-xl bg-[#0B0F19] border border-white/10 text-[11px] text-slate-400 w-full flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
-                      <span>Live Countdown Active</span>
-                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const current = cmsData.checkout_page || defaultCmsContent.checkout_page!;
+                        setCmsData({
+                          ...cmsData,
+                          checkout_page: { ...current, timer_anchor_time: Date.now() }
+                        });
+                        alert('Global timer cycle refreshed! Click "Save Changes" below to apply it live across all devices.');
+                      }}
+                      className="px-3.5 py-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-[11px] font-bold text-amber-400 w-full flex items-center justify-center gap-1.5 active:scale-95 transition-all"
+                      title="Reset global cycle to right now for all users worldwide"
+                    >
+                      <RotateCcw size={13} />
+                      <span>Restart Global Cycle</span>
+                    </button>
                   </div>
                 </div>
               </div>

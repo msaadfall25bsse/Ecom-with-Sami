@@ -212,6 +212,7 @@ export interface CmsContentSchema {
     timer_hours: number;
     timer_minutes: number;
     timer_seconds: number;
+    timer_anchor_time?: number;
     seats_left_text: string;
     seats_filled_percent: number;
     trust_badge1: string;
@@ -823,6 +824,7 @@ export const defaultCmsContent: CmsContentSchema = {
     timer_hours: 2,
     timer_minutes: 27,
     timer_seconds: 38,
+    timer_anchor_time: 1773100000000,
     seats_left_text: 'Only 12 seats left at this price',
     seats_filled_percent: 88,
     trust_badge1: 'Lifetime Access',

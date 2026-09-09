@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Clock, Flame, ShieldCheck, Zap, Users } from 'lucide-react';
 
 export interface CountdownTimerProps {
+  timerAnchorTime?: number;
   serverRemainingSeconds?: number;
   initialHours?: number;
   initialMinutes?: number;
@@ -17,6 +18,7 @@ export interface CountdownTimerProps {
 }
 
 export function CountdownTimer({
+  timerAnchorTime,
   serverRemainingSeconds,
   initialHours = 2,
   initialMinutes = 27,
@@ -33,93 +35,29 @@ export function CountdownTimer({
     Number(initialHours || 0) * 3600 + Number(initialMinutes || 0) * 60 + Number(initialSeconds || 0)
   );
 
+  const calculateGlobalRemaining = () => {
+    const anchor = Number(timerAnchorTime) || 0;
+    const now = Date.now();
+    const elapsed = Math.max(0, Math.floor((now - anchor) / 1000)) % configuredDuration;
+    return Math.max(0, configuredDuration - elapsed);
+  };
+
   const [totalSeconds, setTotalSeconds] = useState<number>(() => {
     if (typeof serverRemainingSeconds === 'number' && serverRemainingSeconds >= 0) {
       return serverRemainingSeconds;
     }
-    if (typeof window !== 'undefined') {
-      try {
-        const storedTarget = localStorage.getItem('sami_checkout_timer_target');
-        const storedDuration = localStorage.getItem('sami_checkout_timer_duration');
-        if (storedTarget && storedDuration === String(configuredDuration)) {
-          const target = Number(storedTarget);
-          const now = Date.now();
-          if (!isNaN(target) && target > now) {
-            return Math.max(0, Math.floor((target - now) / 1000));
-          }
-        }
-      } catch (e) {}
-    }
-    return configuredDuration;
+    return calculateGlobalRemaining();
   });
 
   useEffect(() => {
-    const syncCookie = (target: number, duration: number) => {
-      try {
-        document.cookie = `sami_timer_target=${target}; path=/; max-age=604800; SameSite=Lax`;
-        document.cookie = `sami_timer_duration=${duration}; path=/; max-age=604800; SameSite=Lax`;
-      } catch (e) {}
-    };
-
-    const getOrInitTargetTime = () => {
-      const now = Date.now();
-      try {
-        const storedTarget = localStorage.getItem('sami_checkout_timer_target');
-        const storedDuration = localStorage.getItem('sami_checkout_timer_duration');
-
-        // If admin changed duration in CMS or no target stored, create fresh target
-        if (!storedTarget || storedDuration !== String(configuredDuration)) {
-          const newTarget = now + configuredDuration * 1000;
-          localStorage.setItem('sami_checkout_timer_target', String(newTarget));
-          localStorage.setItem('sami_checkout_timer_duration', String(configuredDuration));
-          syncCookie(newTarget, configuredDuration);
-          return newTarget;
-        }
-
-        const target = Number(storedTarget);
-        // If timer reached 0 (expired), automatically start a fresh rolling cycle
-        if (isNaN(target) || target <= now) {
-          const newTarget = now + configuredDuration * 1000;
-          localStorage.setItem('sami_checkout_timer_target', String(newTarget));
-          localStorage.setItem('sami_checkout_timer_duration', String(configuredDuration));
-          syncCookie(newTarget, configuredDuration);
-          return newTarget;
-        }
-
-        // Ensure cookies stay fresh for subsequent server reloads
-        syncCookie(target, configuredDuration);
-        return target;
-      } catch (e) {
-        return now + configuredDuration * 1000;
-      }
-    };
-
-    let targetTime = getOrInitTargetTime();
-
     const updateRemaining = () => {
-      const now = Date.now();
-      let remaining = Math.max(0, Math.floor((targetTime - now) / 1000));
-
-      // Auto-loop when timer hits 00:00:00
-      if (remaining <= 0) {
-        targetTime = now + configuredDuration * 1000;
-        try {
-          localStorage.setItem('sami_checkout_timer_target', String(targetTime));
-          localStorage.setItem('sami_checkout_timer_duration', String(configuredDuration));
-          syncCookie(targetTime, configuredDuration);
-        } catch (e) {}
-        remaining = configuredDuration;
-      }
-
-      setTotalSeconds(remaining);
+      setTotalSeconds(calculateGlobalRemaining());
     };
 
-    // Calculate immediately on mount
     updateRemaining();
-
     const timer = setInterval(updateRemaining, 1000);
     return () => clearInterval(timer);
-  }, [configuredDuration]);
+  }, [configuredDuration, timerAnchorTime]);
 
   const hours = Math.floor(totalSeconds / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);

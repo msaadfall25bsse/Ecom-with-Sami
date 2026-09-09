@@ -343,6 +343,7 @@ export function EnrollmentPageClient({ initialContent, serverRemainingSeconds }:
           {/* Moved Urgency Countdown Timer Here */}
           <div className="w-full max-w-xl mx-auto">
             <CountdownTimer
+              timerAnchorTime={checkoutContent.timer_anchor_time}
               serverRemainingSeconds={serverRemainingSeconds}
               timerHeading={checkoutContent.timer_heading}
               initialHours={checkoutContent.timer_hours}
