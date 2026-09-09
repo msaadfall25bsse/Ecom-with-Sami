@@ -30,9 +30,10 @@ import { supabase } from '@/lib/supabase';
 
 interface EnrollmentPageClientProps {
   initialContent?: CmsContentSchema | null;
+  serverRemainingSeconds?: number;
 }
 
-export function EnrollmentPageClient({ initialContent }: EnrollmentPageClientProps) {
+export function EnrollmentPageClient({ initialContent, serverRemainingSeconds }: EnrollmentPageClientProps) {
   const { displayPhone } = useContactConfig();
 
   const [selectedMethod, setSelectedMethod] = useState<string>('easypaisa');
@@ -342,6 +343,7 @@ export function EnrollmentPageClient({ initialContent }: EnrollmentPageClientPro
           {/* Moved Urgency Countdown Timer Here */}
           <div className="w-full max-w-xl mx-auto">
             <CountdownTimer
+              serverRemainingSeconds={serverRemainingSeconds}
               timerHeading={checkoutContent.timer_heading}
               initialHours={checkoutContent.timer_hours}
               initialMinutes={checkoutContent.timer_minutes}

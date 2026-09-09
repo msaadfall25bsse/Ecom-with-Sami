@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Clock, Flame, ShieldCheck, Zap, Users } from 'lucide-react';
 
 export interface CountdownTimerProps {
+  serverRemainingSeconds?: number;
   initialHours?: number;
   initialMinutes?: number;
   initialSeconds?: number;
@@ -16,6 +17,7 @@ export interface CountdownTimerProps {
 }
 
 export function CountdownTimer({
+  serverRemainingSeconds,
   initialHours = 2,
   initialMinutes = 27,
   initialSeconds = 38,
@@ -31,11 +33,33 @@ export function CountdownTimer({
     Number(initialHours || 0) * 3600 + Number(initialMinutes || 0) * 60 + Number(initialSeconds || 0)
   );
 
-  const [totalSeconds, setTotalSeconds] = useState(configuredDuration);
-  const [mounted, setMounted] = useState(false);
+  const [totalSeconds, setTotalSeconds] = useState<number>(() => {
+    if (typeof serverRemainingSeconds === 'number' && serverRemainingSeconds >= 0) {
+      return serverRemainingSeconds;
+    }
+    if (typeof window !== 'undefined') {
+      try {
+        const storedTarget = localStorage.getItem('sami_checkout_timer_target');
+        const storedDuration = localStorage.getItem('sami_checkout_timer_duration');
+        if (storedTarget && storedDuration === String(configuredDuration)) {
+          const target = Number(storedTarget);
+          const now = Date.now();
+          if (!isNaN(target) && target > now) {
+            return Math.max(0, Math.floor((target - now) / 1000));
+          }
+        }
+      } catch (e) {}
+    }
+    return configuredDuration;
+  });
 
   useEffect(() => {
-    setMounted(true);
+    const syncCookie = (target: number, duration: number) => {
+      try {
+        document.cookie = `sami_timer_target=${target}; path=/; max-age=604800; SameSite=Lax`;
+        document.cookie = `sami_timer_duration=${duration}; path=/; max-age=604800; SameSite=Lax`;
+      } catch (e) {}
+    };
 
     const getOrInitTargetTime = () => {
       const now = Date.now();
@@ -48,6 +72,7 @@ export function CountdownTimer({
           const newTarget = now + configuredDuration * 1000;
           localStorage.setItem('sami_checkout_timer_target', String(newTarget));
           localStorage.setItem('sami_checkout_timer_duration', String(configuredDuration));
+          syncCookie(newTarget, configuredDuration);
           return newTarget;
         }
 
@@ -57,9 +82,12 @@ export function CountdownTimer({
           const newTarget = now + configuredDuration * 1000;
           localStorage.setItem('sami_checkout_timer_target', String(newTarget));
           localStorage.setItem('sami_checkout_timer_duration', String(configuredDuration));
+          syncCookie(newTarget, configuredDuration);
           return newTarget;
         }
 
+        // Ensure cookies stay fresh for subsequent server reloads
+        syncCookie(target, configuredDuration);
         return target;
       } catch (e) {
         return now + configuredDuration * 1000;
@@ -78,6 +106,7 @@ export function CountdownTimer({
         try {
           localStorage.setItem('sami_checkout_timer_target', String(targetTime));
           localStorage.setItem('sami_checkout_timer_duration', String(configuredDuration));
+          syncCookie(targetTime, configuredDuration);
         } catch (e) {}
         remaining = configuredDuration;
       }
@@ -85,7 +114,7 @@ export function CountdownTimer({
       setTotalSeconds(remaining);
     };
 
-    // Calculate immediately
+    // Calculate immediately on mount
     updateRemaining();
 
     const timer = setInterval(updateRemaining, 1000);
@@ -112,15 +141,18 @@ export function CountdownTimer({
         {/* 3 Box Digital Countdown Timer */}
         <div className="flex items-center gap-1.5 xs:gap-2">
           {[
-            { val: mounted ? pad(hours) : pad(initialHours), lbl: 'HOURS' },
-            { val: mounted ? pad(minutes) : pad(initialMinutes), lbl: 'MINS' },
-            { val: mounted ? pad(seconds) : pad(initialSeconds), lbl: 'SECS' }
+            { val: pad(hours), lbl: 'HOURS' },
+            { val: pad(minutes), lbl: 'MINS' },
+            { val: pad(seconds), lbl: 'SECS' }
           ].map((unit, idx) => (
             <div
               key={idx}
               className="bg-slate-950 text-white rounded-xl py-1.5 xs:py-2 px-2.5 xs:px-3.5 sm:px-4 text-center min-w-[52px] xs:min-w-[60px] sm:min-w-[68px] border border-[#00A0DF]/30 shadow-inner"
             >
-              <div className="text-lg xs:text-xl sm:text-2xl font-black font-mono text-[#00A0DF] leading-none">
+              <div 
+                className="text-lg xs:text-xl sm:text-2xl font-black font-mono text-[#00A0DF] leading-none"
+                suppressHydrationWarning
+              >
                 {unit.val}
               </div>
               <div className="text-[8px] xs:text-[9px] sm:text-[10px] font-bold text-slate-400 tracking-wider mt-1">
