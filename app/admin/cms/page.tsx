@@ -432,6 +432,9 @@ export default function AdminCmsPage() {
       try {
         localStorage.setItem('sami_cms_payment_methods', JSON.stringify(cmsData.payment_methods));
         localStorage.setItem('sami_cms_content', JSON.stringify(cmsData));
+        if (cmsData.checkout_page) {
+          localStorage.setItem('sami_cms_checkout_page', JSON.stringify(cmsData.checkout_page));
+        }
         updateCmsContent(cmsData);
       } catch (e) {}
       setSavedSuccess(true);
