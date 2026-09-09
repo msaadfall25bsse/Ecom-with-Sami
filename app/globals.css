@@ -803,22 +803,15 @@ input[type="submit"] {
   animation-play-state: paused;
 }
 
-/* Homepage Proof Wall - Slower & Relaxed for easy reading */
+/* Homepage Proof Wall - Ultra-Slow & Relaxed Continuous Glide */
 .animate-homepage-proof-col1 {
-  animation: scrollReviewsUp 58s linear infinite;
+  animation: scrollReviewsUp 95s linear infinite;
   will-change: transform;
 }
 
 .animate-homepage-proof-col2 {
-  animation: scrollReviewsUp 46s linear infinite;
+  animation: scrollReviewsUp 80s linear infinite;
   will-change: transform;
-}
-
-.animate-homepage-proof-col1:hover,
-.animate-homepage-proof-col2:hover,
-.group-scroll:hover .animate-homepage-proof-col1,
-.group-scroll:hover .animate-homepage-proof-col2 {
-  animation-play-state: paused;
 }
 
 
