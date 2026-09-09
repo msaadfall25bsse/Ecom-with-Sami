@@ -24,7 +24,6 @@ export function Navbar() {
     { label: 'Curriculum', href: '/#curriculum' },
     { label: 'Success Stories', href: '/success' },
     { label: 'About Sami', href: '/about' },
-    { label: 'Guides & Blog', href: '/blogs' },
     { label: 'Support', href: '/support' }
   ];
 
