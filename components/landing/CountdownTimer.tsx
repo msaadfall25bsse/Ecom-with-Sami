@@ -26,24 +26,71 @@ export function CountdownTimer({
   trustBadge2 = 'Instant LMS Activation',
   trustBadge3 = '9,700+ Students'
 }: CountdownTimerProps) {
-  const [totalSeconds, setTotalSeconds] = useState(
+  const configuredDuration = Math.max(
+    1,
     Number(initialHours || 0) * 3600 + Number(initialMinutes || 0) * 60 + Number(initialSeconds || 0)
   );
+
+  const [totalSeconds, setTotalSeconds] = useState(configuredDuration);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
-    setTotalSeconds(
-      Number(initialHours || 0) * 3600 + Number(initialMinutes || 0) * 60 + Number(initialSeconds || 0)
-    );
-  }, [initialHours, initialMinutes, initialSeconds]);
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setTotalSeconds(prev => (prev > 0 ? prev - 1 : 0));
-    }, 1000);
+    const getOrInitTargetTime = () => {
+      const now = Date.now();
+      try {
+        const storedTarget = localStorage.getItem('sami_checkout_timer_target');
+        const storedDuration = localStorage.getItem('sami_checkout_timer_duration');
+
+        // If admin changed duration in CMS or no target stored, create fresh target
+        if (!storedTarget || storedDuration !== String(configuredDuration)) {
+          const newTarget = now + configuredDuration * 1000;
+          localStorage.setItem('sami_checkout_timer_target', String(newTarget));
+          localStorage.setItem('sami_checkout_timer_duration', String(configuredDuration));
+          return newTarget;
+        }
+
+        const target = Number(storedTarget);
+        // If timer reached 0 (expired), automatically start a fresh rolling cycle
+        if (isNaN(target) || target <= now) {
+          const newTarget = now + configuredDuration * 1000;
+          localStorage.setItem('sami_checkout_timer_target', String(newTarget));
+          localStorage.setItem('sami_checkout_timer_duration', String(configuredDuration));
+          return newTarget;
+        }
+
+        return target;
+      } catch (e) {
+        return now + configuredDuration * 1000;
+      }
+    };
+
+    let targetTime = getOrInitTargetTime();
+
+    const updateRemaining = () => {
+      const now = Date.now();
+      let remaining = Math.max(0, Math.floor((targetTime - now) / 1000));
+
+      // Auto-loop when timer hits 00:00:00
+      if (remaining <= 0) {
+        targetTime = now + configuredDuration * 1000;
+        try {
+          localStorage.setItem('sami_checkout_timer_target', String(targetTime));
+          localStorage.setItem('sami_checkout_timer_duration', String(configuredDuration));
+        } catch (e) {}
+        remaining = configuredDuration;
+      }
+
+      setTotalSeconds(remaining);
+    };
+
+    // Calculate immediately
+    updateRemaining();
+
+    const timer = setInterval(updateRemaining, 1000);
     return () => clearInterval(timer);
-  }, []);
+  }, [configuredDuration]);
 
   const hours = Math.floor(totalSeconds / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);
