@@ -2,38 +2,50 @@
 
 import React, { useState, useEffect } from 'react';
 import { ChevronDown, PlayCircle } from 'lucide-react';
-import { initialModules } from '@/utils/db';
+import { defaultCmsContent } from '@/utils/cmsStore';
 
-export interface ModuleItem {
-  id?: number;
-  module_number?: string;
+export interface CurriculumLessonItem {
+  id?: string;
   title: string;
-  duration?: string;
-  description?: string;
-  lesson_count?: number;
-  lessons?: { id?: string; title: string; duration?: string; videoUrl?: string }[];
 }
 
-export function CurriculumAccordion({ modules: initialCustomModules }: { modules?: any[] }) {
+export interface CurriculumModuleItem {
+  id?: string | number;
+  title: string;
+  lessons?: (string | CurriculumLessonItem)[];
+}
+
+export type ModuleItem = CurriculumModuleItem;
+
+export function CurriculumAccordion({ modules: customModules }: { modules?: CurriculumModuleItem[] }) {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
-  const [moduleList, setModuleList] = useState<any[]>(initialCustomModules || initialModules);
+  const [moduleList, setModuleList] = useState<CurriculumModuleItem[]>(
+    customModules && customModules.length > 0
+      ? customModules
+      : defaultCmsContent.homepage_curriculum?.modules || []
+  );
 
   useEffect(() => {
-    const timestamp = Date.now();
-    fetch(`/api/lms/modules?t=${timestamp}`, {
-      cache: 'no-store',
-      headers: {
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Pragma': 'no-cache'
-      }
-    })
-      .then(r => r.json())
-      .then(res => {
-        if (res.success && Array.isArray(res.modules)) {
-          setModuleList(res.modules);
+    if (customModules && customModules.length > 0) {
+      setModuleList(customModules);
+    }
+  }, [customModules]);
+
+  // Also listen to local CMS update event
+  useEffect(() => {
+    const handleCmsUpdate = () => {
+      try {
+        const stored = localStorage.getItem('sami_cms_content');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (parsed?.homepage_curriculum?.modules) {
+            setModuleList(parsed.homepage_curriculum.modules);
+          }
         }
-      })
-      .catch(() => {});
+      } catch {}
+    };
+    window.addEventListener('sami_cms_updated', handleCmsUpdate);
+    return () => window.removeEventListener('sami_cms_updated', handleCmsUpdate);
   }, []);
 
   if (!moduleList || moduleList.length === 0) {
@@ -98,17 +110,20 @@ export function CurriculumAccordion({ modules: initialCustomModules }: { modules
               <div className="px-4 pb-5 sm:px-6 sm:pb-6 pt-2 border-t border-gray-100 space-y-2 animate-in fade-in-50 duration-150">
                 {lessons.length > 0 ? (
                   <ul className="space-y-2 pt-1">
-                    {lessons.map((lesson: any, lIdx: number) => (
-                      <li
-                        key={lesson.id || lIdx}
-                        className="p-3 rounded-xl bg-slate-50 border border-gray-100 flex items-center gap-2.5 text-xs sm:text-sm hover:bg-slate-100/80 transition-colors"
-                      >
-                        <PlayCircle size={16} className="text-[#00A0DF] flex-shrink-0" />
-                        <span className="text-slate-800 font-bold truncate">
-                          {lesson.title}
-                        </span>
-                      </li>
-                    ))}
+                    {lessons.map((lesson: any, lIdx: number) => {
+                      const lessonTitle = typeof lesson === 'string' ? lesson : (lesson.title || String(lesson));
+                      return (
+                        <li
+                          key={lIdx}
+                          className="p-3 rounded-xl bg-slate-50 border border-gray-100 flex items-center gap-2.5 text-xs sm:text-sm hover:bg-slate-100/80 transition-colors"
+                        >
+                          <PlayCircle size={16} className="text-[#00A0DF] flex-shrink-0" />
+                          <span className="text-slate-800 font-bold truncate">
+                            {lessonTitle}
+                          </span>
+                        </li>
+                      );
+                    })}
                   </ul>
                 ) : (
                   <p className="text-xs text-slate-500 italic py-2">
@@ -125,4 +140,3 @@ export function CurriculumAccordion({ modules: initialCustomModules }: { modules
 }
 
 export default CurriculumAccordion;
-

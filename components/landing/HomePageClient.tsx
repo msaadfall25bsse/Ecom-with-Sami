@@ -1102,16 +1102,18 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           
           <div className="text-center max-w-3xl mx-auto mb-12 sm:mb-16">
-            <span className="section-tag-pill">COMPLETE COURSE CURRICULUM</span>
+            <span className="section-tag-pill">
+              {content.homepage_curriculum?.tag || 'COMPLETE COURSE CURRICULUM'}
+            </span>
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 tracking-tight mb-3">
-              Everything You Get Inside the Course
+              {content.homepage_curriculum?.title || 'Everything You Get Inside the Course'}
             </h2>
             <p className="text-xs sm:text-sm md:text-base text-slate-600 font-medium">
-              Start from zero and build your own UAE &amp; KSA store, step by step.
+              {content.homepage_curriculum?.subtitle || 'Start from zero and build your own UAE & KSA store, step by step.'}
             </p>
           </div>
 
-          <CurriculumAccordion modules={initialModules} />
+          <CurriculumAccordion modules={content.homepage_curriculum?.modules || defaultCmsContent.homepage_curriculum?.modules} />
 
           <div className="text-center mt-10">
             <Link

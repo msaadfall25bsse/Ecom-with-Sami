@@ -58,9 +58,11 @@ export default function AdminCmsPage() {
   const router = useRouter();
   const [authChecking, setAuthChecking] = useState(true);
   const [activeTab, setActiveTab] = useState<
-    'marquee' | 'hero' | 'stats' | 'why' | 'what' | 'mentor' | 'video_reviews' | 'who' | 'lms' | 'bonuses' | 'reviews' | 'proofwall_home' | 'options' | 'cost' | 'faqs' | 'cta' | 'contact' | 'payments' | 'themes' | 'pixels' | 'success_page' | 'checkout_page'
+    'marquee' | 'hero' | 'stats' | 'why' | 'what' | 'mentor' | 'video_reviews' | 'who' | 'homepage_curriculum' | 'lms' | 'bonuses' | 'reviews' | 'proofwall_home' | 'options' | 'cost' | 'faqs' | 'cta' | 'contact' | 'payments' | 'themes' | 'pixels' | 'success_page' | 'checkout_page'
   >('hero');
   const [cmsData, setCmsData] = useState<CmsContentSchema>(defaultCmsContent);
+  const [openHomeModIndex, setOpenHomeModIndex] = useState<number | null>(0);
+  const [newTopicInputs, setNewTopicInputs] = useState<{ [modIdx: number]: string }>({});
   const [modules, setModules] = useState<Module[]>(initialModules);
   const [suppliers, setSuppliers] = useState<Supplier[]>(initialSuppliers);
   const [loading, setLoading] = useState(false);
@@ -1484,7 +1486,8 @@ export default function AdminCmsPage() {
             { id: 'mentor', label: '6. 👤 Mentor Profile', icon: Award },
             { id: 'video_reviews', label: '7. 🎥 Video Reviews', icon: FileVideo },
             { id: 'who', label: '8. 🎯 Who Is This For', icon: ShieldCheck },
-            { id: 'lms', label: '9. 📚 Curriculum LMS', icon: BookOpen },
+            { id: 'homepage_curriculum', label: '9A. 🌐 Homepage Curriculum (Accordion)', icon: BookOpen },
+            { id: 'lms', label: '9B. 📚 LMS Portal (Videos & Lessons)', icon: Video },
             { id: 'bonuses', label: '10. 🎁 6 Bonuses', icon: Gift },
             { id: 'reviews', label: '11A. 🏆 Proof Wall (Checkout)', icon: Award },
             { id: 'proofwall_home', label: '11B. 🌟 Proof Wall (Homepage)', icon: Star },
@@ -1522,7 +1525,343 @@ export default function AdminCmsPage() {
       <main className="max-w-7xl mx-auto px-3 sm:px-8 pt-6 sm:pt-8">
         
         {/* ========================================================================= */}
-        {/* TAB 0: LMS COURSE & CURRICULUM MANAGER */}
+        {/* TAB 9A: HOMEPAGE CURRICULUM ACCORDION (MARKETING OUTLINE) */}
+        {/* ========================================================================= */}
+        {activeTab === 'homepage_curriculum' && (
+          <div className="space-y-6 sm:space-y-8">
+            
+            {/* Top Action & Information Bar */}
+            <div className="bg-[#111827] border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xl">
+              <div>
+                <h2 className="text-base sm:text-2xl font-black text-white flex items-center gap-2">
+                  <BookOpen size={20} className="text-[#00A0DF]" />
+                  <span>Homepage Course Curriculum (Accordion)</span>
+                </h2>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  Manage the public FAQ-style modules &amp; lecture outline displayed on the Homepage.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const current = cmsData.homepage_curriculum?.modules || defaultCmsContent.homepage_curriculum?.modules || [];
+                    const nextNum = current.length + 1;
+                    const newModule = {
+                      id: `mod_${Date.now()}`,
+                      title: `Module ${nextNum}: New Course Topic`,
+                      lessons: [
+                        `${nextNum}.1 Getting Started & Setup`
+                      ]
+                    };
+                    const updated = [...current, newModule];
+                    setCmsData({
+                      ...cmsData,
+                      homepage_curriculum: {
+                        ...(cmsData.homepage_curriculum || defaultCmsContent.homepage_curriculum!),
+                        modules: updated
+                      }
+                    });
+                    setOpenHomeModIndex(updated.length - 1);
+                  }}
+                  className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-4 py-2 sm:py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-xs font-black text-white shadow-lg shadow-emerald-600/20 transition-all active:scale-95"
+                >
+                  <Plus size={15} />
+                  <span>Add Module to Homepage</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Explanatory Banner */}
+            <div className="p-4 rounded-2xl bg-[#00A0DF]/10 border border-[#00A0DF]/30 flex items-start gap-3 text-xs text-slate-300">
+              <span className="text-lg flex-shrink-0">💡</span>
+              <div className="leading-relaxed">
+                <strong className="text-white">Note:</strong> Yeh section sirf aapki <strong>Homepage (Landing Page)</strong> par aane wale 
+                course curriculum accordion ko control karta hai. Yahan aap bina kisi video upload ke asani se module titles aur topics add/edit kar sakte hain. 
+                Actual enrolled students ke video lessons aur Bunny Stream videos alag <strong>&quot;9B. 📚 LMS Portal&quot;</strong> tab se manage hotay hain.
+              </div>
+            </div>
+
+            {/* Section Headings Customization */}
+            <div className="bg-[#111827] border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-6 space-y-4 shadow-xl">
+              <h3 className="text-sm font-bold text-white uppercase tracking-wider text-[#00A0DF]">
+                Homepage Section Headers
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                    Tag Pill
+                  </label>
+                  <input
+                    type="text"
+                    value={cmsData.homepage_curriculum?.tag ?? defaultCmsContent.homepage_curriculum?.tag ?? ''}
+                    onChange={(e) => {
+                      const cur = cmsData.homepage_curriculum || defaultCmsContent.homepage_curriculum!;
+                      setCmsData({
+                        ...cmsData,
+                        homepage_curriculum: { ...cur, tag: e.target.value }
+                      });
+                    }}
+                    className="w-full px-3 py-2 rounded-xl bg-[#0B0F19] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                    Main Heading
+                  </label>
+                  <input
+                    type="text"
+                    value={cmsData.homepage_curriculum?.title ?? defaultCmsContent.homepage_curriculum?.title ?? ''}
+                    onChange={(e) => {
+                      const cur = cmsData.homepage_curriculum || defaultCmsContent.homepage_curriculum!;
+                      setCmsData({
+                        ...cmsData,
+                        homepage_curriculum: { ...cur, title: e.target.value }
+                      });
+                    }}
+                    className="w-full px-3 py-2 rounded-xl bg-[#0B0F19] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                    Subtitle
+                  </label>
+                  <input
+                    type="text"
+                    value={cmsData.homepage_curriculum?.subtitle ?? defaultCmsContent.homepage_curriculum?.subtitle ?? ''}
+                    onChange={(e) => {
+                      const cur = cmsData.homepage_curriculum || defaultCmsContent.homepage_curriculum!;
+                      setCmsData({
+                        ...cmsData,
+                        homepage_curriculum: { ...cur, subtitle: e.target.value }
+                      });
+                    }}
+                    className="w-full px-3 py-2 rounded-xl bg-[#0B0F19] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF]"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Modules List for Homepage */}
+            <div className="space-y-3 sm:space-y-4">
+              {((cmsData.homepage_curriculum?.modules && cmsData.homepage_curriculum.modules.length > 0)
+                ? cmsData.homepage_curriculum.modules
+                : (defaultCmsContent.homepage_curriculum?.modules || [])
+              ).map((mod, modIdx) => {
+                const isOpen = openHomeModIndex === modIdx;
+                const lessons = mod.lessons || [];
+
+                return (
+                  <div
+                    key={mod.id || modIdx}
+                    className="bg-[#111827] border border-white/10 rounded-2xl overflow-hidden shadow-lg transition-all"
+                  >
+                    {/* Module Header Bar */}
+                    <div className="p-3.5 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#111827]">
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <span className="w-8 h-8 rounded-xl bg-[#00A0DF]/15 text-[#00A0DF] font-black text-xs sm:text-sm flex items-center justify-center flex-shrink-0 border border-[#00A0DF]/30">
+                          {String(modIdx + 1).padStart(2, '0')}
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          <input
+                            type="text"
+                            value={mod.title}
+                            onChange={(e) => {
+                              const curMods = [...(cmsData.homepage_curriculum?.modules || defaultCmsContent.homepage_curriculum?.modules || [])];
+                              curMods[modIdx] = { ...curMods[modIdx], title: e.target.value };
+                              setCmsData({
+                                ...cmsData,
+                                homepage_curriculum: {
+                                  ...(cmsData.homepage_curriculum || defaultCmsContent.homepage_curriculum!),
+                                  modules: curMods
+                                }
+                              });
+                            }}
+                            className="w-full bg-[#0B0F19] border border-white/10 rounded-xl px-3 py-1.5 text-xs sm:text-sm font-bold text-white focus:outline-none focus:border-[#00A0DF]"
+                            placeholder="Module Title (e.g. Module 1: Dropshipping Fundamentals)"
+                          />
+                          <p className="text-[11px] text-slate-400 mt-1 pl-1">
+                            {lessons.length} Lectures / Topics Included
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 self-end sm:self-center flex-shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => setOpenHomeModIndex(isOpen ? null : modIdx)}
+                          className="px-3 py-1.5 rounded-xl bg-[#1E293B] hover:bg-[#00A0DF] text-slate-200 hover:text-white text-xs font-bold transition-colors flex items-center gap-1.5 border border-white/5"
+                        >
+                          <span>{isOpen ? 'Hide Topics' : `Manage Topics (${lessons.length})`}</span>
+                          {isOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (!confirm(`Delete "${mod.title}" from Homepage?`)) return;
+                            const curMods = (cmsData.homepage_curriculum?.modules || defaultCmsContent.homepage_curriculum?.modules || []).filter((_, i) => i !== modIdx);
+                            setCmsData({
+                              ...cmsData,
+                              homepage_curriculum: {
+                                ...(cmsData.homepage_curriculum || defaultCmsContent.homepage_curriculum!),
+                                modules: curMods
+                              }
+                            });
+                          }}
+                          className="p-2 rounded-xl bg-red-500/10 hover:bg-red-500/30 text-red-400 transition-colors"
+                          title="Delete Module from Homepage"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Expanded Topics / Lectures List */}
+                    {isOpen && (
+                      <div className="p-4 sm:p-6 bg-[#0B0F19] border-t border-white/10 space-y-3">
+                        {/* Quick Add Topic Input */}
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="text"
+                            placeholder={`e.g. ${modIdx + 1}.${lessons.length + 1} New Topic Title`}
+                            value={newTopicInputs[modIdx] || ''}
+                            onChange={(e) => setNewTopicInputs({ ...newTopicInputs, [modIdx]: e.target.value })}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                const val = (newTopicInputs[modIdx] || '').trim();
+                                if (!val) return;
+                                const curMods = [...(cmsData.homepage_curriculum?.modules || defaultCmsContent.homepage_curriculum?.modules || [])];
+                                curMods[modIdx] = {
+                                  ...curMods[modIdx],
+                                  lessons: [...(curMods[modIdx].lessons || []), val]
+                                };
+                                setCmsData({
+                                  ...cmsData,
+                                  homepage_curriculum: {
+                                    ...(cmsData.homepage_curriculum || defaultCmsContent.homepage_curriculum!),
+                                    modules: curMods
+                                  }
+                                });
+                                setNewTopicInputs({ ...newTopicInputs, [modIdx]: '' });
+                              }
+                            }}
+                            className="flex-1 px-3 py-2 rounded-xl bg-[#111827] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF]"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const val = (newTopicInputs[modIdx] || '').trim();
+                              if (!val) return;
+                              const curMods = [...(cmsData.homepage_curriculum?.modules || defaultCmsContent.homepage_curriculum?.modules || [])];
+                              curMods[modIdx] = {
+                                ...curMods[modIdx],
+                                lessons: [...(curMods[modIdx].lessons || []), val]
+                              };
+                              setCmsData({
+                                ...cmsData,
+                                homepage_curriculum: {
+                                  ...(cmsData.homepage_curriculum || defaultCmsContent.homepage_curriculum!),
+                                  modules: curMods
+                                }
+                              });
+                              setNewTopicInputs({ ...newTopicInputs, [modIdx]: '' });
+                            }}
+                            className="px-4 py-2 rounded-xl bg-[#00A0DF] hover:bg-[#008ec7] text-white text-xs font-bold transition-all flex items-center gap-1.5 flex-shrink-0 active:scale-95"
+                          >
+                            <Plus size={14} />
+                            <span>Add Topic</span>
+                          </button>
+                        </div>
+
+                        {/* List of Existing Topics */}
+                        <div className="space-y-2 pt-1">
+                          {lessons.length === 0 ? (
+                            <p className="text-xs text-slate-500 italic py-2">
+                              No topics added to this module yet. Type a topic above and click &quot;Add Topic&quot;.
+                            </p>
+                          ) : (
+                            lessons.map((lessonItem, lIdx) => {
+                              const lessonText = typeof lessonItem === 'string' ? lessonItem : (lessonItem as any).title;
+                              return (
+                                <div
+                                  key={lIdx}
+                                  className="flex items-center gap-2.5 bg-[#111827] p-2.5 rounded-xl border border-white/5"
+                                >
+                                  <span className="text-[11px] font-mono text-[#00A0DF] font-bold w-6 text-center">
+                                    {lIdx + 1}.
+                                  </span>
+                                  <input
+                                    type="text"
+                                    value={lessonText}
+                                    onChange={(e) => {
+                                      const curMods = [...(cmsData.homepage_curriculum?.modules || defaultCmsContent.homepage_curriculum?.modules || [])];
+                                      const curLessons = [...(curMods[modIdx].lessons || [])];
+                                      curLessons[lIdx] = e.target.value;
+                                      curMods[modIdx] = { ...curMods[modIdx], lessons: curLessons };
+                                      setCmsData({
+                                        ...cmsData,
+                                        homepage_curriculum: {
+                                          ...(cmsData.homepage_curriculum || defaultCmsContent.homepage_curriculum!),
+                                          modules: curMods
+                                        }
+                                      });
+                                    }}
+                                    className="flex-1 bg-transparent border-0 text-xs text-white focus:outline-none focus:bg-[#0B0F19] px-2 py-1 rounded-lg"
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const curMods = [...(cmsData.homepage_curriculum?.modules || defaultCmsContent.homepage_curriculum?.modules || [])];
+                                      const curLessons = (curMods[modIdx].lessons || []).filter((_, i) => i !== lIdx);
+                                      curMods[modIdx] = { ...curMods[modIdx], lessons: curLessons };
+                                      setCmsData({
+                                        ...cmsData,
+                                        homepage_curriculum: {
+                                          ...(cmsData.homepage_curriculum || defaultCmsContent.homepage_curriculum!),
+                                          modules: curMods
+                                        }
+                                      });
+                                    }}
+                                    className="p-1.5 text-slate-500 hover:text-red-400 transition-colors rounded-lg hover:bg-red-500/10"
+                                    title="Delete Topic"
+                                  >
+                                    <Trash2 size={13} />
+                                  </button>
+                                </div>
+                              );
+                            })
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Bottom Save Button */}
+            <div className="pt-4 border-t border-white/5 flex items-center justify-between">
+              <p className="text-xs text-slate-400">
+                Changes will update live on <strong>Homepage (/) Curriculum Accordion</strong> immediately upon saving.
+              </p>
+              <button
+                type="button"
+                onClick={handleSaveAll}
+                disabled={loading}
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs sm:text-sm font-black shadow-lg shadow-emerald-600/30 transition-all active:scale-95"
+              >
+                <Save size={15} />
+                <span>{loading ? 'Saving...' : 'Save Homepage Curriculum'}</span>
+              </button>
+            </div>
+
+          </div>
+        )}
+
+        {/* ========================================================================= */}
+        {/* TAB 9B: LMS COURSE & CURRICULUM MANAGER (FOR ENROLLED STUDENTS) */}
         {/* ========================================================================= */}
         {activeTab === 'lms' && (
           <div className="space-y-6 sm:space-y-8">

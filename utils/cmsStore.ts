@@ -219,6 +219,16 @@ export interface CmsContentSchema {
     trust_badge2: string;
     trust_badge3: string;
   };
+  homepage_curriculum?: {
+    tag?: string;
+    title?: string;
+    subtitle?: string;
+    modules: {
+      id: string;
+      title: string;
+      lessons: string[];
+    }[];
+  };
 }
 
 export interface ThemeCustomColors {
@@ -830,6 +840,115 @@ export const defaultCmsContent: CmsContentSchema = {
     trust_badge1: 'Lifetime Access',
     trust_badge2: 'Instant LMS Activation',
     trust_badge3: '9,700+ Students'
+  },
+  homepage_curriculum: {
+    tag: 'COMPLETE COURSE CURRICULUM',
+    title: 'Everything You Get Inside the Course',
+    subtitle: 'Start from zero and build your own UAE & KSA store, step by step.',
+    modules: [
+      {
+        id: 'mod_1',
+        title: 'Module 1: GCC Dropshipping Fundamentals & Opportunity',
+        lessons: [
+          '1.1 GCC Dropshipping Overview & Market Arbitrage',
+          '1.2 Mindset, Capital Requirements & Legal Structure',
+          '1.3 Selecting Between UAE (AED) vs Saudi Arabia (SAR)'
+        ]
+      },
+      {
+        id: 'mod_2',
+        title: 'Module 2: High-Converting Shopify Store Architecture',
+        lessons: [
+          '2.1 Shopify Account Creation & Partner Plan Setup',
+          '2.2 Installing the Free High-Converting Custom Theme',
+          '2.3 Setting Up Fast COD Form & WhatsApp Floating Chat',
+          '2.4 Currency Converters & Arabic Multi-language Integration'
+        ]
+      },
+      {
+        id: 'mod_3',
+        title: 'Module 3: Winning Product Research & Validation Criteria',
+        lessons: [
+          '3.1 The 15-Point Winning Product Matrix for GCC',
+          '3.2 Spying on Top Dubai Competitors via TikTok Ads Library',
+          '3.3 Product Margin & Break-Even ROAS Calculation'
+        ]
+      },
+      {
+        id: 'mod_4',
+        title: 'Module 4: Sourcing from Verified Wholesale UAE & KSA Suppliers',
+        lessons: [
+          '4.1 How to Negotiate with Deira & Riyadh Warehouse Managers',
+          '4.2 Utilizing the Private Supplier Directory Included in Course',
+          '4.3 Handling Stock Availability, Packaging & QA Inspections'
+        ]
+      },
+      {
+        id: 'mod_5',
+        title: 'Module 5: TikTok Ads Mastery & Pixel Integration',
+        lessons: [
+          '5.1 Creating TikTok Agency Ad Accounts Without Bans',
+          '5.2 TikTok Pixel & Events API Setup via Google Tag Manager',
+          '5.3 The CBO Testing Framework (Rs 5,000 to 50 Orders)',
+          '5.4 UGC Video Creation & Hook Formulas That Print Dirhams'
+        ]
+      },
+      {
+        id: 'mod_6',
+        title: 'Module 6: Facebook & Instagram Ads Scaling Engine',
+        lessons: [
+          '6.1 Meta Business Manager Verification & Pixel Setup',
+          '6.2 Advantage+ Campaigns vs Manual Broad Targeting',
+          '6.3 Retargeting Sequences & Dynamic Product Ads (DPA)',
+          '6.4 Scaling Winning Ad Sets to AED 5,000/Day Safely'
+        ]
+      },
+      {
+        id: 'mod_7',
+        title: 'Module 7: WhatsApp Automation & Order Confirmation Funnel',
+        lessons: [
+          '7.1 Setting Up Automated WhatsApp Confirmation Flows',
+          '7.2 Gulf Arabic Voice Note Scripts That Reduce Cancellations',
+          '7.3 Address Verification Hacks (Dubai Al-Barsha, Riyadh Olaya)'
+        ]
+      },
+      {
+        id: 'mod_8',
+        title: 'Module 8: Courier Logistics, COD Remittance & Return Rate (RTO) Control',
+        lessons: [
+          '8.1 Courier Onboarding (SMSA, Aramex, Zajil, Local Couriers)',
+          '8.2 Tracking Remittances & Withdrawing PKR to Pakistani Banks',
+          '8.3 RTO Minimization Strategies & Re-delivery Automation'
+        ]
+      },
+      {
+        id: 'mod_9',
+        title: 'Module 9: Financial Management, P&L Tracking & Currency Transfers',
+        lessons: [
+          '9.1 E-Commerce Profit & Loss Spreadsheet Walkthrough',
+          '9.2 Managing Credit Limits for Ads & Working Capital',
+          '9.3 Tax Considerations & Long-Term Wealth Planning'
+        ]
+      },
+      {
+        id: 'mod_10',
+        title: 'Module 10: Building a Private Label Brand in UAE & Saudi Arabia',
+        lessons: [
+          '10.1 When and How to Transition into Private Label',
+          '10.2 Custom Packaging & Arabic Labeling Regulations',
+          '10.3 Trademark Registration in UAE & Saudi Arabia (MOC)'
+        ]
+      },
+      {
+        id: 'mod_11',
+        title: 'Module 11: Scaling to 7-Figures & Team Hiring Blueprint',
+        lessons: [
+          '11.1 Hiring & Training Customer Support VAs on Upwork',
+          '11.2 Standard Operating Procedures (SOPs) for Daily Store Ops',
+          '11.3 Final Words of Wisdom from Mentor Sardar Samiullah'
+        ]
+      }
+    ]
   }
 };
 
