@@ -1,5 +1,13 @@
 import { supabase } from './supabase';
-import { mysqlGetCmsSettings, mysqlSaveCmsSettings } from './mysql';
+import { 
+  mysqlGetCmsSettings, 
+  mysqlSaveCmsSettings, 
+  mysqlGetModules, 
+  mysqlAddModule, 
+  mysqlUpdateModule, 
+  mysqlDeleteModule, 
+  mysqlBulkDeleteModules 
+} from './mysql';
 import { defaultCmsContent, CmsContentSchema, ThemeCustomColors, DEFAULT_THEME_COLORS } from '@/utils/cmsStore';
 import { 
   initialStudents, 
@@ -211,9 +219,20 @@ export async function dbSaveCmsSettings(patch: Partial<CmsContentSchema>): Promi
 }
 
 // -----------------------------------------------------------------------------
-// 2. LMS MODULES & LECTURES (100% DIRECT SUPABASE REAL-TIME READ/WRITE)
+// 2. LMS MODULES & LECTURES (HOSTINGER MYSQL PRIMARY REAL-TIME READ/WRITE)
 // -----------------------------------------------------------------------------
 export async function dbGetModules(): Promise<Module[]> {
+  // 1. Primary: Hostinger MySQL
+  try {
+    const mysqlMods = await mysqlGetModules();
+    if (mysqlMods !== null) {
+      return mysqlMods;
+    }
+  } catch (e) {
+    console.error('Hostinger MySQL get modules error:', e);
+  }
+
+  // 2. Secondary fallback: Supabase
   if (supabase) {
     try {
       const { data, error } = await supabase
@@ -239,6 +258,29 @@ export async function dbGetModules(): Promise<Module[]> {
 }
 
 export async function dbAddModule(module: Module): Promise<Module> {
+  // 1. Primary: Hostinger MySQL
+  try {
+    const saved = await mysqlAddModule(module);
+    if (saved) {
+      if (supabase) {
+        try {
+          await supabase.from('lms_modules').upsert({
+            id: saved.id,
+            title: saved.title,
+            duration: saved.duration,
+            description: saved.description,
+            lessons_json: JSON.stringify(saved.lessons || []),
+            updated_at: new Date().toISOString()
+          });
+        } catch {}
+      }
+      return saved;
+    }
+  } catch (e) {
+    console.error('Hostinger MySQL add module error:', e);
+  }
+
+  // Secondary fallback
   if (supabase) {
     try {
       await supabase.from('lms_modules').upsert({
@@ -258,6 +300,28 @@ export async function dbAddModule(module: Module): Promise<Module> {
 }
 
 export async function dbUpdateModule(id: number, patch: Partial<Module>): Promise<Module | null> {
+  // 1. Primary: Hostinger MySQL
+  try {
+    const updated = await mysqlUpdateModule(id, patch);
+    if (updated) {
+      if (supabase) {
+        try {
+          await supabase.from('lms_modules').update({
+            title: updated.title,
+            duration: updated.duration,
+            description: updated.description,
+            lessons_json: JSON.stringify(updated.lessons || []),
+            updated_at: new Date().toISOString()
+          }).eq('id', id);
+        } catch {}
+      }
+      return updated;
+    }
+  } catch (e) {
+    console.error('Hostinger MySQL update module error:', e);
+  }
+
+  // Secondary fallback
   const modules = await dbGetModules();
   const target = modules.find(m => m.id === id);
   if (!target) return null;
@@ -282,6 +346,14 @@ export async function dbUpdateModule(id: number, patch: Partial<Module>): Promis
 }
 
 export async function dbDeleteModule(id: number): Promise<boolean> {
+  // 1. Primary: Hostinger MySQL
+  try {
+    await mysqlDeleteModule(id);
+  } catch (e) {
+    console.error('Hostinger MySQL delete module error:', e);
+  }
+
+  // 2. Secondary: Supabase
   if (supabase) {
     try {
       await supabase.from('lms_modules').delete().eq('id', id);
@@ -291,6 +363,27 @@ export async function dbDeleteModule(id: number): Promise<boolean> {
   }
   return true;
 }
+
+export async function dbBulkDeleteModules(ids: number[]): Promise<boolean> {
+  if (!ids || ids.length === 0) return true;
+  // 1. Primary: Hostinger MySQL
+  try {
+    await mysqlBulkDeleteModules(ids);
+  } catch (e) {
+    console.error('Hostinger MySQL bulk delete modules error:', e);
+  }
+
+  // 2. Secondary: Supabase
+  if (supabase) {
+    try {
+      await supabase.from('lms_modules').delete().in('id', ids);
+    } catch (e) {
+      console.error('Supabase bulk delete module error:', e);
+    }
+  }
+  return true;
+}
+
 
 export async function dbAddLesson(moduleId: number, lesson: Lesson): Promise<Lesson | null> {
   const modules = await dbGetModules();

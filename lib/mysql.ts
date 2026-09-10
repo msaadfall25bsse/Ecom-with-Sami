@@ -1,5 +1,6 @@
 import mysql from 'mysql2/promise';
 import { defaultCmsContent } from '@/utils/cmsStore';
+import { Module, Lesson, initialModules } from '@/utils/db';
 
 let pool: mysql.Pool | null = null;
 let tablesInitialized = false;
@@ -82,6 +83,19 @@ export async function ensureAnalyticsTables(): Promise<boolean> {
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
     `);
 
+    // 5. LMS Modules table in Hostinger MySQL
+    await p.query(`
+      CREATE TABLE IF NOT EXISTS \`lms_modules\` (
+        \`id\` INT NOT NULL,
+        \`title\` VARCHAR(255) NOT NULL,
+        \`duration\` VARCHAR(100) NULL,
+        \`description\` TEXT NULL,
+        \`lessons_json\` LONGTEXT NULL,
+        \`updated_at\` DATETIME NULL,
+        PRIMARY KEY (\`id\`)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    `);
+
     // Auto-seed main_cms if not present
     try {
       const [cmsRows]: any = await p.query(`SELECT \`key\` FROM cms_settings WHERE \`key\` = 'main_cms' LIMIT 1`);
@@ -90,6 +104,24 @@ export async function ensureAnalyticsTables(): Promise<boolean> {
           `INSERT INTO cms_settings (\`key\`, \`value_json\`) VALUES ('main_cms', ?)`,
           [JSON.stringify(defaultCmsContent)]
         );
+      }
+    } catch {
+      // Ignore seed error
+    }
+
+    // Auto-seed initialModules once if lms_seeded flag is not set
+    try {
+      const [seedFlag]: any = await p.query(`SELECT \`key\` FROM cms_settings WHERE \`key\` = 'lms_seeded' LIMIT 1`);
+      if (!Array.isArray(seedFlag) || seedFlag.length === 0) {
+        for (const mod of initialModules) {
+          await p.query(
+            `INSERT INTO lms_modules (\`id\`, \`title\`, \`duration\`, \`description\`, \`lessons_json\`, \`updated_at\`)
+             VALUES (?, ?, ?, ?, ?, NOW())
+             ON DUPLICATE KEY UPDATE \`updated_at\` = NOW()`,
+            [mod.id, mod.title, mod.duration, mod.description, JSON.stringify(mod.lessons || [])]
+          );
+        }
+        await p.query(`INSERT INTO cms_settings (\`key\`, \`value_json\`) VALUES ('lms_seeded', 'true')`);
       }
     } catch {
       // Ignore seed error
@@ -448,3 +480,164 @@ export async function getLast30DaysAnalytics(): Promise<{
   };
 }
 
+/**
+ * Fetches all LMS modules from Hostinger MySQL.
+ * Returns empty array [] if admin deleted all modules (avoids resurrection).
+ */
+export async function mysqlGetModules(): Promise<Module[] | null> {
+  const hasTables = await ensureAnalyticsTables();
+  if (hasTables && pool) {
+    try {
+      const [rows]: any = await pool.query(
+        `SELECT id, title, duration, description, lessons_json FROM lms_modules ORDER BY id ASC`
+      );
+      if (Array.isArray(rows)) {
+        return rows.map((r: any) => {
+          let lessons: Lesson[] = [];
+          if (r.lessons_json) {
+            try {
+              lessons = typeof r.lessons_json === 'string' ? JSON.parse(r.lessons_json) : r.lessons_json;
+            } catch {
+              lessons = [];
+            }
+          }
+          return {
+            id: Number(r.id),
+            title: r.title || '',
+            duration: r.duration || '',
+            description: r.description || '',
+            lessons: Array.isArray(lessons) ? lessons : [],
+          };
+        });
+      }
+    } catch (err) {
+      console.error('mysqlGetModules error:', err);
+    }
+  }
+  return null;
+}
+
+/**
+ * Inserts a new LMS module into Hostinger MySQL.
+ */
+export async function mysqlAddModule(mod: Module): Promise<Module> {
+  const hasTables = await ensureAnalyticsTables();
+  if (hasTables && pool) {
+    let newId = mod.id;
+    if (!newId || newId <= 0) {
+      try {
+        const [maxRows]: any = await pool.query(`SELECT COALESCE(MAX(id), 0) + 1 as nextId FROM lms_modules`);
+        if (Array.isArray(maxRows) && maxRows[0]?.nextId) {
+          newId = Number(maxRows[0].nextId);
+        } else {
+          newId = Date.now();
+        }
+      } catch {
+        newId = Date.now();
+      }
+    }
+
+    const lessonsJson = JSON.stringify(mod.lessons || []);
+    await pool.query(
+      `INSERT INTO lms_modules (\`id\`, \`title\`, \`duration\`, \`description\`, \`lessons_json\`, \`updated_at\`)
+       VALUES (?, ?, ?, ?, ?, NOW())
+       ON DUPLICATE KEY UPDATE 
+         \`title\` = VALUES(\`title\`),
+         \`duration\` = VALUES(\`duration\`),
+         \`description\` = VALUES(\`description\`),
+         \`lessons_json\` = VALUES(\`lessons_json\`),
+         \`updated_at\` = NOW()`,
+      [newId, mod.title || '', mod.duration || '', mod.description || '', lessonsJson]
+    );
+
+    return { ...mod, id: newId };
+  }
+  return mod;
+}
+
+/**
+ * Updates an existing LMS module in Hostinger MySQL.
+ */
+export async function mysqlUpdateModule(id: number, patch: Partial<Module>): Promise<Module | null> {
+  const hasTables = await ensureAnalyticsTables();
+  if (hasTables && pool) {
+    try {
+      const [rows]: any = await pool.query(
+        `SELECT id, title, duration, description, lessons_json FROM lms_modules WHERE id = ? LIMIT 1`,
+        [id]
+      );
+      if (!Array.isArray(rows) || rows.length === 0) {
+        return null;
+      }
+      const existing = rows[0];
+      let existingLessons: Lesson[] = [];
+      try {
+        existingLessons = typeof existing.lessons_json === 'string' ? JSON.parse(existing.lessons_json) : (existing.lessons_json || []);
+      } catch {
+        existingLessons = [];
+      }
+
+      const updatedTitle = patch.title !== undefined ? patch.title : existing.title;
+      const updatedDuration = patch.duration !== undefined ? patch.duration : existing.duration;
+      const updatedDesc = patch.description !== undefined ? patch.description : existing.description;
+      const updatedLessons = patch.lessons !== undefined ? patch.lessons : existingLessons;
+
+      await pool.query(
+        `UPDATE lms_modules SET
+           \`title\` = ?,
+           \`duration\` = ?,
+           \`description\` = ?,
+           \`lessons_json\` = ?,
+           \`updated_at\` = NOW()
+         WHERE \`id\` = ?`,
+        [updatedTitle || '', updatedDuration || '', updatedDesc || '', JSON.stringify(updatedLessons || []), id]
+      );
+
+      return {
+        id: Number(id),
+        title: updatedTitle,
+        duration: updatedDuration,
+        description: updatedDesc,
+        lessons: updatedLessons,
+      };
+    } catch (err) {
+      console.error('mysqlUpdateModule error:', err);
+    }
+  }
+  return null;
+}
+
+/**
+ * Permanently deletes a single module from Hostinger MySQL.
+ */
+export async function mysqlDeleteModule(id: number): Promise<boolean> {
+  const hasTables = await ensureAnalyticsTables();
+  if (hasTables && pool) {
+    try {
+      await pool.query(`DELETE FROM lms_modules WHERE id = ?`, [id]);
+      return true;
+    } catch (err) {
+      console.error('mysqlDeleteModule error:', err);
+    }
+  }
+  return false;
+}
+
+/**
+ * Permanently deletes multiple modules from Hostinger MySQL.
+ */
+export async function mysqlBulkDeleteModules(ids: number[]): Promise<boolean> {
+  if (!ids || ids.length === 0) return true;
+  const hasTables = await ensureAnalyticsTables();
+  if (hasTables && pool) {
+    try {
+      const numericIds = ids.map(id => Number(id)).filter(id => !isNaN(id) && id > 0);
+      if (numericIds.length === 0) return true;
+      await pool.query(`DELETE FROM lms_modules WHERE id IN (?)`, [numericIds]);
+      return true;
+    } catch (err) {
+      console.error('mysqlBulkDeleteModules error:', err);
+    }
+  }
+  return false;
+}

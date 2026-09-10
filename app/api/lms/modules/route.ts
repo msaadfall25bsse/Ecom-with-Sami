@@ -5,6 +5,7 @@ import {
   dbAddModule, 
   dbUpdateModule, 
   dbDeleteModule, 
+  dbBulkDeleteModules,
   dbAddLesson, 
   dbUpdateLesson, 
   dbDeleteLesson 
@@ -45,7 +46,19 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { action, module, lesson, moduleId } = body;
+    const { action, module, lesson, moduleId, moduleIds, ids } = body;
+
+    // Action: Bulk Delete Modules
+    if (action === 'BULK_DELETE') {
+      const targetIds: number[] = (moduleIds || ids || []).map(Number).filter((n: number) => !isNaN(n));
+      await dbBulkDeleteModules(targetIds);
+      triggerRevalidate();
+      return NextResponse.json({
+        success: true,
+        message: `${targetIds.length} modules permanently deleted!`,
+        modules: await dbGetModules()
+      }, { headers: NO_CACHE_HEADERS });
+    }
 
     // Action: Add new module
     if (action === 'ADD_MODULE' || (!action && module)) {
@@ -140,6 +153,28 @@ export async function DELETE(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const moduleId = searchParams.get('moduleId');
     const lessonId = searchParams.get('lessonId');
+    const idsParam = searchParams.get('ids');
+
+    // Bulk delete modules via query param
+    if (idsParam) {
+      const targetIds = idsParam.split(',').map(Number).filter(n => !isNaN(n));
+      await dbBulkDeleteModules(targetIds);
+      triggerRevalidate();
+      return NextResponse.json({ success: true, message: `${targetIds.length} modules deleted from database`, modules: await dbGetModules() }, { headers: NO_CACHE_HEADERS });
+    }
+
+    // Check if JSON body provided for bulk delete
+    let bodyJson: any = null;
+    try {
+      bodyJson = await request.json();
+    } catch {}
+
+    if (bodyJson && (bodyJson.moduleIds || bodyJson.ids)) {
+      const targetIds = (bodyJson.moduleIds || bodyJson.ids).map(Number).filter((n: number) => !isNaN(n));
+      await dbBulkDeleteModules(targetIds);
+      triggerRevalidate();
+      return NextResponse.json({ success: true, message: `${targetIds.length} modules deleted from database`, modules: await dbGetModules() }, { headers: NO_CACHE_HEADERS });
+    }
 
     // Delete specific lesson
     if (moduleId && lessonId) {
@@ -159,8 +194,9 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ success: true, message: 'Module deleted from database', modules: await dbGetModules() }, { headers: NO_CACHE_HEADERS });
     }
 
-    return NextResponse.json({ success: false, message: 'Missing moduleId or lessonId' }, { status: 400, headers: NO_CACHE_HEADERS });
+    return NextResponse.json({ success: false, message: 'Missing moduleId, lessonId, or ids' }, { status: 400, headers: NO_CACHE_HEADERS });
   } catch (error: any) {
     return NextResponse.json({ success: false, message: error.message }, { status: 500, headers: NO_CACHE_HEADERS });
   }
 }
+

@@ -73,6 +73,20 @@ export default function AdminCmsPage() {
   const [newModDuration, setNewModDuration] = useState('45 mins');
   const [newModDesc, setNewModDesc] = useState('');
 
+  // Bulk Selection for LMS Modules
+  const [selectedModuleIds, setSelectedModuleIds] = useState<number[]>([]);
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+
+  // Edit Module Modal state
+  const [editingModule, setEditingModule] = useState<{
+    id: number;
+    title: string;
+    duration: string;
+    description: string;
+  } | null>(null);
+  const [editModuleSaving, setEditModuleSaving] = useState(false);
+  const [editModuleError, setEditModuleError] = useState('');
+
   // New Lesson form state
   const [addingLessonForModuleId, setAddingLessonForModuleId] = useState<number | null>(null);
   const [newLessonTitle, setNewLessonTitle] = useState('');
@@ -260,7 +274,7 @@ export default function AdminCmsPage() {
       }
     } catch (err) {}
 
-    // 2. Fetch LMS Modules from API
+    // 2. Fetch LMS Modules from Hostinger MySQL API
     try {
       const modRes = await fetch(`/api/lms/modules?_nocache=${cacheBuster}`, {
         cache: 'no-store',
@@ -268,7 +282,7 @@ export default function AdminCmsPage() {
       });
       if (modRes.ok) {
         const modData = await modRes.json();
-        if (modData.success && Array.isArray(modData.modules) && modData.modules.length > 0) {
+        if (modData.success && Array.isArray(modData.modules)) {
           setModules(modData.modules);
         }
       }
@@ -288,7 +302,7 @@ export default function AdminCmsPage() {
       }
     } catch (err) {}
 
-    // 4. Direct Supabase Cloud Fetch (Guaranteed fallback for static web hosts like Hostinger)
+    // 4. Direct Supabase Cloud Fetch (CMS Settings Mirror)
     if (supabase) {
       try {
         const { data, error } = await supabase.from('cms_settings').select('value_json').eq('key', 'main_cms').maybeSingle();
@@ -316,18 +330,6 @@ export default function AdminCmsPage() {
         }
       } catch (e) {}
 
-      try {
-        const { data: modData } = await supabase.from('lms_modules').select('*').order('id', { ascending: true });
-        if (modData && modData.length > 0) {
-          setModules(modData.map((r: any) => ({
-            id: Number(r.id),
-            title: r.title,
-            duration: r.duration,
-            description: r.description,
-            lessons: typeof r.lessons_json === 'string' ? JSON.parse(r.lessons_json || '[]') : (r.lessons_json || [])
-          })));
-        }
-      } catch (e) {}
 
       try {
         const { data: supData } = await supabase.from('lms_suppliers').select('*').order('updated_at', { ascending: false });
@@ -458,6 +460,91 @@ export default function AdminCmsPage() {
   };
 
   // --- LMS MODULE ACTIONS ---
+  const handleToggleSelectModule = (id: number) => {
+    setSelectedModuleIds(prev =>
+      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+    );
+  };
+
+  const handleToggleSelectAll = () => {
+    if (selectedModuleIds.length === modules.length && modules.length > 0) {
+      setSelectedModuleIds([]);
+    } else {
+      setSelectedModuleIds(modules.map(m => m.id));
+    }
+  };
+
+  const handleBulkDeleteModules = async () => {
+    if (selectedModuleIds.length === 0) return;
+    if (!confirm(`Are you sure you want to permanently delete ${selectedModuleIds.length} selected module(s) from the database? This cannot be undone.`)) return;
+    setIsBulkDeleting(true);
+    try {
+      const res = await fetch('/api/lms/modules', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'BULK_DELETE',
+          moduleIds: selectedModuleIds
+        })
+      });
+      const data = await res.json();
+      if (data.success && Array.isArray(data.modules)) {
+        setModules(data.modules);
+        setSelectedModuleIds([]);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsBulkDeleting(false);
+    }
+  };
+
+  const openEditModule = (mod: Module) => {
+    setEditingModule({
+      id: mod.id,
+      title: mod.title,
+      duration: mod.duration || '',
+      description: mod.description || ''
+    });
+    setEditModuleError('');
+  };
+
+  const handleUpdateModule = async () => {
+    if (!editingModule) return;
+    if (!editingModule.title.trim()) {
+      setEditModuleError('Module title is required');
+      return;
+    }
+    setEditModuleSaving(true);
+    setEditModuleError('');
+    try {
+      const res = await fetch('/api/lms/modules', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'UPDATE_MODULE',
+          moduleId: editingModule.id,
+          patch: {
+            title: editingModule.title.trim(),
+            duration: editingModule.duration.trim(),
+            description: editingModule.description.trim()
+          }
+        })
+      });
+      const data = await res.json();
+      if (data.success && Array.isArray(data.modules)) {
+        setModules(data.modules);
+        setEditingModule(null);
+      } else {
+        setEditModuleError(data.message || 'Failed to update module');
+      }
+    } catch (e: any) {
+      setEditModuleError(e.message || 'Error updating module');
+    } finally {
+      setEditModuleSaving(false);
+    }
+  };
+
   const handleAddModule = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newModTitle) return;
@@ -477,7 +564,7 @@ export default function AdminCmsPage() {
         })
       });
       const data = await res.json();
-      if (data.success && data.modules) {
+      if (data.success && Array.isArray(data.modules)) {
         setModules(data.modules);
         setShowAddModuleModal(false);
         setNewModTitle('');
@@ -489,15 +576,19 @@ export default function AdminCmsPage() {
   };
 
   const handleDeleteModule = async (moduleId: number) => {
-    if (!confirm('Are you sure you want to delete this module and all its lectures?')) return;
+    if (!confirm('Are you sure you want to delete this module and all its lectures permanently from the database?')) return;
     try {
       const res = await fetch(`/api/lms/modules?moduleId=${moduleId}`, { method: 'DELETE' });
       const data = await res.json();
-      if (data.success && data.modules) setModules(data.modules);
+      if (data.success && Array.isArray(data.modules)) {
+        setModules(data.modules);
+        setSelectedModuleIds(prev => prev.filter(id => id !== moduleId));
+      }
     } catch (e) {
       console.error(e);
     }
   };
+
 
   const parseEmbedInput = (input: string): string => {
     const trimmed = (input || '').trim();
@@ -1467,51 +1558,122 @@ export default function AdminCmsPage() {
               </div>
             </div>
 
+            {/* Bulk Selection & Actions Bar */}
+            <div className="bg-[#111827] border border-white/10 rounded-2xl p-3 sm:p-4 flex flex-wrap items-center justify-between gap-3 shadow-md">
+              <div className="flex items-center gap-3">
+                <label className="flex items-center gap-2 text-xs font-bold text-slate-300 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={modules.length > 0 && selectedModuleIds.length === modules.length}
+                    onChange={handleToggleSelectAll}
+                    disabled={modules.length === 0}
+                    className="w-4 h-4 rounded text-[#00A0DF] focus:ring-[#00A0DF] bg-slate-900 border-white/20 cursor-pointer accent-[#00A0DF]"
+                  />
+                  <span>Select All ({modules.length} Modules)</span>
+                </label>
+
+                {selectedModuleIds.length > 0 && (
+                  <span className="px-2.5 py-0.5 rounded-full bg-[#00A0DF]/15 border border-[#00A0DF]/30 text-[#00A0DF] text-xs font-bold">
+                    {selectedModuleIds.length} Selected
+                  </span>
+                )}
+              </div>
+
+              {selectedModuleIds.length > 0 && (
+                <button
+                  type="button"
+                  onClick={handleBulkDeleteModules}
+                  disabled={isBulkDeleting}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-xs font-black text-white shadow-lg shadow-red-600/30 transition-all active:scale-95 disabled:opacity-50"
+                >
+                  <Trash2 size={14} />
+                  <span>{isBulkDeleting ? 'Deleting Selected...' : `Delete Selected (${selectedModuleIds.length}) Modules`}</span>
+                </button>
+              )}
+            </div>
+
             {/* Modules Accordion List */}
             <div className="space-y-3 sm:space-y-4">
-              {modules.map((m) => {
-                const isOpen = openModuleId === m.id;
+              {modules.length === 0 ? (
+                <div className="bg-[#111827] border border-white/10 rounded-2xl p-8 text-center space-y-2">
+                  <BookOpen size={36} className="mx-auto text-slate-500" />
+                  <h3 className="text-base font-bold text-white">No Modules in Database</h3>
+                  <p className="text-xs text-slate-400 max-w-sm mx-auto">
+                    Database currently has zero modules. Click the green &quot;Add Module&quot; button above to create a new module.
+                  </p>
+                </div>
+              ) : (
+                modules.map((m) => {
+                  const isOpen = openModuleId === m.id;
+                  const isSelected = selectedModuleIds.includes(m.id);
 
-                return (
-                  <div key={m.id} className="bg-[#111827] border border-white/10 rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl">
-                    {/* Module Header Bar */}
-                    <div className="p-3.5 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 bg-[#111827]">
-                      <button
-                        onClick={() => setOpenModuleId(isOpen ? 0 : m.id)}
-                        className="flex-1 flex items-center gap-2.5 sm:gap-3 text-left w-full"
-                      >
-                        <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-[#00A0DF]/20 text-[#00A0DF] flex items-center justify-center font-black text-xs sm:text-sm flex-shrink-0 border border-[#00A0DF]/30">
-                          {m.id}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <h3 className="text-xs sm:text-base font-bold text-white truncate">{m.title}</h3>
-                          <p className="text-[11px] sm:text-xs text-slate-400 mt-0.5">{m.duration} &bull; {m.lessons.length} Lectures</p>
-                        </div>
-                      </button>
+                  return (
+                    <div
+                      key={m.id}
+                      className={`bg-[#111827] border rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl transition-all ${
+                        isSelected ? 'border-red-500/50 ring-1 ring-red-500/30' : 'border-white/10'
+                      }`}
+                    >
+                      {/* Module Header Bar */}
+                      <div className="p-3.5 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 bg-[#111827]">
+                        <div className="flex items-center gap-2.5 sm:gap-3 flex-1 w-full min-w-0">
+                          {/* Module Selection Checkbox */}
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => handleToggleSelectModule(m.id)}
+                            className="w-4 h-4 rounded text-red-600 focus:ring-red-500 bg-slate-900 border-white/20 cursor-pointer accent-red-600 flex-shrink-0"
+                            title={`Select Module ${m.id} for bulk delete`}
+                          />
 
-                      <div className="flex items-center gap-1.5 sm:gap-2 self-end sm:self-center">
-                        <button
-                          onClick={() => openAddLesson(m.id)}
-                          className="px-2.5 sm:px-3 py-1.5 rounded-xl bg-[#1E293B] hover:bg-[#00A0DF] text-slate-200 hover:text-white text-xs font-bold transition-colors flex items-center gap-1 border border-white/5 active:scale-95"
-                        >
-                          <Plus size={12} />
-                          <span>Add Lecture</span>
-                        </button>
-                        <button
-                          onClick={() => handleDeleteModule(m.id)}
-                          className="p-1.5 sm:p-2 rounded-xl bg-red-500/10 hover:bg-red-500/30 text-red-400 transition-colors"
-                          title="Delete Module"
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                        <button
-                          onClick={() => setOpenModuleId(isOpen ? 0 : m.id)}
-                          className="p-1.5 text-slate-400 hover:text-white"
-                        >
-                          {isOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-                        </button>
+                          <button
+                            onClick={() => setOpenModuleId(isOpen ? 0 : m.id)}
+                            className="flex-1 flex items-center gap-2.5 sm:gap-3 text-left min-w-0"
+                          >
+                            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-[#00A0DF]/20 text-[#00A0DF] flex items-center justify-center font-black text-xs sm:text-sm flex-shrink-0 border border-[#00A0DF]/30">
+                              {m.id}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <h3 className="text-xs sm:text-base font-bold text-white truncate">{m.title}</h3>
+                              <p className="text-[11px] sm:text-xs text-slate-400 mt-0.5">
+                                {m.duration} &bull; {m.lessons.length} Lectures {m.description ? `• ${m.description.slice(0, 45)}...` : ''}
+                              </p>
+                            </div>
+                          </button>
+                        </div>
+
+                        <div className="flex items-center gap-1.5 sm:gap-2 self-end sm:self-center flex-shrink-0">
+                          <button
+                            onClick={() => openEditModule(m)}
+                            className="px-2.5 sm:px-3 py-1.5 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 text-xs font-bold transition-colors flex items-center gap-1 border border-blue-500/20 active:scale-95"
+                            title="Edit Module (Title, Duration, Description)"
+                          >
+                            <Edit size={12} />
+                            <span className="hidden sm:inline">Edit Module</span>
+                          </button>
+                          <button
+                            onClick={() => openAddLesson(m.id)}
+                            className="px-2.5 sm:px-3 py-1.5 rounded-xl bg-[#1E293B] hover:bg-[#00A0DF] text-slate-200 hover:text-white text-xs font-bold transition-colors flex items-center gap-1 border border-white/5 active:scale-95"
+                          >
+                            <Plus size={12} />
+                            <span>Add Lecture</span>
+                          </button>
+                          <button
+                            onClick={() => handleDeleteModule(m.id)}
+                            className="p-1.5 sm:p-2 rounded-xl bg-red-500/10 hover:bg-red-500/30 text-red-400 transition-colors"
+                            title="Delete Module"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                          <button
+                            onClick={() => setOpenModuleId(isOpen ? 0 : m.id)}
+                            className="p-1.5 text-slate-400 hover:text-white"
+                          >
+                            {isOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                          </button>
+                        </div>
                       </div>
-                    </div>
+
 
                     {/* Module Expanded Content */}
                     {isOpen && (
@@ -1892,7 +2054,8 @@ export default function AdminCmsPage() {
                     )}
                   </div>
                 );
-              })}
+              })
+            )}
             </div>
 
             {/* Edit Lesson Modal */}
@@ -6156,6 +6319,96 @@ export default function AdminCmsPage() {
         </div>
       )}
 
+      {/* Edit Module Modal */}
+      {editingModule && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
+          <div className="w-full max-w-md bg-[#111827] border border-white/10 rounded-2xl sm:rounded-3xl p-5 sm:p-7 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-2 border-b border-white/10">
+              <h3 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+                <Edit size={16} className="text-[#00A0DF]" />
+                <span>Edit Module {editingModule.id}</span>
+              </h3>
+              <button
+                type="button"
+                onClick={() => setEditingModule(null)}
+                className="p-1 rounded-lg text-slate-400 hover:text-white"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            {editModuleError && (
+              <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs font-bold">
+                ⚠️ {editModuleError}
+              </div>
+            )}
+
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-bold text-slate-400 mb-1">Module Title *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Module 1: Product Research &amp; Winning Mindset"
+                  value={editingModule.title}
+                  onChange={(e) => setEditingModule({ ...editingModule, title: e.target.value })}
+                  className="w-full px-3 py-2 rounded-xl bg-[#0B0F19] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-400 mb-1">Duration</label>
+                <input
+                  type="text"
+                  placeholder="e.g. 45 mins"
+                  value={editingModule.duration}
+                  onChange={(e) => setEditingModule({ ...editingModule, duration: e.target.value })}
+                  className="w-full px-3 py-2 rounded-xl bg-[#0B0F19] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-400 mb-1">Description</label>
+                <textarea
+                  rows={3}
+                  placeholder="What will students learn in this module?"
+                  value={editingModule.description}
+                  onChange={(e) => setEditingModule({ ...editingModule, description: e.target.value })}
+                  className="w-full px-3 py-2 rounded-xl bg-[#0B0F19] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF] resize-none"
+                />
+              </div>
+
+              <div className="flex items-center gap-2 justify-end pt-2 border-t border-white/5">
+                <button
+                  type="button"
+                  onClick={() => setEditingModule(null)}
+                  className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-300 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleUpdateModule}
+                  disabled={editModuleSaving || !editingModule.title.trim()}
+                  className="px-4 py-2 rounded-xl bg-[#00A0DF] hover:bg-[#008ec7] text-xs font-black text-white active:scale-95 transition-all shadow-md shadow-[#00A0DF]/30 disabled:opacity-50 flex items-center gap-1.5"
+                >
+                  {editModuleSaving ? (
+                    <>
+                      <Loader2 size={13} className="animate-spin" />
+                      <span>Saving...</span>
+                    </>
+                  ) : (
+                    <span>Save Changes</span>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+
     </div>
   );
 }
+
