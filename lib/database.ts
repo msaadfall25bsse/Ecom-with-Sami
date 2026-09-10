@@ -235,26 +235,60 @@ export async function dbGetModules(): Promise<Module[]> {
   // 2. Secondary fallback: Supabase
   if (supabase) {
     try {
+      const { data: seedFlag } = await supabase
+        .from('cms_settings')
+        .select('value_json')
+        .eq('key', 'lms_seeded')
+        .maybeSingle();
+
+      const isSeeded = Boolean(seedFlag);
+
       const { data, error } = await supabase
         .from('lms_modules')
         .select('*')
         .order('id', { ascending: true });
 
-      if (!error && data && data.length > 0) {
-        return data.map((r: any) => ({
-          id: Number(r.id),
-          title: r.title,
-          duration: r.duration,
-          description: r.description,
-          lessons: typeof r.lessons_json === 'string' ? JSON.parse(r.lessons_json || '[]') : (r.lessons_json || [])
-        }));
+      if (!error && Array.isArray(data)) {
+        if (data.length > 0) {
+          return data.map((r: any) => ({
+            id: Number(r.id),
+            title: r.title,
+            duration: r.duration,
+            description: r.description,
+            lessons: typeof r.lessons_json === 'string' ? JSON.parse(r.lessons_json || '[]') : (r.lessons_json || [])
+          }));
+        }
+
+        // If data is empty AND isSeeded is true -> All modules were deleted by admin! DO NOT RESURRECT!
+        if (isSeeded) {
+          return [];
+        }
+
+        // First time initialization: seed initialModules into Supabase so they exist as real deletable rows
+        for (const mod of initialModules) {
+          await supabase.from('lms_modules').upsert({
+            id: mod.id,
+            title: mod.title,
+            duration: mod.duration,
+            description: mod.description,
+            lessons_json: JSON.stringify(mod.lessons || []),
+            updated_at: new Date().toISOString()
+          });
+        }
+        await supabase.from('cms_settings').upsert({
+          key: 'lms_seeded',
+          value_json: 'true',
+          updated_at: new Date().toISOString()
+        });
+
+        return initialModules;
       }
     } catch (e) {
       console.error('Supabase get modules error:', e);
     }
   }
 
-  return initialModules;
+  return [];
 }
 
 export async function dbAddModule(module: Module): Promise<Module> {
@@ -346,9 +380,10 @@ export async function dbUpdateModule(id: number, patch: Partial<Module>): Promis
 }
 
 export async function dbDeleteModule(id: number): Promise<boolean> {
+  const numId = Number(id);
   // 1. Primary: Hostinger MySQL
   try {
-    await mysqlDeleteModule(id);
+    await mysqlDeleteModule(numId);
   } catch (e) {
     console.error('Hostinger MySQL delete module error:', e);
   }
@@ -356,7 +391,7 @@ export async function dbDeleteModule(id: number): Promise<boolean> {
   // 2. Secondary: Supabase
   if (supabase) {
     try {
-      await supabase.from('lms_modules').delete().eq('id', id);
+      await supabase.from('lms_modules').delete().eq('id', numId);
     } catch (e) {
       console.error('Supabase delete module error:', e);
     }
@@ -366,9 +401,12 @@ export async function dbDeleteModule(id: number): Promise<boolean> {
 
 export async function dbBulkDeleteModules(ids: number[]): Promise<boolean> {
   if (!ids || ids.length === 0) return true;
+  const numericIds = ids.map(id => Number(id)).filter(id => !isNaN(id) && id > 0);
+  if (numericIds.length === 0) return true;
+
   // 1. Primary: Hostinger MySQL
   try {
-    await mysqlBulkDeleteModules(ids);
+    await mysqlBulkDeleteModules(numericIds);
   } catch (e) {
     console.error('Hostinger MySQL bulk delete modules error:', e);
   }
@@ -376,13 +414,14 @@ export async function dbBulkDeleteModules(ids: number[]): Promise<boolean> {
   // 2. Secondary: Supabase
   if (supabase) {
     try {
-      await supabase.from('lms_modules').delete().in('id', ids);
+      await supabase.from('lms_modules').delete().in('id', numericIds);
     } catch (e) {
       console.error('Supabase bulk delete module error:', e);
     }
   }
   return true;
 }
+
 
 
 export async function dbAddLesson(moduleId: number, lesson: Lesson): Promise<Lesson | null> {

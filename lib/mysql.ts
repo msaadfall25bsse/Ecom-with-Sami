@@ -633,11 +633,13 @@ export async function mysqlBulkDeleteModules(ids: number[]): Promise<boolean> {
     try {
       const numericIds = ids.map(id => Number(id)).filter(id => !isNaN(id) && id > 0);
       if (numericIds.length === 0) return true;
-      await pool.query(`DELETE FROM lms_modules WHERE id IN (?)`, [numericIds]);
+      const idList = numericIds.join(',');
+      await pool.query(`DELETE FROM lms_modules WHERE id IN (${idList})`);
       return true;
     } catch (err) {
       console.error('mysqlBulkDeleteModules error:', err);
     }
+
   }
   return false;
 }
