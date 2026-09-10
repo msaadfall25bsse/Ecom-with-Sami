@@ -38,7 +38,8 @@ import {
   RotateCcw,
   SlidersHorizontal,
   Star,
-  X
+  X,
+  Zap
 } from 'lucide-react';
 import { 
   defaultCmsContent, 
@@ -58,7 +59,7 @@ export default function AdminCmsPage() {
   const router = useRouter();
   const [authChecking, setAuthChecking] = useState(true);
   const [activeTab, setActiveTab] = useState<
-    'marquee' | 'hero' | 'stats' | 'why' | 'what' | 'why_different' | 'mentor' | 'video_reviews' | 'who' | 'homepage_curriculum' | 'lms' | 'bonuses' | 'reviews' | 'proofwall_home' | 'options' | 'cost' | 'faqs' | 'cta' | 'contact' | 'payments' | 'themes' | 'pixels' | 'success_page' | 'checkout_page'
+    'marquee' | 'hero' | 'stats' | 'why' | 'what' | 'why_different' | 'signature_framework' | 'mentor' | 'video_reviews' | 'who' | 'homepage_curriculum' | 'lms' | 'bonuses' | 'reviews' | 'proofwall_home' | 'options' | 'cost' | 'faqs' | 'cta' | 'contact' | 'payments' | 'themes' | 'pixels' | 'success_page' | 'checkout_page'
   >('hero');
   const [cmsData, setCmsData] = useState<CmsContentSchema>(defaultCmsContent);
   const [openHomeModIndex, setOpenHomeModIndex] = useState<number | null>(0);
@@ -1484,6 +1485,7 @@ export default function AdminCmsPage() {
             { id: 'why', label: '4. 💡 Why Dropship', icon: Globe2 },
             { id: 'what', label: '5A. 🎓 Master Inside Ecominion', icon: Gift },
             { id: 'why_different', label: '5B. 💎 Why Ecominion Is Different', icon: Sparkles },
+            { id: 'signature_framework', label: '5C. ⚡ Signature Framework (3S)', icon: Zap },
             { id: 'mentor', label: '6. 👤 Mentor Profile', icon: Award },
             { id: 'video_reviews', label: '7. 🎥 Video Reviews', icon: FileVideo },
             { id: 'who', label: '8. 🎯 Who Is This For', icon: ShieldCheck },
@@ -3754,6 +3756,284 @@ export default function AdminCmsPage() {
               >
                 <Save size={15} />
                 <span>{loading ? 'Saving...' : 'Save Why Ecominion Is Different'}</span>
+              </button>
+            </div>
+
+          </div>
+        )}
+
+        {/* ========================================================================= */}
+        {/* TAB 5C: SIGNATURE FRAMEWORK (THE 3S SCALING FORMULA™) */}
+        {/* ========================================================================= */}
+        {activeTab === 'signature_framework' && (
+          <div className="bg-[#111827] border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-8 space-y-6 shadow-xl">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h3 className="text-sm sm:text-lg font-bold text-white flex items-center gap-2">
+                  <Zap size={18} className="text-[#00A0DF]" />
+                  <span>Signature Framework — The 3S Scaling Formula™</span>
+                </h3>
+                <p className="text-xs text-slate-400 mt-1">
+                  Manage the compact homepage teaser card and interactive modal overlay (3-Shift framework + Order Booster system).
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
+                <label className="flex items-center gap-2 text-xs font-bold text-slate-300 cursor-pointer select-none bg-[#0B0F19] px-3 py-2 rounded-xl border border-white/10">
+                  <input
+                    type="checkbox"
+                    checked={cmsData.signature_framework?.is_active ?? defaultCmsContent.signature_framework?.is_active ?? true}
+                    onChange={(e) => {
+                      const cur = cmsData.signature_framework || defaultCmsContent.signature_framework!;
+                      setCmsData({
+                        ...cmsData,
+                        signature_framework: { ...cur, is_active: e.target.checked }
+                      });
+                    }}
+                    className="w-4 h-4 rounded text-[#00A0DF] focus:ring-[#00A0DF] bg-slate-900 border-white/20 cursor-pointer accent-[#00A0DF]"
+                  />
+                  <span>Feature Visibility (ON / OFF)</span>
+                </label>
+              </div>
+            </div>
+
+            {/* Homepage Teaser Card Fields */}
+            <div className="bg-[#0B0F19] p-5 rounded-2xl border border-white/10 space-y-4">
+              <h4 className="text-xs font-bold text-[#00A0DF] uppercase tracking-wider flex items-center gap-2">
+                <Sparkles size={14} />
+                <span>Homepage Compact Teaser Card</span>
+              </h4>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 mb-1">Eyebrow / Badge Text</label>
+                  <input
+                    type="text"
+                    value={cmsData.signature_framework?.eyebrow ?? defaultCmsContent.signature_framework?.eyebrow ?? ''}
+                    onChange={(e) => {
+                      const cur = cmsData.signature_framework || defaultCmsContent.signature_framework!;
+                      setCmsData({
+                        ...cmsData,
+                        signature_framework: { ...cur, eyebrow: e.target.value }
+                      });
+                    }}
+                    className="w-full px-3 py-2.5 rounded-xl bg-[#111827] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 mb-1">Button CTA Text</label>
+                  <input
+                    type="text"
+                    value={cmsData.signature_framework?.cta_text ?? defaultCmsContent.signature_framework?.cta_text ?? ''}
+                    onChange={(e) => {
+                      const cur = cmsData.signature_framework || defaultCmsContent.signature_framework!;
+                      setCmsData({
+                        ...cmsData,
+                        signature_framework: { ...cur, cta_text: e.target.value }
+                      });
+                    }}
+                    className="w-full px-3 py-2.5 rounded-xl bg-[#111827] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF]"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-400 mb-1">Framework Title</label>
+                <input
+                  type="text"
+                  value={cmsData.signature_framework?.title ?? defaultCmsContent.signature_framework?.title ?? ''}
+                  onChange={(e) => {
+                    const cur = cmsData.signature_framework || defaultCmsContent.signature_framework!;
+                    setCmsData({
+                      ...cmsData,
+                      signature_framework: { ...cur, title: e.target.value }
+                    });
+                  }}
+                  className="w-full px-3 py-2.5 rounded-xl bg-[#111827] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-400 mb-1">Teaser Description / Subtitle</label>
+                <textarea
+                  rows={2}
+                  value={cmsData.signature_framework?.description ?? defaultCmsContent.signature_framework?.description ?? ''}
+                  onChange={(e) => {
+                    const cur = cmsData.signature_framework || defaultCmsContent.signature_framework!;
+                    setCmsData({
+                      ...cmsData,
+                      signature_framework: { ...cur, description: e.target.value }
+                    });
+                  }}
+                  className="w-full px-3 py-2.5 rounded-xl bg-[#111827] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF] resize-none"
+                />
+              </div>
+            </div>
+
+            {/* Modal Content: 3-Shift Steps */}
+            <div className="space-y-4 pt-2">
+              <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider text-[#00A0DF]">
+                The 3-Shift Steps (Inside Interactive Modal)
+              </h4>
+              <div className="space-y-4">
+                {/* Step 1 */}
+                <div className="bg-[#0B0F19] p-4 rounded-xl border border-white/10 space-y-3">
+                  <span className="text-xs font-bold text-[#00A0DF]">Shift 01 (Step 1)</span>
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-400 mb-1">Step 1 Title</label>
+                    <input
+                      type="text"
+                      value={cmsData.signature_framework?.step1_title ?? defaultCmsContent.signature_framework?.step1_title ?? ''}
+                      onChange={(e) => {
+                        const cur = cmsData.signature_framework || defaultCmsContent.signature_framework!;
+                        setCmsData({
+                          ...cmsData,
+                          signature_framework: { ...cur, step1_title: e.target.value }
+                        });
+                      }}
+                      className="w-full px-3 py-2 rounded-lg bg-[#111827] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-400 mb-1">Step 1 Description</label>
+                    <textarea
+                      rows={2}
+                      value={cmsData.signature_framework?.step1_desc ?? defaultCmsContent.signature_framework?.step1_desc ?? ''}
+                      onChange={(e) => {
+                        const cur = cmsData.signature_framework || defaultCmsContent.signature_framework!;
+                        setCmsData({
+                          ...cmsData,
+                          signature_framework: { ...cur, step1_desc: e.target.value }
+                        });
+                      }}
+                      className="w-full px-3 py-2 rounded-lg bg-[#111827] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF] resize-none"
+                    />
+                  </div>
+                </div>
+
+                {/* Step 2 */}
+                <div className="bg-[#0B0F19] p-4 rounded-xl border border-white/10 space-y-3">
+                  <span className="text-xs font-bold text-[#00A0DF]">Shift 02 (Step 2)</span>
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-400 mb-1">Step 2 Title</label>
+                    <input
+                      type="text"
+                      value={cmsData.signature_framework?.step2_title ?? defaultCmsContent.signature_framework?.step2_title ?? ''}
+                      onChange={(e) => {
+                        const cur = cmsData.signature_framework || defaultCmsContent.signature_framework!;
+                        setCmsData({
+                          ...cmsData,
+                          signature_framework: { ...cur, step2_title: e.target.value }
+                        });
+                      }}
+                      className="w-full px-3 py-2 rounded-lg bg-[#111827] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-400 mb-1">Step 2 Description</label>
+                    <textarea
+                      rows={2}
+                      value={cmsData.signature_framework?.step2_desc ?? defaultCmsContent.signature_framework?.step2_desc ?? ''}
+                      onChange={(e) => {
+                        const cur = cmsData.signature_framework || defaultCmsContent.signature_framework!;
+                        setCmsData({
+                          ...cmsData,
+                          signature_framework: { ...cur, step2_desc: e.target.value }
+                        });
+                      }}
+                      className="w-full px-3 py-2 rounded-lg bg-[#111827] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF] resize-none"
+                    />
+                  </div>
+                </div>
+
+                {/* Step 3 */}
+                <div className="bg-[#0B0F19] p-4 rounded-xl border border-white/10 space-y-3">
+                  <span className="text-xs font-bold text-[#00A0DF]">Shift 03 (Step 3)</span>
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-400 mb-1">Step 3 Title</label>
+                    <input
+                      type="text"
+                      value={cmsData.signature_framework?.step3_title ?? defaultCmsContent.signature_framework?.step3_title ?? ''}
+                      onChange={(e) => {
+                        const cur = cmsData.signature_framework || defaultCmsContent.signature_framework!;
+                        setCmsData({
+                          ...cmsData,
+                          signature_framework: { ...cur, step3_title: e.target.value }
+                        });
+                      }}
+                      className="w-full px-3 py-2 rounded-lg bg-[#111827] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-400 mb-1">Step 3 Description</label>
+                    <textarea
+                      rows={2}
+                      value={cmsData.signature_framework?.step3_desc ?? defaultCmsContent.signature_framework?.step3_desc ?? ''}
+                      onChange={(e) => {
+                        const cur = cmsData.signature_framework || defaultCmsContent.signature_framework!;
+                        setCmsData({
+                          ...cmsData,
+                          signature_framework: { ...cur, step3_desc: e.target.value }
+                        });
+                      }}
+                      className="w-full px-3 py-2 rounded-lg bg-[#111827] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF] resize-none"
+                    />
+                  </div>
+                </div>
+
+                {/* Order Booster Highlight */}
+                <div className="bg-[#0B0F19] p-4 rounded-xl border border-amber-500/30 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Zap size={14} className="text-amber-400" />
+                    <span className="text-xs font-bold text-amber-400">Order Booster System (Secondary Highlight)</span>
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-400 mb-1">Order Booster Title</label>
+                    <input
+                      type="text"
+                      value={cmsData.signature_framework?.order_booster_title ?? defaultCmsContent.signature_framework?.order_booster_title ?? ''}
+                      onChange={(e) => {
+                        const cur = cmsData.signature_framework || defaultCmsContent.signature_framework!;
+                        setCmsData({
+                          ...cmsData,
+                          signature_framework: { ...cur, order_booster_title: e.target.value }
+                        });
+                      }}
+                      className="w-full px-3 py-2 rounded-lg bg-[#111827] border border-white/10 text-xs text-white focus:outline-none focus:border-amber-400"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-400 mb-1">Order Booster Description</label>
+                    <textarea
+                      rows={2}
+                      value={cmsData.signature_framework?.order_booster_desc ?? defaultCmsContent.signature_framework?.order_booster_desc ?? ''}
+                      onChange={(e) => {
+                        const cur = cmsData.signature_framework || defaultCmsContent.signature_framework!;
+                        setCmsData({
+                          ...cmsData,
+                          signature_framework: { ...cur, order_booster_desc: e.target.value }
+                        });
+                      }}
+                      className="w-full px-3 py-2 rounded-lg bg-[#111827] border border-white/10 text-xs text-white focus:outline-none focus:border-amber-400 resize-none"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom Save Button */}
+            <div className="pt-4 border-t border-white/5 flex items-center justify-between">
+              <p className="text-xs text-slate-400">
+                Changes will update live on <strong>Homepage (/)</strong> immediately upon saving.
+              </p>
+              <button
+                type="button"
+                onClick={handleSaveAll}
+                disabled={loading}
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs sm:text-sm font-black shadow-lg shadow-emerald-600/30 transition-all active:scale-95 cursor-pointer"
+              >
+                <Save size={15} />
+                <span>{loading ? 'Saving...' : 'Save Signature Framework (3S)'}</span>
               </button>
             </div>
 

@@ -23,6 +23,7 @@ import {
   Building2, 
   TrendingUp, 
   WalletCards,
+  X,
   XCircle,
   Sparkles,
   ShieldCheck,
@@ -117,6 +118,242 @@ function WhyDifferentSection({ content, defaultData }: { content: any; defaultDa
 
       </div>
     </section>
+  );
+}
+
+function SignatureFrameworkTeaser({ content, defaultData }: { content: any; defaultData: any }) {
+  const data = content?.signature_framework || defaultData;
+  const [isOpen, setIsOpen] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
+  const sectionRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    if (!sectionRef.current) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.15 }
+    );
+    observer.observe(sectionRef.current);
+    return () => observer.disconnect();
+  }, []);
+
+  // Lock body scroll when modal is open and handle ESC key
+  useEffect(() => {
+    if (!isOpen) return;
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsOpen(false);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen]);
+
+  if (data?.is_active === false) return null;
+
+  const eyebrow = data?.eyebrow || defaultData.eyebrow || 'SIGNATURE FRAMEWORK';
+  const title = data?.title || defaultData.title || 'THE 3S SCALING FORMULA™';
+  const description = data?.description || defaultData.description || 'My signature framework for understanding the journey from testing products to selling and scaling with a structured system.';
+  const ctaText = data?.cta_text || defaultData.cta_text || 'EXPLORE THE 3S →';
+
+  const step1Title = data?.step1_title || defaultData.step1_title || 'SHIFT 1: PRODUCT VALIDATION & STORE SETUP';
+  const step1Desc = data?.step1_desc || defaultData.step1_desc || 'Identify proven high-demand local products with healthy margins, validate suppliers, and build high-converting landing pages.';
+
+  const step2Title = data?.step2_title || defaultData.step2_title || 'SHIFT 2: SYSTEMATIC AD TESTING & OPTIMIZATION';
+  const step2Desc = data?.step2_desc || defaultData.step2_desc || 'Run data-driven Facebook & TikTok ad experiments to discover winning creatives, optimize CPA, and achieve consistent daily orders.';
+
+  const step3Title = data?.step3_title || defaultData.step3_title || 'SHIFT 3: PROFIT-FIRST SCALING & AUTOMATION';
+  const step3Desc = data?.step3_desc || defaultData.step3_desc || 'Scale ad spend safely, streamline courier deliveries and cash collection, cut return/RTO rates, and automate repetitive fulfillment.';
+
+  const orderBoosterTitle = data?.order_booster_title || defaultData.order_booster_title || 'ORDER BOOSTER SYSTEM';
+  const orderBoosterDesc = data?.order_booster_desc || defaultData.order_booster_desc || 'Our specialized operational playbook for WhatsApp confirmations, automated follow-ups, and COD delivery optimization to ensure maximum fulfilled orders.';
+
+  return (
+    <>
+      <section ref={sectionRef} className="py-8 sm:py-10 bg-slate-100/70 border-t border-slate-200/80">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div
+            className={`transition-all duration-500 motion-reduce:transition-none ${
+              isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+            }`}
+          >
+            <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-r from-slate-900 via-[#0B0F19] to-slate-900 border-2 border-[#00A0DF]/35 p-6 sm:p-8 md:p-10 shadow-xl shadow-[#00A0DF]/5 card-hover-lift">
+              {/* Subtle ambient corner glow */}
+              <div className="absolute top-0 right-0 w-64 h-64 bg-[#00A0DF]/15 rounded-full blur-3xl pointer-events-none" />
+              <div className="absolute bottom-0 left-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+
+              <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">
+                <div className="max-w-2xl">
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#00A0DF]/15 border border-[#00A0DF]/30 text-[#00A0DF] text-[11px] sm:text-xs font-black tracking-wider uppercase mb-3">
+                    <Sparkles size={13} className="animate-pulse" />
+                    <span>{eyebrow}</span>
+                  </div>
+                  <h3 className="text-xl sm:text-2xl md:text-3xl font-black text-white tracking-tight uppercase mb-2">
+                    {title}
+                  </h3>
+                  <p className="text-xs sm:text-sm text-slate-300 font-medium leading-relaxed">
+                    {description}
+                  </p>
+                </div>
+
+                <div className="flex-shrink-0 w-full sm:w-auto">
+                  <button
+                    type="button"
+                    onClick={() => setIsOpen(true)}
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-6 py-3.5 bg-gradient-to-r from-[#00A0DF] to-[#0082b4] hover:from-[#00b0f5] hover:to-[#00A0DF] text-white font-black text-xs sm:text-sm rounded-xl shadow-lg shadow-[#00A0DF]/25 transition-all transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
+                  >
+                    <span>{ctaText}</span>
+                    <ArrowRight size={16} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Modal Drawer Overlay */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 animate-in fade-in duration-200 overflow-y-auto"
+          onClick={() => setIsOpen(false)}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="signature-framework-modal-title"
+        >
+          <div
+            className="bg-slate-900 border border-slate-700/90 rounded-3xl w-full max-w-3xl shadow-2xl overflow-hidden my-auto relative text-white flex flex-col max-h-[90vh]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Top Cyan Neon Accent Bar */}
+            <div className="h-1.5 w-full bg-gradient-to-r from-[#00A0DF] via-emerald-400 to-[#00A0DF]" />
+
+            {/* Modal Header */}
+            <div className="flex items-start justify-between p-5 sm:p-7 border-b border-slate-800 bg-slate-950/70">
+              <div>
+                <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-[#00A0DF]/15 border border-[#00A0DF]/30 text-[#00A0DF] text-[10px] sm:text-xs font-black tracking-wider uppercase mb-2">
+                  <Sparkles size={12} />
+                  <span>{eyebrow}</span>
+                </div>
+                <h2 id="signature-framework-modal-title" className="text-xl sm:text-2xl md:text-3xl font-black text-white tracking-tight uppercase">
+                  {title}
+                </h2>
+                <p className="text-xs sm:text-sm text-slate-300 font-medium mt-1">
+                  {description}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsOpen(false)}
+                className="p-2 rounded-xl bg-slate-800 hover:bg-red-500/20 text-slate-300 hover:text-red-400 transition-colors flex-shrink-0 ml-3 cursor-pointer"
+                aria-label="Close Signature Framework Modal"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Modal Body: 3 Steps + Order Booster */}
+            <div className="p-5 sm:p-7 overflow-y-auto space-y-4">
+              {/* Step 1 */}
+              <div className="bg-slate-950/60 border border-slate-800 hover:border-[#00A0DF]/40 rounded-2xl p-4 sm:p-5 transition-colors">
+                <div className="flex items-start gap-3.5">
+                  <div className="w-9 h-9 rounded-xl bg-[#00A0DF]/15 text-[#00A0DF] font-black text-sm flex items-center justify-center border border-[#00A0DF]/30 flex-shrink-0">
+                    01
+                  </div>
+                  <div>
+                    <h4 className="text-sm sm:text-base font-black text-white uppercase tracking-tight mb-1">
+                      {step1Title}
+                    </h4>
+                    <p className="text-xs sm:text-sm text-slate-400 font-medium leading-relaxed">
+                      {step1Desc}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Step 2 */}
+              <div className="bg-slate-950/60 border border-slate-800 hover:border-[#00A0DF]/40 rounded-2xl p-4 sm:p-5 transition-colors">
+                <div className="flex items-start gap-3.5">
+                  <div className="w-9 h-9 rounded-xl bg-[#00A0DF]/15 text-[#00A0DF] font-black text-sm flex items-center justify-center border border-[#00A0DF]/30 flex-shrink-0">
+                    02
+                  </div>
+                  <div>
+                    <h4 className="text-sm sm:text-base font-black text-white uppercase tracking-tight mb-1">
+                      {step2Title}
+                    </h4>
+                    <p className="text-xs sm:text-sm text-slate-400 font-medium leading-relaxed">
+                      {step2Desc}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Step 3 */}
+              <div className="bg-slate-950/60 border border-slate-800 hover:border-[#00A0DF]/40 rounded-2xl p-4 sm:p-5 transition-colors">
+                <div className="flex items-start gap-3.5">
+                  <div className="w-9 h-9 rounded-xl bg-[#00A0DF]/15 text-[#00A0DF] font-black text-sm flex items-center justify-center border border-[#00A0DF]/30 flex-shrink-0">
+                    03
+                  </div>
+                  <div>
+                    <h4 className="text-sm sm:text-base font-black text-white uppercase tracking-tight mb-1">
+                      {step3Title}
+                    </h4>
+                    <p className="text-xs sm:text-sm text-slate-400 font-medium leading-relaxed">
+                      {step3Desc}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Secondary Highlight: ORDER BOOSTER SYSTEM */}
+              <div className="bg-gradient-to-r from-amber-500/10 via-slate-950/80 to-amber-500/10 border-2 border-amber-500/30 rounded-2xl p-4 sm:p-5 relative overflow-hidden">
+                <div className="flex items-start gap-3.5">
+                  <div className="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-400 font-black text-sm flex items-center justify-center border border-amber-500/40 flex-shrink-0">
+                    <Zap size={18} />
+                  </div>
+                  <div>
+                    <div className="inline-block text-[10px] font-black tracking-wider uppercase text-amber-400 bg-amber-500/15 px-2 py-0.5 rounded mb-1">
+                      KEY ACCELERATOR
+                    </div>
+                    <h4 className="text-sm sm:text-base font-black text-white uppercase tracking-tight mb-1">
+                      {orderBoosterTitle}
+                    </h4>
+                    <p className="text-xs sm:text-sm text-slate-300 font-medium leading-relaxed">
+                      {orderBoosterDesc}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer CTA */}
+            <div className="p-4 sm:p-5 border-t border-slate-800 bg-slate-950/80 flex flex-col sm:flex-row items-center justify-between gap-3">
+              <p className="text-xs text-slate-400 font-medium text-center sm:text-left">
+                Full system step-by-step breakdown is included inside Ecominion.
+              </p>
+              <Link
+                href="/enrollment"
+                onClick={() => setIsOpen(false)}
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#00A0DF] hover:bg-[#0082b4] text-white font-black text-xs sm:text-sm rounded-xl shadow-lg transition-colors cursor-pointer"
+              >
+                <span>JOIN ECOMINION TODAY</span>
+                <ArrowRight size={14} />
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 
@@ -922,6 +1159,11 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
 
         </div>
       </section>
+
+      {/* ========================================================================= */}
+      {/* 4A. SIGNATURE FRAMEWORK (THE 3S SCALING FORMULA™ COMPACT TEASER & MODAL) */}
+      {/* ========================================================================= */}
+      <SignatureFrameworkTeaser content={content} defaultData={defaultCmsContent.signature_framework!} />
 
       {/* ========================================================================= */}
       {/* 4B. WHY ECOMINION IS DIFFERENT (NEW STANDALONE SECTION) */}

@@ -239,6 +239,21 @@ export interface CmsContentSchema {
       desc: string;
     }[];
   };
+  signature_framework?: {
+    is_active: boolean;
+    eyebrow: string;
+    title: string;
+    description: string;
+    cta_text: string;
+    step1_title: string;
+    step1_desc: string;
+    step2_title: string;
+    step2_desc: string;
+    step3_title: string;
+    step3_desc: string;
+    order_booster_title: string;
+    order_booster_desc: string;
+  };
 }
 
 export interface ThemeCustomColors {
@@ -559,6 +574,21 @@ export const defaultCmsContent: CmsContentSchema = {
         desc: 'The goal isn’t simply to get one order. Learn what happens after the first sale and how to build a repeatable system.'
       }
     ]
+  },
+  signature_framework: {
+    is_active: true,
+    eyebrow: 'SIGNATURE FRAMEWORK',
+    title: 'THE 3S SCALING FORMULA™',
+    description: 'My signature framework for understanding the journey from testing products to selling and scaling with a structured system.',
+    cta_text: 'EXPLORE THE 3S →',
+    step1_title: 'Shift 01: Product Validation & Market Testing',
+    step1_desc: 'Identify, test and validate winning products using proven criteria before allocating serious advertising budget.',
+    step2_title: 'Shift 02: High-Converting Store Architecture & CRO',
+    step2_desc: 'Build customer trust, optimize checkout friction and achieve industry-leading conversion rates.',
+    step3_title: 'Shift 03: Paid Traffic Mastery & Systematized Scaling',
+    step3_desc: 'Scale winning Meta and TikTok ad campaigns profitably with systematic pixel tracking and cash-flow control.',
+    order_booster_title: 'ORDER BOOSTER SYSTEM',
+    order_booster_desc: 'Our proprietary post-purchase and WhatsApp automation framework that slashes cancellation rates and increases average order value.'
   },
   who_is_this_for: {
     badge: 'PERFECT FOR YOU IF…',
