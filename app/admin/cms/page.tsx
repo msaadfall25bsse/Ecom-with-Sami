@@ -1972,7 +1972,7 @@ export default function AdminCmsPage() {
                               {m.id}
                             </div>
                             <div className="min-w-0 flex-1">
-                              <h3 className="text-xs sm:text-base font-bold text-white truncate">{m.title}</h3>
+                              <h3 className="text-xs sm:text-base font-bold text-white leading-snug break-words">{m.title}</h3>
                               <p className="text-[11px] sm:text-xs text-slate-400 mt-0.5">
                                 {m.lessons.length} Lectures Included
                               </p>

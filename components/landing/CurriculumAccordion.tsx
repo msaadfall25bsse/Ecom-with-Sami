@@ -73,12 +73,12 @@ export function CurriculumAccordion({ modules: customModules }: { modules?: Curr
               onClick={() => setOpenIndex(isOpen ? null : index)}
               className="w-full p-4 sm:p-5 text-left flex items-center justify-between gap-3 cursor-pointer select-none"
             >
-              <div className="flex items-center gap-3.5 min-w-0">
-                <span className="w-8 h-8 rounded-lg bg-[#00A0DF]/10 text-[#00A0DF] font-black text-xs sm:text-sm flex items-center justify-center flex-shrink-0">
+              <div className="flex items-start sm:items-center gap-3 sm:gap-3.5 min-w-0 flex-1 pr-1">
+                <span className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[#00A0DF]/10 text-[#00A0DF] font-black text-xs sm:text-sm flex items-center justify-center flex-shrink-0 mt-0.5 sm:mt-0">
                   {moduleNumber}
                 </span>
-                <div className="min-w-0">
-                  <h3 className="text-sm sm:text-base font-black text-slate-900 truncate">
+                <div className="min-w-0 flex-1">
+                  <h3 className="text-[13px] sm:text-base font-bold sm:font-black text-slate-900 leading-snug break-words">
                     {module.title}
                   </h3>
                   {lessons.length > 0 && (
@@ -89,7 +89,7 @@ export function CurriculumAccordion({ modules: customModules }: { modules?: Curr
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 flex-shrink-0">
+              <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0 self-center">
                 <span className="text-xs font-bold text-[#00A0DF] hidden sm:inline">
                   {isOpen ? 'Close' : 'View'}
                 </span>
@@ -115,10 +115,10 @@ export function CurriculumAccordion({ modules: customModules }: { modules?: Curr
                       return (
                         <li
                           key={lIdx}
-                          className="p-3 rounded-xl bg-slate-50 border border-gray-100 flex items-center gap-2.5 text-xs sm:text-sm hover:bg-slate-100/80 transition-colors"
+                          className="p-2.5 sm:p-3 rounded-xl bg-slate-50 border border-gray-100 flex items-start sm:items-center gap-2.5 text-xs sm:text-sm hover:bg-slate-100/80 transition-colors"
                         >
-                          <PlayCircle size={16} className="text-[#00A0DF] flex-shrink-0" />
-                          <span className="text-slate-800 font-bold truncate">
+                          <PlayCircle size={16} className="text-[#00A0DF] flex-shrink-0 mt-0.5 sm:mt-0" />
+                          <span className="text-slate-800 font-bold leading-snug break-words flex-1">
                             {lessonTitle}
                           </span>
                         </li>
