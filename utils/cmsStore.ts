@@ -229,6 +229,16 @@ export interface CmsContentSchema {
       lessons: string[];
     }[];
   };
+  why_different?: {
+    is_active: boolean;
+    title: string;
+    subtitle: string;
+    cards: {
+      number: string;
+      title: string;
+      desc: string;
+    }[];
+  };
 }
 
 export interface ThemeCustomColors {
@@ -502,24 +512,51 @@ export const defaultCmsContent: CmsContentSchema = {
   },
   what_you_get: {
     badge: 'WHAT YOU GET',
-    title: 'Here’s What You’ll Get Access To',
-    subtitle: 'No prior experience required — learn step by step how to build and manage your own online store.',
+    title: 'WHAT YOU’LL MASTER INSIDE ECOMINION',
+    subtitle: 'Not just videos. You’ll learn the systems behind building, testing and scaling an e-commerce business.',
     items: [
       {
-        title: 'Start & Manage Your Own Store',
-        desc: 'Using the Ecommestry Program framework, build and grow your own dropshipping business. Student, job holder, or beginner — all you need is a mobile or laptop.'
+        title: 'WINNING PRODUCT RESEARCH',
+        desc: 'Learn how to identify, validate and test products before putting your budget behind them.'
       },
       {
-        title: 'Develop 8 Practical Skills',
-        desc: 'Design stunning Shopify stores, find winning products, and source top UAE & KSA suppliers. Master Facebook and TikTok ads — from pixel to scaling.'
+        title: 'STORE DESIGN & CRO',
+        desc: 'Build a Shopify store designed to earn trust, improve conversions and turn visitors into customers.'
       },
       {
-        title: 'Lifetime WhatsApp Support',
-        desc: 'Stuck during the course? Ask your questions directly on WhatsApp from 9AM to 5PM. We make sure your learning journey stays smooth with lifetime support.'
+        title: 'META & TIKTOK ADS',
+        desc: 'Learn campaign setup, creative testing, pixel, tracking and scaling across the two major paid platforms.'
       },
       {
-        title: 'Private Community Access',
-        desc: 'Get into private Facebook and WhatsApp communities. Network with like-minded people, share wins, and solve problems by learning from active dropshippers.'
+        title: 'PIXEL, DATA & SCALING',
+        desc: 'Understand the data behind your campaigns, make better decisions and learn how to scale what works.'
+      }
+    ]
+  },
+  why_different: {
+    is_active: true,
+    title: 'WHY ECOMINION IS DIFFERENT',
+    subtitle: 'Because we’re not teaching you to copy a product. We’re teaching you to understand the business behind it.',
+    cards: [
+      {
+        number: '01',
+        title: 'PRACTICAL FROM DAY ONE',
+        desc: 'No unnecessary theory. Learn through actual e-commerce workflows, decisions and practical execution.'
+      },
+      {
+        number: '02',
+        title: 'PAKISTAN-FIRST',
+        desc: 'Understand the local market, local selling environment and fundamentals before trying to expand internationally.'
+      },
+      {
+        number: '03',
+        title: 'SYSTEMS, NOT SHORTCUTS',
+        desc: 'Product research, CRO, pixel, ads, testing, data and scaling — learn how the pieces work together.'
+      },
+      {
+        number: '04',
+        title: 'BEYOND THE FIRST SALE',
+        desc: 'The goal isn’t simply to get one order. Learn what happens after the first sale and how to build a repeatable system.'
       }
     ]
   },

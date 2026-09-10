@@ -49,6 +49,75 @@ import { defaultCmsContent, CmsContentSchema, updateCmsContent } from '@/utils/c
 import { Module } from '@/utils/db';
 import { supabase } from '@/lib/supabase';
 
+function WhyDifferentSection({ content, defaultData }: { content: any; defaultData: any }) {
+  const data = content?.why_different || defaultData;
+  const [isVisible, setIsVisible] = useState(false);
+  const sectionRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    if (!sectionRef.current) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.15 }
+    );
+    observer.observe(sectionRef.current);
+    return () => observer.disconnect();
+  }, []);
+
+  if (data?.is_active === false) return null;
+
+  const cards = data?.cards || defaultData.cards || [];
+
+  return (
+    <section ref={sectionRef} className="py-14 sm:py-20 bg-white border-t border-slate-200/80 overflow-hidden">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <div className="text-center max-w-3xl mx-auto mb-12 sm:mb-16">
+          <span className="section-tag-pill">THE ECOMINION DIFFERENCE</span>
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 tracking-tight mb-3 uppercase">
+            {data?.title || 'WHY ECOMINION IS DIFFERENT'}
+          </h2>
+          <p className="text-xs sm:text-sm md:text-base text-slate-600 font-medium">
+            {data?.subtitle || 'Because we’re not teaching you to copy a product. We’re teaching you to understand the business behind it.'}
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+          {cards.map((card: any, idx: number) => (
+            <div
+              key={idx}
+              className={`bg-slate-50/90 hover:bg-white border border-slate-200 hover:border-[#00A0DF]/40 rounded-2xl p-5 sm:p-6 shadow-sm hover:shadow-xl transition-all duration-500 hover:-translate-y-1 flex flex-col justify-between group motion-reduce:transform-none ${
+                isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+              }`}
+              style={{
+                transitionDelay: `${idx * 120}ms`
+              }}
+            >
+              <div>
+                <div className="w-9 h-9 rounded-xl bg-[#00A0DF]/10 text-[#00A0DF] font-black text-xs sm:text-sm flex items-center justify-center border border-[#00A0DF]/25 mb-4 group-hover:bg-[#00A0DF] group-hover:text-white transition-colors duration-300">
+                  {card.number || `0${idx + 1}`}
+                </div>
+                <h3 className="text-sm sm:text-base font-black text-slate-900 tracking-tight mb-2.5 uppercase leading-snug">
+                  {card.title}
+                </h3>
+                <p className="text-xs sm:text-[13px] text-slate-600 leading-relaxed font-medium">
+                  {card.desc}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+      </div>
+    </section>
+  );
+}
+
 interface HomePageClientProps {
   initialContent: CmsContentSchema;
   initialModules: Module[];
@@ -799,18 +868,18 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
       </section>
 
       {/* ========================================================================= */}
-      {/* 4. HERE'S WHAT YOU'LL GET ACCESS TO (LEARNWITHAFAQ STYLE) */}
+      {/* 4. WHAT YOU’LL MASTER INSIDE ECOMINION */}
       {/* ========================================================================= */}
       <section className="py-14 sm:py-20 bg-slate-50 border-t border-slate-200/80">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           
           <div className="text-center max-w-3xl mx-auto mb-12 sm:mb-16">
-            <span className="section-tag-pill">{content.what_you_get?.badge || 'WHAT YOU GET'}</span>
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 tracking-tight mb-3">
-              {content.what_you_get?.title || 'Here’s What You’ll Get Access To'}
+            <span className="section-tag-pill">{content.what_you_get?.badge || 'ECOMINION MASTERY'}</span>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 tracking-tight mb-3 uppercase">
+              {content.what_you_get?.title || 'WHAT YOU’LL MASTER INSIDE ECOMINION'}
             </h2>
             <p className="text-xs sm:text-sm md:text-base text-slate-600 font-medium">
-              {content.what_you_get?.subtitle || 'No prior experience required — learn step by step how to build and manage your own online store.'}
+              {content.what_you_get?.subtitle || 'Not just videos. You’ll learn the systems behind building, testing and scaling an e-commerce business.'}
             </p>
           </div>
 
@@ -829,7 +898,7 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
                   <div className={`w-10 h-10 rounded-xl ${s.bg} flex items-center justify-center mb-4`}>
                     <IconComp size={20} />
                   </div>
-                  <h3 className="text-base sm:text-lg font-black text-slate-900 mb-2">
+                  <h3 className="text-base sm:text-lg font-black text-slate-900 mb-2 uppercase">
                     {card.title}
                   </h3>
                   <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-medium">
@@ -851,6 +920,11 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
 
         </div>
       </section>
+
+      {/* ========================================================================= */}
+      {/* 4B. WHY ECOMINION IS DIFFERENT (NEW STANDALONE SECTION) */}
+      {/* ========================================================================= */}
+      <WhyDifferentSection content={content} defaultData={defaultCmsContent.why_different!} />
 
       {/* ========================================================================= */}
       {/* 5. MEET YOUR MENTOR (LEARNWITHAFAQ STYLE CARD) */}

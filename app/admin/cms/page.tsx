@@ -58,7 +58,7 @@ export default function AdminCmsPage() {
   const router = useRouter();
   const [authChecking, setAuthChecking] = useState(true);
   const [activeTab, setActiveTab] = useState<
-    'marquee' | 'hero' | 'stats' | 'why' | 'what' | 'mentor' | 'video_reviews' | 'who' | 'homepage_curriculum' | 'lms' | 'bonuses' | 'reviews' | 'proofwall_home' | 'options' | 'cost' | 'faqs' | 'cta' | 'contact' | 'payments' | 'themes' | 'pixels' | 'success_page' | 'checkout_page'
+    'marquee' | 'hero' | 'stats' | 'why' | 'what' | 'why_different' | 'mentor' | 'video_reviews' | 'who' | 'homepage_curriculum' | 'lms' | 'bonuses' | 'reviews' | 'proofwall_home' | 'options' | 'cost' | 'faqs' | 'cta' | 'contact' | 'payments' | 'themes' | 'pixels' | 'success_page' | 'checkout_page'
   >('hero');
   const [cmsData, setCmsData] = useState<CmsContentSchema>(defaultCmsContent);
   const [openHomeModIndex, setOpenHomeModIndex] = useState<number | null>(0);
@@ -1482,7 +1482,8 @@ export default function AdminCmsPage() {
             { id: 'hero', label: '2. 📣 Hero & Video', icon: Video },
             { id: 'stats', label: '3. ⏱ Stats Bar', icon: Clock },
             { id: 'why', label: '4. 💡 Why Dropship', icon: Globe2 },
-            { id: 'what', label: '5. 📦 What You Get', icon: Gift },
+            { id: 'what', label: '5A. 🎓 Master Inside Ecominion', icon: Gift },
+            { id: 'why_different', label: '5B. 💎 Why Ecominion Is Different', icon: Sparkles },
             { id: 'mentor', label: '6. 👤 Mentor Profile', icon: Award },
             { id: 'video_reviews', label: '7. 🎥 Video Reviews', icon: FileVideo },
             { id: 'who', label: '8. 🎯 Who Is This For', icon: ShieldCheck },
@@ -3594,6 +3595,168 @@ export default function AdminCmsPage() {
                 </div>
               ))}
             </div>
+          </div>
+        )}
+
+        {/* ========================================================================= */}
+        {/* TAB 5B: WHY ECOMINION IS DIFFERENT */}
+        {/* ========================================================================= */}
+        {activeTab === 'why_different' && (
+          <div className="bg-[#111827] border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-8 space-y-6 shadow-xl">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h3 className="text-sm sm:text-lg font-bold text-white flex items-center gap-2">
+                  <Sparkles size={18} className="text-[#00A0DF]" />
+                  <span>Why Ecominion Is Different</span>
+                </h3>
+                <p className="text-xs text-slate-400 mt-1">
+                  Manage the 4 differentiators displayed right after What You’ll Master section.
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
+                <label className="flex items-center gap-2 text-xs font-bold text-slate-300 cursor-pointer select-none bg-[#0B0F19] px-3 py-2 rounded-xl border border-white/10">
+                  <input
+                    type="checkbox"
+                    checked={cmsData.why_different?.is_active ?? defaultCmsContent.why_different?.is_active ?? true}
+                    onChange={(e) => {
+                      const cur = cmsData.why_different || defaultCmsContent.why_different!;
+                      setCmsData({
+                        ...cmsData,
+                        why_different: { ...cur, is_active: e.target.checked }
+                      });
+                    }}
+                    className="w-4 h-4 rounded text-[#00A0DF] focus:ring-[#00A0DF] bg-slate-900 border-white/20 cursor-pointer accent-[#00A0DF]"
+                  />
+                  <span>Section Visibility (ON / OFF)</span>
+                </label>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-400 mb-1">Section Heading</label>
+                <input
+                  type="text"
+                  value={cmsData.why_different?.title ?? defaultCmsContent.why_different?.title ?? ''}
+                  onChange={(e) => {
+                    const cur = cmsData.why_different || defaultCmsContent.why_different!;
+                    setCmsData({
+                      ...cmsData,
+                      why_different: { ...cur, title: e.target.value }
+                    });
+                  }}
+                  className="w-full px-3 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-400 mb-1">Section Subheading</label>
+                <textarea
+                  rows={2}
+                  value={cmsData.why_different?.subtitle ?? defaultCmsContent.why_different?.subtitle ?? ''}
+                  onChange={(e) => {
+                    const cur = cmsData.why_different || defaultCmsContent.why_different!;
+                    setCmsData({
+                      ...cmsData,
+                      why_different: { ...cur, subtitle: e.target.value }
+                    });
+                  }}
+                  className="w-full px-3 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF] resize-none"
+                />
+              </div>
+            </div>
+
+            {/* Exactly 4 Cards */}
+            <div className="space-y-4 pt-2">
+              <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider text-[#00A0DF]">
+                4 Core Differentiators (Cards)
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {(cmsData.why_different?.cards || defaultCmsContent.why_different?.cards || []).map((card, idx) => (
+                  <div key={idx} className="bg-[#0B0F19] p-4 rounded-xl border border-white/10 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-[#00A0DF]">Card #{idx + 1}</span>
+                      <div className="flex items-center gap-2">
+                        <label className="text-[10px] font-bold text-slate-400 uppercase">Number:</label>
+                        <input
+                          type="text"
+                          value={card.number}
+                          onChange={(e) => {
+                            const curCards = [...(cmsData.why_different?.cards || defaultCmsContent.why_different?.cards || [])];
+                            curCards[idx] = { ...curCards[idx], number: e.target.value };
+                            setCmsData({
+                              ...cmsData,
+                              why_different: {
+                                ...(cmsData.why_different || defaultCmsContent.why_different!),
+                                cards: curCards
+                              }
+                            });
+                          }}
+                          className="w-16 px-2 py-1 rounded-lg bg-[#111827] border border-white/10 text-xs text-center font-bold text-[#00A0DF] focus:outline-none focus:border-[#00A0DF]"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-400 mb-1">Card Title</label>
+                      <input
+                        type="text"
+                        value={card.title}
+                        onChange={(e) => {
+                          const curCards = [...(cmsData.why_different?.cards || defaultCmsContent.why_different?.cards || [])];
+                          curCards[idx] = { ...curCards[idx], title: e.target.value };
+                          setCmsData({
+                            ...cmsData,
+                            why_different: {
+                              ...(cmsData.why_different || defaultCmsContent.why_different!),
+                              cards: curCards
+                            }
+                          });
+                        }}
+                        className="w-full px-3 py-2 rounded-lg bg-[#111827] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF]"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-400 mb-1">Card Description</label>
+                      <textarea
+                        rows={3}
+                        value={card.desc}
+                        onChange={(e) => {
+                          const curCards = [...(cmsData.why_different?.cards || defaultCmsContent.why_different?.cards || [])];
+                          curCards[idx] = { ...curCards[idx], desc: e.target.value };
+                          setCmsData({
+                            ...cmsData,
+                            why_different: {
+                              ...(cmsData.why_different || defaultCmsContent.why_different!),
+                              cards: curCards
+                            }
+                          });
+                        }}
+                        className="w-full px-3 py-2 rounded-lg bg-[#111827] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF] resize-none"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Bottom Save Button */}
+            <div className="pt-4 border-t border-white/5 flex items-center justify-between">
+              <p className="text-xs text-slate-400">
+                Changes will update live on <strong>Homepage (/)</strong> immediately upon saving.
+              </p>
+              <button
+                type="button"
+                onClick={handleSaveAll}
+                disabled={loading}
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs sm:text-sm font-black shadow-lg shadow-emerald-600/30 transition-all active:scale-95"
+              >
+                <Save size={15} />
+                <span>{loading ? 'Saving...' : 'Save Why Ecominion Is Different'}</span>
+              </button>
+            </div>
+
           </div>
         )}
 
