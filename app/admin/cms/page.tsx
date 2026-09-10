@@ -503,8 +503,8 @@ export default function AdminCmsPage() {
     setEditingModule({
       id: mod.id,
       title: mod.title,
-      duration: mod.duration || '',
-      description: mod.description || ''
+      duration: '',
+      description: ''
     });
     setEditModuleError('');
   };
@@ -525,9 +525,7 @@ export default function AdminCmsPage() {
           action: 'UPDATE_MODULE',
           moduleId: editingModule.id,
           patch: {
-            title: editingModule.title.trim(),
-            duration: editingModule.duration.trim(),
-            description: editingModule.description.trim()
+            title: editingModule.title.trim()
           }
         })
       });
@@ -547,7 +545,7 @@ export default function AdminCmsPage() {
 
   const handleAddModule = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newModTitle) return;
+    if (!newModTitle.trim()) return;
 
     try {
       const res = await fetch('/api/lms/modules', {
@@ -556,9 +554,9 @@ export default function AdminCmsPage() {
         body: JSON.stringify({
           action: 'ADD_MODULE',
           module: {
-            title: newModTitle,
-            duration: newModDuration,
-            description: newModDesc,
+            title: newModTitle.trim(),
+            duration: '',
+            description: '',
             lessons: []
           }
         })
@@ -574,6 +572,7 @@ export default function AdminCmsPage() {
       console.error(e);
     }
   };
+
 
   const handleDeleteModule = async (moduleId: number) => {
     if (!confirm('Are you sure you want to delete this module and all its lectures permanently from the database?')) return;
@@ -686,7 +685,7 @@ export default function AdminCmsPage() {
           lessonId: editingLesson.lessonId,
           patch: {
             title: editingLesson.title.trim(),
-            duration: editingLesson.duration || '15:00',
+            duration: '',
             videoUrl: finalVideoUrl
           }
         })
@@ -1030,7 +1029,7 @@ export default function AdminCmsPage() {
           moduleId,
           lesson: {
             title: newLessonTitle.trim(),
-            duration: newLessonDuration || '15:00',
+            duration: '',
             videoUrl: finalVideoUrl
           }
         })
@@ -1636,7 +1635,7 @@ export default function AdminCmsPage() {
                             <div className="min-w-0 flex-1">
                               <h3 className="text-xs sm:text-base font-bold text-white truncate">{m.title}</h3>
                               <p className="text-[11px] sm:text-xs text-slate-400 mt-0.5">
-                                {m.duration} &bull; {m.lessons.length} Lectures {m.description ? `• ${m.description.slice(0, 45)}...` : ''}
+                                {m.lessons.length} Lectures Included
                               </p>
                             </div>
                           </button>
@@ -1646,7 +1645,7 @@ export default function AdminCmsPage() {
                           <button
                             onClick={() => openEditModule(m)}
                             className="px-2.5 sm:px-3 py-1.5 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 text-xs font-bold transition-colors flex items-center gap-1 border border-blue-500/20 active:scale-95"
-                            title="Edit Module (Title, Duration, Description)"
+                            title="Edit Module Title"
                           >
                             <Edit size={12} />
                             <span className="hidden sm:inline">Edit Module</span>
@@ -1721,32 +1720,18 @@ export default function AdminCmsPage() {
                               </div>
                             </div>
 
-                            {/* Lecture Title & Duration Inputs */}
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                              <div className="sm:col-span-2">
-                                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
-                                  Lecture Title
-                                </label>
-                                <input
-                                  type="text"
-                                  placeholder="e.g. 1.4 Setting Up Business Manager & Pixel"
-                                  value={newLessonTitle}
-                                  onChange={(e) => setNewLessonTitle(e.target.value)}
-                                  className="w-full px-3 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF]"
-                                />
-                              </div>
-                              <div>
-                                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
-                                  Duration (MM:SS)
-                                </label>
-                                <input
-                                  type="text"
-                                  placeholder="e.g. 18:30"
-                                  value={newLessonDuration}
-                                  onChange={(e) => setNewLessonDuration(e.target.value)}
-                                  className="w-full px-3 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF]"
-                                />
-                              </div>
+                            {/* Lecture Title Input */}
+                            <div>
+                              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                                Lecture Title
+                              </label>
+                              <input
+                                type="text"
+                                placeholder="e.g. 1.4 Setting Up Business Manager & Pixel"
+                                value={newLessonTitle}
+                                onChange={(e) => setNewLessonTitle(e.target.value)}
+                                className="w-full px-3 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF]"
+                              />
                             </div>
 
                             {/* SOURCE 1: UPLOAD FROM LAPTOP / COMPUTER */}
@@ -2029,7 +2014,6 @@ export default function AdminCmsPage() {
                                 </div>
 
                                 <div className="flex items-center gap-1.5 flex-shrink-0">
-                                  <span className="text-slate-400 text-[11px] hidden sm:inline">{l.duration}</span>
                                   <button
                                     onClick={() => openEditLesson(m.id, l)}
                                     className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
@@ -2084,18 +2068,6 @@ export default function AdminCmsPage() {
                         type="text"
                         value={editingLesson.title}
                         onChange={(e) => setEditingLesson({ ...editingLesson, title: e.target.value })}
-                        className="w-full px-3 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF]"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
-                        Duration (MM:SS)
-                      </label>
-                      <input
-                        type="text"
-                        value={editingLesson.duration}
-                        onChange={(e) => setEditingLesson({ ...editingLesson, duration: e.target.value })}
                         className="w-full px-3 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF]"
                       />
                     </div>
@@ -6207,26 +6179,6 @@ export default function AdminCmsPage() {
                   className="w-full px-3 py-2 rounded-xl bg-[#0B0F19] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF]"
                 />
               </div>
-              <div>
-                <label className="block text-xs text-slate-400 mb-1">Duration</label>
-                <input
-                  type="text"
-                  placeholder="e.g. 50 mins"
-                  value={newModDuration}
-                  onChange={(e) => setNewModDuration(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-[#0B0F19] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF]"
-                />
-              </div>
-              <div>
-                <label className="block text-xs text-slate-400 mb-1">Description</label>
-                <textarea
-                  rows={2}
-                  placeholder="What will students learn?"
-                  value={newModDesc}
-                  onChange={(e) => setNewModDesc(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-[#0B0F19] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF] resize-none"
-                />
-              </div>
 
               <div className="flex items-center gap-2 justify-end pt-2">
                 <button
@@ -6353,28 +6305,6 @@ export default function AdminCmsPage() {
                   value={editingModule.title}
                   onChange={(e) => setEditingModule({ ...editingModule, title: e.target.value })}
                   className="w-full px-3 py-2 rounded-xl bg-[#0B0F19] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-400 mb-1">Duration</label>
-                <input
-                  type="text"
-                  placeholder="e.g. 45 mins"
-                  value={editingModule.duration}
-                  onChange={(e) => setEditingModule({ ...editingModule, duration: e.target.value })}
-                  className="w-full px-3 py-2 rounded-xl bg-[#0B0F19] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-400 mb-1">Description</label>
-                <textarea
-                  rows={3}
-                  placeholder="What will students learn in this module?"
-                  value={editingModule.description}
-                  onChange={(e) => setEditingModule({ ...editingModule, description: e.target.value })}
-                  className="w-full px-3 py-2 rounded-xl bg-[#0B0F19] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF] resize-none"
                 />
               </div>
 

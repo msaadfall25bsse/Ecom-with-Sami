@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { ChevronDown, PlayCircle, Clock } from 'lucide-react';
+import { ChevronDown, PlayCircle } from 'lucide-react';
 import { initialModules } from '@/utils/db';
 
 export interface ModuleItem {
@@ -9,7 +9,7 @@ export interface ModuleItem {
   module_number?: string;
   title: string;
   duration?: string;
-  description: string;
+  description?: string;
   lesson_count?: number;
   lessons?: { id?: string; title: string; duration?: string; videoUrl?: string }[];
 }
@@ -19,10 +19,6 @@ export function CurriculumAccordion({ modules: initialCustomModules }: { modules
   const [moduleList, setModuleList] = useState<any[]>(initialCustomModules || initialModules);
 
   useEffect(() => {
-    if (initialCustomModules && initialCustomModules.length > 0) {
-      setModuleList(initialCustomModules);
-      return;
-    }
     const timestamp = Date.now();
     fetch(`/api/lms/modules?t=${timestamp}`, {
       cache: 'no-store',
@@ -33,12 +29,16 @@ export function CurriculumAccordion({ modules: initialCustomModules }: { modules
     })
       .then(r => r.json())
       .then(res => {
-        if (res.success && res.modules && res.modules.length > 0) {
+        if (res.success && Array.isArray(res.modules)) {
           setModuleList(res.modules);
         }
       })
       .catch(() => {});
-  }, [initialCustomModules]);
+  }, []);
+
+  if (!moduleList || moduleList.length === 0) {
+    return null;
+  }
 
   return (
     <div className="space-y-3">
@@ -56,7 +56,7 @@ export function CurriculumAccordion({ modules: initialCustomModules }: { modules
                 : 'bg-white border border-gray-200 hover:border-gray-300'
             }`}
           >
-            {/* Accordion Summary / Header */}
+            {/* Accordion Summary / Header (FAQ style) */}
             <button
               onClick={() => setOpenIndex(isOpen ? null : index)}
               className="w-full p-4 sm:p-5 text-left flex items-center justify-between gap-3 cursor-pointer select-none"
@@ -70,14 +70,8 @@ export function CurriculumAccordion({ modules: initialCustomModules }: { modules
                     {module.title}
                   </h3>
                   {lessons.length > 0 && (
-                    <div className="flex items-center gap-2 text-[11px] font-semibold text-slate-500 mt-0.5">
-                      <span>{lessons.length} Lessons</span>
-                      {module.duration && (
-                        <>
-                          <span>&bull;</span>
-                          <span>{module.duration}</span>
-                        </>
-                      )}
+                    <div className="text-[11px] font-semibold text-slate-500 mt-0.5">
+                      <span>{lessons.length} Lectures Included</span>
                     </div>
                   )}
                 </div>
@@ -99,36 +93,27 @@ export function CurriculumAccordion({ modules: initialCustomModules }: { modules
               </div>
             </button>
 
-            {/* Accordion Body */}
+            {/* Accordion Body (Only Lectures, No Descriptions, No Timers) */}
             {isOpen && (
-              <div className="px-4 pb-5 sm:px-6 sm:pb-6 pt-2 border-t border-gray-100 space-y-3 animate-in fade-in-50 duration-150">
-                {module.description && (
-                  <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-medium bg-slate-50 p-3.5 rounded-xl border border-gray-100">
-                    {module.description}
-                  </p>
-                )}
-
-                {lessons.length > 0 && (
+              <div className="px-4 pb-5 sm:px-6 sm:pb-6 pt-2 border-t border-gray-100 space-y-2 animate-in fade-in-50 duration-150">
+                {lessons.length > 0 ? (
                   <ul className="space-y-2 pt-1">
                     {lessons.map((lesson: any, lIdx: number) => (
                       <li
                         key={lesson.id || lIdx}
-                        className="p-3 rounded-xl bg-slate-50 border border-gray-100 flex items-center justify-between gap-3 text-xs sm:text-sm hover:bg-slate-100/80 transition-colors"
+                        className="p-3 rounded-xl bg-slate-50 border border-gray-100 flex items-center gap-2.5 text-xs sm:text-sm hover:bg-slate-100/80 transition-colors"
                       >
-                        <div className="flex items-center gap-2.5 min-w-0">
-                          <PlayCircle size={16} className="text-[#00A0DF] flex-shrink-0" />
-                          <span className="text-slate-800 font-bold truncate">
-                            {lesson.title}
-                          </span>
-                        </div>
-                        {lesson.duration && (
-                          <span className="text-[11px] font-semibold text-slate-500 bg-white px-2 py-0.5 rounded border border-gray-200 flex-shrink-0">
-                            {lesson.duration}
-                          </span>
-                        )}
+                        <PlayCircle size={16} className="text-[#00A0DF] flex-shrink-0" />
+                        <span className="text-slate-800 font-bold truncate">
+                          {lesson.title}
+                        </span>
                       </li>
                     ))}
                   </ul>
+                ) : (
+                  <p className="text-xs text-slate-500 italic py-2">
+                    Lectures will be uploaded soon.
+                  </p>
                 )}
               </div>
             )}
@@ -140,3 +125,4 @@ export function CurriculumAccordion({ modules: initialCustomModules }: { modules
 }
 
 export default CurriculumAccordion;
+
