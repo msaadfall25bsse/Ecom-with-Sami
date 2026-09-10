@@ -1286,7 +1286,7 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
             </p>
           </div>
 
-          <CurriculumAccordion modules={content.homepage_curriculum?.modules || defaultCmsContent.homepage_curriculum?.modules} />
+          <CurriculumAccordion modules={Array.isArray(content.homepage_curriculum?.modules) ? content.homepage_curriculum.modules : defaultCmsContent.homepage_curriculum?.modules} />
 
           <div className="text-center mt-10">
             <Link

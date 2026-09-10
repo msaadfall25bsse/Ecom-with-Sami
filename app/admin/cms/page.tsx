@@ -24,6 +24,7 @@ import {
   BookOpen,
   Edit,
   ChevronDown,
+  ChevronUp,
   ChevronRight,
   ShoppingBag,
   ExternalLink,
@@ -79,6 +80,9 @@ export default function AdminCmsPage() {
   // Bulk Selection for LMS Modules
   const [selectedModuleIds, setSelectedModuleIds] = useState<number[]>([]);
   const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+
+  // Bulk Selection for Homepage Curriculum Modules (Tab 9A)
+  const [selectedHomeModIds, setSelectedHomeModIds] = useState<string[]>([]);
 
   // Edit Module Modal state
   const [editingModule, setEditingModule] = useState<{
@@ -1530,338 +1534,546 @@ export default function AdminCmsPage() {
         {/* ========================================================================= */}
         {/* TAB 9A: HOMEPAGE CURRICULUM ACCORDION (MARKETING OUTLINE) */}
         {/* ========================================================================= */}
-        {activeTab === 'homepage_curriculum' && (
-          <div className="space-y-6 sm:space-y-8">
-            
-            {/* Top Action & Information Bar */}
-            <div className="bg-[#111827] border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xl">
-              <div>
-                <h2 className="text-base sm:text-2xl font-black text-white flex items-center gap-2">
-                  <BookOpen size={20} className="text-[#00A0DF]" />
-                  <span>Homepage Course Curriculum (Accordion)</span>
-                </h2>
-                <p className="text-xs text-slate-400 mt-0.5">
-                  Manage the public FAQ-style modules &amp; lecture outline displayed on the Homepage.
-                </p>
+        {/* ========================================================================= */}
+        {/* TAB 9A: HOMEPAGE CURRICULUM ACCORDION (MARKETING OUTLINE) */}
+        {/* ========================================================================= */}
+        {activeTab === 'homepage_curriculum' && (() => {
+          const homeModules = Array.isArray(cmsData.homepage_curriculum?.modules)
+            ? cmsData.homepage_curriculum!.modules
+            : (defaultCmsContent.homepage_curriculum?.modules || []);
+
+          const allSelected = homeModules.length > 0 && homeModules.every((m, idx) => selectedHomeModIds.includes(m.id || `mod_${idx}`));
+
+          const toggleSelectAll = () => {
+            if (allSelected) {
+              setSelectedHomeModIds([]);
+            } else {
+              setSelectedHomeModIds(homeModules.map((m, idx) => m.id || `mod_${idx}`));
+            }
+          };
+
+          const toggleSelectModule = (id: string) => {
+            if (selectedHomeModIds.includes(id)) {
+              setSelectedHomeModIds(selectedHomeModIds.filter(i => i !== id));
+            } else {
+              setSelectedHomeModIds([...selectedHomeModIds, id]);
+            }
+          };
+
+          const updateModules = (newMods: typeof homeModules) => {
+            setCmsData({
+              ...cmsData,
+              homepage_curriculum: {
+                tag: cmsData.homepage_curriculum?.tag ?? defaultCmsContent.homepage_curriculum?.tag ?? '',
+                title: cmsData.homepage_curriculum?.title ?? defaultCmsContent.homepage_curriculum?.title ?? '',
+                subtitle: cmsData.homepage_curriculum?.subtitle ?? defaultCmsContent.homepage_curriculum?.subtitle ?? '',
+                modules: newMods
+              }
+            });
+          };
+
+          const handleAddModule = () => {
+            const nextNum = homeModules.length + 1;
+            const newMod = {
+              id: `mod_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+              title: `Module ${nextNum}: New Course Topic`,
+              lessons: [
+                `${nextNum}.1 Getting Started & Introduction`
+              ]
+            };
+            const updated = [...homeModules, newMod];
+            updateModules(updated);
+            setOpenHomeModIndex(updated.length - 1);
+          };
+
+          const handleDeleteModule = (idx: number) => {
+            const target = homeModules[idx];
+            if (!confirm(`Are you sure you want to delete "${target.title}" from Homepage?`)) return;
+            const updated = homeModules.filter((_, i) => i !== idx);
+            updateModules(updated);
+            const targetId = target.id || `mod_${idx}`;
+            setSelectedHomeModIds(prev => prev.filter(id => id !== targetId));
+          };
+
+          const handleDeleteSelected = () => {
+            if (selectedHomeModIds.length === 0) return;
+            if (!confirm(`Are you sure you want to permanently delete ${selectedHomeModIds.length} selected module(s) from Homepage?`)) return;
+            const updated = homeModules.filter((m, idx) => !selectedHomeModIds.includes(m.id || `mod_${idx}`));
+            updateModules(updated);
+            setSelectedHomeModIds([]);
+          };
+
+          const handleClearAll = () => {
+            if (!confirm('Are you sure you want to delete ALL modules from Homepage curriculum? You can then add your own custom modules from scratch.')) return;
+            updateModules([]);
+            setSelectedHomeModIds([]);
+          };
+
+          const handleRestoreDefaults = () => {
+            if (!confirm('Restore default template modules? This will overwrite your current list.')) return;
+            updateModules(defaultCmsContent.homepage_curriculum?.modules || []);
+            setSelectedHomeModIds([]);
+          };
+
+          const handleMoveModule = (fromIdx: number, toIdx: number) => {
+            if (toIdx < 0 || toIdx >= homeModules.length) return;
+            const copy = [...homeModules];
+            const [moved] = copy.splice(fromIdx, 1);
+            copy.splice(toIdx, 0, moved);
+            updateModules(copy);
+            setOpenHomeModIndex(toIdx);
+          };
+
+          return (
+            <div className="space-y-6 sm:space-y-8">
+              {/* Top Action & Information Bar */}
+              <div className="bg-[#111827] border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xl">
+                <div>
+                  <h2 className="text-base sm:text-2xl font-black text-white flex items-center gap-2">
+                    <BookOpen size={20} className="text-[#00A0DF]" />
+                    <span>Homepage Course Curriculum (Accordion)</span>
+                  </h2>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    Manage the public FAQ-style modules &amp; lecture outline displayed on the Homepage.
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
+                  <button
+                    type="button"
+                    onClick={handleAddModule}
+                    className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-xs font-black text-white shadow-lg shadow-emerald-600/20 transition-all active:scale-95 cursor-pointer"
+                  >
+                    <Plus size={15} />
+                    <span>Add New Module</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleSaveAll}
+                    disabled={loading}
+                    className="inline-flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-xl bg-[#00A0DF] hover:bg-[#0082b4] text-xs font-black text-white shadow-lg shadow-[#00A0DF]/20 transition-all active:scale-95 cursor-pointer disabled:opacity-50"
+                  >
+                    <Save size={15} />
+                    <span>{loading ? 'Saving...' : 'Save Curriculum'}</span>
+                  </button>
+                </div>
               </div>
 
-              <div className="flex items-center gap-2 w-full sm:w-auto">
+              {/* Explanatory Banner */}
+              <div className="p-4 rounded-2xl bg-[#00A0DF]/10 border border-[#00A0DF]/30 flex items-start gap-3 text-xs text-slate-300">
+                <span className="text-lg flex-shrink-0">💡</span>
+                <div className="leading-relaxed">
+                  <strong className="text-white">Note:</strong> Yeh section sirf aapki <strong>Homepage (Landing Page)</strong> par aane wale 
+                  course curriculum accordion ko control karta hai. Yahan aap bina kisi video upload ke asani se module titles aur topics add/edit kar sakte hain. 
+                  Actual enrolled students ke video lessons aur Bunny Stream videos alag <strong>&quot;9B. 📚 LMS Portal&quot;</strong> tab se manage hotay hain.
+                </div>
+              </div>
+
+              {/* Section Headings Customization */}
+              <div className="bg-[#111827] border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-6 space-y-4 shadow-xl">
+                <h3 className="text-sm font-bold text-white uppercase tracking-wider text-[#00A0DF]">
+                  Homepage Section Headers
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                      Tag Pill
+                    </label>
+                    <input
+                      type="text"
+                      value={cmsData.homepage_curriculum?.tag ?? defaultCmsContent.homepage_curriculum?.tag ?? ''}
+                      onChange={(e) => {
+                        const cur = cmsData.homepage_curriculum || defaultCmsContent.homepage_curriculum!;
+                        setCmsData({
+                          ...cmsData,
+                          homepage_curriculum: { ...cur, tag: e.target.value }
+                        });
+                      }}
+                      className="w-full px-3 py-2 rounded-xl bg-[#0B0F19] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                      Main Heading
+                    </label>
+                    <input
+                      type="text"
+                      value={cmsData.homepage_curriculum?.title ?? defaultCmsContent.homepage_curriculum?.title ?? ''}
+                      onChange={(e) => {
+                        const cur = cmsData.homepage_curriculum || defaultCmsContent.homepage_curriculum!;
+                        setCmsData({
+                          ...cmsData,
+                          homepage_curriculum: { ...cur, title: e.target.value }
+                        });
+                      }}
+                      className="w-full px-3 py-2 rounded-xl bg-[#0B0F19] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                      Subtitle
+                    </label>
+                    <input
+                      type="text"
+                      value={cmsData.homepage_curriculum?.subtitle ?? defaultCmsContent.homepage_curriculum?.subtitle ?? ''}
+                      onChange={(e) => {
+                        const cur = cmsData.homepage_curriculum || defaultCmsContent.homepage_curriculum!;
+                        setCmsData({
+                          ...cmsData,
+                          homepage_curriculum: { ...cur, subtitle: e.target.value }
+                        });
+                      }}
+                      className="w-full px-3 py-2 rounded-xl bg-[#0B0F19] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF]"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Bulk Actions & Selection Toolbar */}
+              <div className="bg-[#0B0F19] border border-white/10 rounded-2xl p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-md">
+                <div className="flex items-center gap-3">
+                  <label className="flex items-center gap-2 text-xs font-bold text-slate-300 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={allSelected}
+                      onChange={toggleSelectAll}
+                      className="w-4 h-4 rounded text-[#00A0DF] focus:ring-[#00A0DF] bg-slate-900 border-white/20 cursor-pointer accent-[#00A0DF]"
+                    />
+                    <span>Select All Modules</span>
+                  </label>
+                  {homeModules.length > 0 && (
+                    <span className="text-xs text-slate-400 font-medium border-l border-white/10 pl-3">
+                      {selectedHomeModIds.length} of {homeModules.length} selected
+                    </span>
+                  )}
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2">
+                  {selectedHomeModIds.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={handleDeleteSelected}
+                      className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-red-600/20 hover:bg-red-600 text-red-300 hover:text-white border border-red-500/30 text-xs font-bold transition-all cursor-pointer"
+                    >
+                      <Trash2 size={13} />
+                      <span>Delete Selected ({selectedHomeModIds.length})</span>
+                    </button>
+                  )}
+
+                  {homeModules.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={handleClearAll}
+                      className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-red-500/20 text-slate-300 hover:text-red-400 border border-white/5 text-xs font-bold transition-colors cursor-pointer"
+                    >
+                      <Trash2 size={13} />
+                      <span>Clear All Modules</span>
+                    </button>
+                  )}
+
+                  {homeModules.length === 0 && (
+                    <button
+                      type="button"
+                      onClick={handleRestoreDefaults}
+                      className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-white/10 text-xs font-bold transition-colors cursor-pointer"
+                    >
+                      <RotateCcw size={13} />
+                      <span>Restore Default Modules</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Modules List */}
+              {homeModules.length === 0 ? (
+                <div className="bg-[#111827] border border-white/10 rounded-2xl p-8 sm:p-12 text-center space-y-4">
+                  <div className="w-14 h-14 mx-auto rounded-2xl bg-[#00A0DF]/10 text-[#00A0DF] flex items-center justify-center">
+                    <BookOpen size={28} />
+                  </div>
+                  <div>
+                    <h3 className="text-base sm:text-lg font-bold text-white">No Modules on Homepage</h3>
+                    <p className="text-xs sm:text-sm text-slate-400 mt-1 max-w-md mx-auto">
+                      Aapne purane modules delete kar diye hain. Ab aap apne naye modules &amp; lectures add kar sakte hain.
+                    </p>
+                  </div>
+                  <div className="flex items-center justify-center gap-3 pt-2">
+                    <button
+                      type="button"
+                      onClick={handleAddModule}
+                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs sm:text-sm shadow-lg shadow-emerald-600/20 cursor-pointer"
+                    >
+                      <Plus size={16} />
+                      <span>Add First Module</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleRestoreDefaults}
+                      className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold cursor-pointer"
+                    >
+                      <RotateCcw size={14} />
+                      <span>Restore Template Modules</span>
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-3 sm:space-y-4">
+                  {homeModules.map((mod, modIdx) => {
+                    const modId = mod.id || `mod_${modIdx}`;
+                    const isSelected = selectedHomeModIds.includes(modId);
+                    const isOpen = openHomeModIndex === modIdx;
+                    const lessons = mod.lessons || [];
+
+                    return (
+                      <div
+                        key={modId}
+                        className={`bg-[#111827] border rounded-2xl overflow-hidden shadow-lg transition-all ${
+                          isSelected ? 'border-[#00A0DF] ring-1 ring-[#00A0DF]/50' : 'border-white/10'
+                        }`}
+                      >
+                        {/* Module Header Bar */}
+                        <div className="p-3.5 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#111827]">
+                          <div className="flex items-center gap-3 flex-1 min-w-0">
+                            {/* Checkbox */}
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={() => toggleSelectModule(modId)}
+                              className="w-4 h-4 rounded text-[#00A0DF] focus:ring-[#00A0DF] bg-slate-900 border-white/20 cursor-pointer accent-[#00A0DF] flex-shrink-0"
+                              title="Select module"
+                            />
+
+                            {/* Number */}
+                            <span className="w-8 h-8 rounded-xl bg-[#00A0DF]/15 text-[#00A0DF] font-black text-xs sm:text-sm flex items-center justify-center flex-shrink-0 border border-[#00A0DF]/30">
+                              {String(modIdx + 1).padStart(2, '0')}
+                            </span>
+
+                            {/* Module Title Input */}
+                            <div className="flex-1 min-w-0">
+                              <input
+                                type="text"
+                                value={mod.title}
+                                onChange={(e) => {
+                                  const curMods = [...homeModules];
+                                  curMods[modIdx] = { ...curMods[modIdx], title: e.target.value };
+                                  updateModules(curMods);
+                                }}
+                                className="w-full bg-[#0B0F19] border border-white/10 rounded-xl px-3 py-1.5 text-xs sm:text-sm font-bold text-white focus:outline-none focus:border-[#00A0DF]"
+                                placeholder="Module Title (e.g. Module 1: Dropshipping Fundamentals)"
+                              />
+                              <p className="text-[11px] text-slate-400 mt-1 pl-1">
+                                {lessons.length} Lectures / Topics Included
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Action Buttons */}
+                          <div className="flex items-center gap-2 self-end sm:self-center flex-shrink-0">
+                            {/* Move Up */}
+                            <button
+                              type="button"
+                              onClick={() => handleMoveModule(modIdx, modIdx - 1)}
+                              disabled={modIdx === 0}
+                              className="p-1.5 rounded-lg bg-[#1E293B] hover:bg-[#00A0DF] text-slate-300 hover:text-white disabled:opacity-30 disabled:hover:bg-[#1E293B] transition-colors"
+                              title="Move Module Up"
+                            >
+                              <ChevronUp size={15} />
+                            </button>
+
+                            {/* Move Down */}
+                            <button
+                              type="button"
+                              onClick={() => handleMoveModule(modIdx, modIdx + 1)}
+                              disabled={modIdx === homeModules.length - 1}
+                              className="p-1.5 rounded-lg bg-[#1E293B] hover:bg-[#00A0DF] text-slate-300 hover:text-white disabled:opacity-30 disabled:hover:bg-[#1E293B] transition-colors"
+                              title="Move Module Down"
+                            >
+                              <ChevronDown size={15} />
+                            </button>
+
+                            {/* Manage Topics */}
+                            <button
+                              type="button"
+                              onClick={() => setOpenHomeModIndex(isOpen ? null : modIdx)}
+                              className="px-3 py-1.5 rounded-xl bg-[#1E293B] hover:bg-[#00A0DF] text-slate-200 hover:text-white text-xs font-bold transition-colors flex items-center gap-1.5 border border-white/5 cursor-pointer"
+                            >
+                              <span>{isOpen ? 'Hide Topics' : `Manage Topics (${lessons.length})`}</span>
+                              {isOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                            </button>
+
+                            {/* Delete Module */}
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteModule(modIdx)}
+                              className="p-2 rounded-xl bg-red-500/10 hover:bg-red-500/30 text-red-400 transition-colors cursor-pointer"
+                              title="Delete Module from Homepage"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Expanded Topics / Lectures List */}
+                        {isOpen && (
+                          <div className="p-4 sm:p-6 bg-[#0B0F19] border-t border-white/10 space-y-3">
+                            {/* Quick Add Topic Input */}
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="text"
+                                placeholder={`e.g. ${modIdx + 1}.${lessons.length + 1} Lecture Title`}
+                                value={newTopicInputs[modIdx] || ''}
+                                onChange={(e) => setNewTopicInputs({ ...newTopicInputs, [modIdx]: e.target.value })}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    e.preventDefault();
+                                    const val = (newTopicInputs[modIdx] || '').trim();
+                                    if (!val) return;
+                                    const curMods = [...homeModules];
+                                    curMods[modIdx] = {
+                                      ...curMods[modIdx],
+                                      lessons: [...(curMods[modIdx].lessons || []), val]
+                                    };
+                                    updateModules(curMods);
+                                    setNewTopicInputs({ ...newTopicInputs, [modIdx]: '' });
+                                  }
+                                }}
+                                className="flex-1 px-3 py-2 rounded-xl bg-[#111827] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF]"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const val = (newTopicInputs[modIdx] || '').trim();
+                                  if (!val) return;
+                                  const curMods = [...homeModules];
+                                  curMods[modIdx] = {
+                                    ...curMods[modIdx],
+                                    lessons: [...(curMods[modIdx].lessons || []), val]
+                                  };
+                                  updateModules(curMods);
+                                  setNewTopicInputs({ ...newTopicInputs, [modIdx]: '' });
+                                }}
+                                className="px-4 py-2 rounded-xl bg-[#00A0DF] hover:bg-[#008ec7] text-white text-xs font-bold transition-all flex items-center gap-1.5 flex-shrink-0 active:scale-95 cursor-pointer"
+                              >
+                                <Plus size={14} />
+                                <span>Add Lecture</span>
+                              </button>
+                            </div>
+
+                            {/* List of Existing Topics */}
+                            <div className="space-y-2 pt-1">
+                              {lessons.length === 0 ? (
+                                <p className="text-xs text-slate-500 italic py-2">
+                                  No lectures added to this module yet. Type a lecture title above and click &quot;Add Lecture&quot;.
+                                </p>
+                              ) : (
+                                lessons.map((lessonItem, lIdx) => {
+                                  const lessonText = typeof lessonItem === 'string' ? lessonItem : (lessonItem as any).title;
+                                  return (
+                                    <div
+                                      key={lIdx}
+                                      className="flex items-center gap-2.5 bg-[#111827] p-2.5 rounded-xl border border-white/5"
+                                    >
+                                      <span className="text-[11px] font-mono text-[#00A0DF] font-bold w-6 text-center">
+                                        {lIdx + 1}.
+                                      </span>
+                                      <input
+                                        type="text"
+                                        value={lessonText}
+                                        onChange={(e) => {
+                                          const curMods = [...homeModules];
+                                          const curLessons = [...(curMods[modIdx].lessons || [])];
+                                          curLessons[lIdx] = e.target.value;
+                                          curMods[modIdx] = { ...curMods[modIdx], lessons: curLessons };
+                                          updateModules(curMods);
+                                        }}
+                                        className="flex-1 bg-transparent border-0 text-xs text-white focus:outline-none focus:bg-[#0B0F19] px-2 py-1 rounded-lg"
+                                        placeholder="Lecture / Topic name"
+                                      />
+
+                                      {/* Move Topic Up */}
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          if (lIdx === 0) return;
+                                          const curMods = [...homeModules];
+                                          const curLessons = [...(curMods[modIdx].lessons || [])];
+                                          const [moved] = curLessons.splice(lIdx, 1);
+                                          curLessons.splice(lIdx - 1, 0, moved);
+                                          curMods[modIdx] = { ...curMods[modIdx], lessons: curLessons };
+                                          updateModules(curMods);
+                                        }}
+                                        disabled={lIdx === 0}
+                                        className="p-1 text-slate-500 hover:text-white disabled:opacity-20 transition-colors"
+                                        title="Move Topic Up"
+                                      >
+                                        <ChevronUp size={13} />
+                                      </button>
+
+                                      {/* Move Topic Down */}
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          if (lIdx === lessons.length - 1) return;
+                                          const curMods = [...homeModules];
+                                          const curLessons = [...(curMods[modIdx].lessons || [])];
+                                          const [moved] = curLessons.splice(lIdx, 1);
+                                          curLessons.splice(lIdx + 1, 0, moved);
+                                          curMods[modIdx] = { ...curMods[modIdx], lessons: curLessons };
+                                          updateModules(curMods);
+                                        }}
+                                        disabled={lIdx === lessons.length - 1}
+                                        className="p-1 text-slate-500 hover:text-white disabled:opacity-20 transition-colors"
+                                        title="Move Topic Down"
+                                      >
+                                        <ChevronDown size={13} />
+                                      </button>
+
+                                      {/* Delete Topic */}
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          const curMods = [...homeModules];
+                                          const curLessons = (curMods[modIdx].lessons || []).filter((_, i) => i !== lIdx);
+                                          curMods[modIdx] = { ...curMods[modIdx], lessons: curLessons };
+                                          updateModules(curMods);
+                                        }}
+                                        className="p-1.5 text-slate-500 hover:text-red-400 transition-colors rounded-lg hover:bg-red-500/10 cursor-pointer"
+                                        title="Delete Lecture"
+                                      >
+                                        <Trash2 size={13} />
+                                      </button>
+                                    </div>
+                                  );
+                                })
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Bottom Save Button */}
+              <div className="pt-4 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-3">
+                <p className="text-xs text-slate-400 text-center sm:text-left">
+                  Changes will update live on <strong>Homepage (/) Curriculum Accordion</strong> immediately upon saving.
+                </p>
                 <button
                   type="button"
-                  onClick={() => {
-                    const current = cmsData.homepage_curriculum?.modules || defaultCmsContent.homepage_curriculum?.modules || [];
-                    const nextNum = current.length + 1;
-                    const newModule = {
-                      id: `mod_${Date.now()}`,
-                      title: `Module ${nextNum}: New Course Topic`,
-                      lessons: [
-                        `${nextNum}.1 Getting Started & Setup`
-                      ]
-                    };
-                    const updated = [...current, newModule];
-                    setCmsData({
-                      ...cmsData,
-                      homepage_curriculum: {
-                        ...(cmsData.homepage_curriculum || defaultCmsContent.homepage_curriculum!),
-                        modules: updated
-                      }
-                    });
-                    setOpenHomeModIndex(updated.length - 1);
-                  }}
-                  className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-4 py-2 sm:py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-xs font-black text-white shadow-lg shadow-emerald-600/20 transition-all active:scale-95"
+                  onClick={handleSaveAll}
+                  disabled={loading}
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs sm:text-sm font-black shadow-lg shadow-emerald-600/30 transition-all active:scale-95 cursor-pointer"
                 >
-                  <Plus size={15} />
-                  <span>Add Module to Homepage</span>
+                  <Save size={15} />
+                  <span>{loading ? 'Saving...' : 'Save Homepage Curriculum'}</span>
                 </button>
               </div>
+
             </div>
-
-            {/* Explanatory Banner */}
-            <div className="p-4 rounded-2xl bg-[#00A0DF]/10 border border-[#00A0DF]/30 flex items-start gap-3 text-xs text-slate-300">
-              <span className="text-lg flex-shrink-0">💡</span>
-              <div className="leading-relaxed">
-                <strong className="text-white">Note:</strong> Yeh section sirf aapki <strong>Homepage (Landing Page)</strong> par aane wale 
-                course curriculum accordion ko control karta hai. Yahan aap bina kisi video upload ke asani se module titles aur topics add/edit kar sakte hain. 
-                Actual enrolled students ke video lessons aur Bunny Stream videos alag <strong>&quot;9B. 📚 LMS Portal&quot;</strong> tab se manage hotay hain.
-              </div>
-            </div>
-
-            {/* Section Headings Customization */}
-            <div className="bg-[#111827] border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-6 space-y-4 shadow-xl">
-              <h3 className="text-sm font-bold text-white uppercase tracking-wider text-[#00A0DF]">
-                Homepage Section Headers
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
-                <div>
-                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
-                    Tag Pill
-                  </label>
-                  <input
-                    type="text"
-                    value={cmsData.homepage_curriculum?.tag ?? defaultCmsContent.homepage_curriculum?.tag ?? ''}
-                    onChange={(e) => {
-                      const cur = cmsData.homepage_curriculum || defaultCmsContent.homepage_curriculum!;
-                      setCmsData({
-                        ...cmsData,
-                        homepage_curriculum: { ...cur, tag: e.target.value }
-                      });
-                    }}
-                    className="w-full px-3 py-2 rounded-xl bg-[#0B0F19] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF]"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
-                    Main Heading
-                  </label>
-                  <input
-                    type="text"
-                    value={cmsData.homepage_curriculum?.title ?? defaultCmsContent.homepage_curriculum?.title ?? ''}
-                    onChange={(e) => {
-                      const cur = cmsData.homepage_curriculum || defaultCmsContent.homepage_curriculum!;
-                      setCmsData({
-                        ...cmsData,
-                        homepage_curriculum: { ...cur, title: e.target.value }
-                      });
-                    }}
-                    className="w-full px-3 py-2 rounded-xl bg-[#0B0F19] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF]"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
-                    Subtitle
-                  </label>
-                  <input
-                    type="text"
-                    value={cmsData.homepage_curriculum?.subtitle ?? defaultCmsContent.homepage_curriculum?.subtitle ?? ''}
-                    onChange={(e) => {
-                      const cur = cmsData.homepage_curriculum || defaultCmsContent.homepage_curriculum!;
-                      setCmsData({
-                        ...cmsData,
-                        homepage_curriculum: { ...cur, subtitle: e.target.value }
-                      });
-                    }}
-                    className="w-full px-3 py-2 rounded-xl bg-[#0B0F19] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF]"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Modules List for Homepage */}
-            <div className="space-y-3 sm:space-y-4">
-              {((cmsData.homepage_curriculum?.modules && cmsData.homepage_curriculum.modules.length > 0)
-                ? cmsData.homepage_curriculum.modules
-                : (defaultCmsContent.homepage_curriculum?.modules || [])
-              ).map((mod, modIdx) => {
-                const isOpen = openHomeModIndex === modIdx;
-                const lessons = mod.lessons || [];
-
-                return (
-                  <div
-                    key={mod.id || modIdx}
-                    className="bg-[#111827] border border-white/10 rounded-2xl overflow-hidden shadow-lg transition-all"
-                  >
-                    {/* Module Header Bar */}
-                    <div className="p-3.5 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#111827]">
-                      <div className="flex items-center gap-3 flex-1 min-w-0">
-                        <span className="w-8 h-8 rounded-xl bg-[#00A0DF]/15 text-[#00A0DF] font-black text-xs sm:text-sm flex items-center justify-center flex-shrink-0 border border-[#00A0DF]/30">
-                          {String(modIdx + 1).padStart(2, '0')}
-                        </span>
-                        <div className="flex-1 min-w-0">
-                          <input
-                            type="text"
-                            value={mod.title}
-                            onChange={(e) => {
-                              const curMods = [...(cmsData.homepage_curriculum?.modules || defaultCmsContent.homepage_curriculum?.modules || [])];
-                              curMods[modIdx] = { ...curMods[modIdx], title: e.target.value };
-                              setCmsData({
-                                ...cmsData,
-                                homepage_curriculum: {
-                                  ...(cmsData.homepage_curriculum || defaultCmsContent.homepage_curriculum!),
-                                  modules: curMods
-                                }
-                              });
-                            }}
-                            className="w-full bg-[#0B0F19] border border-white/10 rounded-xl px-3 py-1.5 text-xs sm:text-sm font-bold text-white focus:outline-none focus:border-[#00A0DF]"
-                            placeholder="Module Title (e.g. Module 1: Dropshipping Fundamentals)"
-                          />
-                          <p className="text-[11px] text-slate-400 mt-1 pl-1">
-                            {lessons.length} Lectures / Topics Included
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-2 self-end sm:self-center flex-shrink-0">
-                        <button
-                          type="button"
-                          onClick={() => setOpenHomeModIndex(isOpen ? null : modIdx)}
-                          className="px-3 py-1.5 rounded-xl bg-[#1E293B] hover:bg-[#00A0DF] text-slate-200 hover:text-white text-xs font-bold transition-colors flex items-center gap-1.5 border border-white/5"
-                        >
-                          <span>{isOpen ? 'Hide Topics' : `Manage Topics (${lessons.length})`}</span>
-                          {isOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (!confirm(`Delete "${mod.title}" from Homepage?`)) return;
-                            const curMods = (cmsData.homepage_curriculum?.modules || defaultCmsContent.homepage_curriculum?.modules || []).filter((_, i) => i !== modIdx);
-                            setCmsData({
-                              ...cmsData,
-                              homepage_curriculum: {
-                                ...(cmsData.homepage_curriculum || defaultCmsContent.homepage_curriculum!),
-                                modules: curMods
-                              }
-                            });
-                          }}
-                          className="p-2 rounded-xl bg-red-500/10 hover:bg-red-500/30 text-red-400 transition-colors"
-                          title="Delete Module from Homepage"
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Expanded Topics / Lectures List */}
-                    {isOpen && (
-                      <div className="p-4 sm:p-6 bg-[#0B0F19] border-t border-white/10 space-y-3">
-                        {/* Quick Add Topic Input */}
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="text"
-                            placeholder={`e.g. ${modIdx + 1}.${lessons.length + 1} New Topic Title`}
-                            value={newTopicInputs[modIdx] || ''}
-                            onChange={(e) => setNewTopicInputs({ ...newTopicInputs, [modIdx]: e.target.value })}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') {
-                                e.preventDefault();
-                                const val = (newTopicInputs[modIdx] || '').trim();
-                                if (!val) return;
-                                const curMods = [...(cmsData.homepage_curriculum?.modules || defaultCmsContent.homepage_curriculum?.modules || [])];
-                                curMods[modIdx] = {
-                                  ...curMods[modIdx],
-                                  lessons: [...(curMods[modIdx].lessons || []), val]
-                                };
-                                setCmsData({
-                                  ...cmsData,
-                                  homepage_curriculum: {
-                                    ...(cmsData.homepage_curriculum || defaultCmsContent.homepage_curriculum!),
-                                    modules: curMods
-                                  }
-                                });
-                                setNewTopicInputs({ ...newTopicInputs, [modIdx]: '' });
-                              }
-                            }}
-                            className="flex-1 px-3 py-2 rounded-xl bg-[#111827] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF]"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const val = (newTopicInputs[modIdx] || '').trim();
-                              if (!val) return;
-                              const curMods = [...(cmsData.homepage_curriculum?.modules || defaultCmsContent.homepage_curriculum?.modules || [])];
-                              curMods[modIdx] = {
-                                ...curMods[modIdx],
-                                lessons: [...(curMods[modIdx].lessons || []), val]
-                              };
-                              setCmsData({
-                                ...cmsData,
-                                homepage_curriculum: {
-                                  ...(cmsData.homepage_curriculum || defaultCmsContent.homepage_curriculum!),
-                                  modules: curMods
-                                }
-                              });
-                              setNewTopicInputs({ ...newTopicInputs, [modIdx]: '' });
-                            }}
-                            className="px-4 py-2 rounded-xl bg-[#00A0DF] hover:bg-[#008ec7] text-white text-xs font-bold transition-all flex items-center gap-1.5 flex-shrink-0 active:scale-95"
-                          >
-                            <Plus size={14} />
-                            <span>Add Topic</span>
-                          </button>
-                        </div>
-
-                        {/* List of Existing Topics */}
-                        <div className="space-y-2 pt-1">
-                          {lessons.length === 0 ? (
-                            <p className="text-xs text-slate-500 italic py-2">
-                              No topics added to this module yet. Type a topic above and click &quot;Add Topic&quot;.
-                            </p>
-                          ) : (
-                            lessons.map((lessonItem, lIdx) => {
-                              const lessonText = typeof lessonItem === 'string' ? lessonItem : (lessonItem as any).title;
-                              return (
-                                <div
-                                  key={lIdx}
-                                  className="flex items-center gap-2.5 bg-[#111827] p-2.5 rounded-xl border border-white/5"
-                                >
-                                  <span className="text-[11px] font-mono text-[#00A0DF] font-bold w-6 text-center">
-                                    {lIdx + 1}.
-                                  </span>
-                                  <input
-                                    type="text"
-                                    value={lessonText}
-                                    onChange={(e) => {
-                                      const curMods = [...(cmsData.homepage_curriculum?.modules || defaultCmsContent.homepage_curriculum?.modules || [])];
-                                      const curLessons = [...(curMods[modIdx].lessons || [])];
-                                      curLessons[lIdx] = e.target.value;
-                                      curMods[modIdx] = { ...curMods[modIdx], lessons: curLessons };
-                                      setCmsData({
-                                        ...cmsData,
-                                        homepage_curriculum: {
-                                          ...(cmsData.homepage_curriculum || defaultCmsContent.homepage_curriculum!),
-                                          modules: curMods
-                                        }
-                                      });
-                                    }}
-                                    className="flex-1 bg-transparent border-0 text-xs text-white focus:outline-none focus:bg-[#0B0F19] px-2 py-1 rounded-lg"
-                                  />
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      const curMods = [...(cmsData.homepage_curriculum?.modules || defaultCmsContent.homepage_curriculum?.modules || [])];
-                                      const curLessons = (curMods[modIdx].lessons || []).filter((_, i) => i !== lIdx);
-                                      curMods[modIdx] = { ...curMods[modIdx], lessons: curLessons };
-                                      setCmsData({
-                                        ...cmsData,
-                                        homepage_curriculum: {
-                                          ...(cmsData.homepage_curriculum || defaultCmsContent.homepage_curriculum!),
-                                          modules: curMods
-                                        }
-                                      });
-                                    }}
-                                    className="p-1.5 text-slate-500 hover:text-red-400 transition-colors rounded-lg hover:bg-red-500/10"
-                                    title="Delete Topic"
-                                  >
-                                    <Trash2 size={13} />
-                                  </button>
-                                </div>
-                              );
-                            })
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Bottom Save Button */}
-            <div className="pt-4 border-t border-white/5 flex items-center justify-between">
-              <p className="text-xs text-slate-400">
-                Changes will update live on <strong>Homepage (/) Curriculum Accordion</strong> immediately upon saving.
-              </p>
-              <button
-                type="button"
-                onClick={handleSaveAll}
-                disabled={loading}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs sm:text-sm font-black shadow-lg shadow-emerald-600/30 transition-all active:scale-95"
-              >
-                <Save size={15} />
-                <span>{loading ? 'Saving...' : 'Save Homepage Curriculum'}</span>
-              </button>
-            </div>
-
-          </div>
-        )}
+          );
+        })()}
 
         {/* ========================================================================= */}
         {/* TAB 9B: LMS COURSE & CURRICULUM MANAGER (FOR ENROLLED STUDENTS) */}

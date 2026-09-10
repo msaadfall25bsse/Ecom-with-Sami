@@ -109,7 +109,39 @@ function parseCmsSchema(parsed: any): CmsContentSchema {
           ...defaultCmsContent.checkout_page,
           ...parsed.checkout_page,
         }
-      : defaultCmsContent.checkout_page
+      : defaultCmsContent.checkout_page,
+    homepage_curriculum: parsed.homepage_curriculum !== undefined
+      ? {
+          tag: parsed.homepage_curriculum?.tag ?? defaultCmsContent.homepage_curriculum?.tag ?? '',
+          title: parsed.homepage_curriculum?.title ?? defaultCmsContent.homepage_curriculum?.title ?? '',
+          subtitle: parsed.homepage_curriculum?.subtitle ?? defaultCmsContent.homepage_curriculum?.subtitle ?? '',
+          modules: Array.isArray(parsed.homepage_curriculum?.modules)
+            ? parsed.homepage_curriculum.modules
+            : (defaultCmsContent.homepage_curriculum?.modules || [])
+        }
+      : defaultCmsContent.homepage_curriculum,
+    why_different: parsed.why_different !== undefined
+      ? {
+          is_active: parsed.why_different?.is_active ?? defaultCmsContent.why_different?.is_active ?? true,
+          title: parsed.why_different?.title ?? defaultCmsContent.why_different?.title ?? '',
+          subtitle: parsed.why_different?.subtitle ?? defaultCmsContent.why_different?.subtitle ?? '',
+          cards: Array.isArray(parsed.why_different?.cards)
+            ? parsed.why_different.cards
+            : (defaultCmsContent.why_different?.cards || [])
+        }
+      : defaultCmsContent.why_different,
+    signature_framework: parsed.signature_framework !== undefined
+      ? {
+          is_active: parsed.signature_framework?.is_active ?? defaultCmsContent.signature_framework?.is_active ?? true,
+          badge: parsed.signature_framework?.badge ?? defaultCmsContent.signature_framework?.badge ?? 'SIGNATURE FRAMEWORK',
+          eyebrow: parsed.signature_framework?.eyebrow ?? defaultCmsContent.signature_framework?.eyebrow ?? 'SIGNATURE FRAMEWORK',
+          title: parsed.signature_framework?.title ?? defaultCmsContent.signature_framework?.title ?? '',
+          subtitle: parsed.signature_framework?.subtitle ?? defaultCmsContent.signature_framework?.subtitle ?? '',
+          description: parsed.signature_framework?.description ?? defaultCmsContent.signature_framework?.description ?? '',
+          highlight_tag: parsed.signature_framework?.highlight_tag ?? defaultCmsContent.signature_framework?.highlight_tag ?? '',
+          cta_text: parsed.signature_framework?.cta_text ?? defaultCmsContent.signature_framework?.cta_text ?? ''
+        }
+      : defaultCmsContent.signature_framework
   };
 }
 
@@ -180,6 +212,9 @@ export async function dbSaveCmsSettings(patch: Partial<CmsContentSchema>): Promi
     homepage_proof_wall: patch.homepage_proof_wall !== undefined ? patch.homepage_proof_wall : existing.homepage_proof_wall,
     success_page: patch.success_page !== undefined ? patch.success_page : existing.success_page,
     checkout_page: patch.checkout_page !== undefined ? { ...existing.checkout_page, ...patch.checkout_page } : existing.checkout_page,
+    homepage_curriculum: patch.homepage_curriculum !== undefined ? patch.homepage_curriculum : existing.homepage_curriculum,
+    why_different: patch.why_different !== undefined ? patch.why_different : existing.why_different,
+    signature_framework: patch.signature_framework !== undefined ? patch.signature_framework : existing.signature_framework,
     theme: patch.theme !== undefined 
       ? { 
           ...(existing.theme || defaultCmsContent.theme), 

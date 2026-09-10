@@ -20,13 +20,13 @@ export type ModuleItem = CurriculumModuleItem;
 export function CurriculumAccordion({ modules: customModules }: { modules?: CurriculumModuleItem[] }) {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
   const [moduleList, setModuleList] = useState<CurriculumModuleItem[]>(
-    customModules && customModules.length > 0
+    Array.isArray(customModules)
       ? customModules
       : defaultCmsContent.homepage_curriculum?.modules || []
   );
 
   useEffect(() => {
-    if (customModules && customModules.length > 0) {
+    if (Array.isArray(customModules)) {
       setModuleList(customModules);
     }
   }, [customModules]);
@@ -38,7 +38,7 @@ export function CurriculumAccordion({ modules: customModules }: { modules?: Curr
         const stored = localStorage.getItem('sami_cms_content');
         if (stored) {
           const parsed = JSON.parse(stored);
-          if (parsed?.homepage_curriculum?.modules) {
+          if (Array.isArray(parsed?.homepage_curriculum?.modules)) {
             setModuleList(parsed.homepage_curriculum.modules);
           }
         }
