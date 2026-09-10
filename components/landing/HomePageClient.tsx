@@ -87,27 +87,29 @@ function WhyDifferentSection({ content, defaultData }: { content: any; defaultDa
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           {cards.map((card: any, idx: number) => (
             <div
               key={idx}
-              className={`bg-slate-50/90 hover:bg-white border border-slate-200 hover:border-[#00A0DF]/40 rounded-2xl p-5 sm:p-6 shadow-sm hover:shadow-xl transition-all duration-500 hover:-translate-y-1 flex flex-col justify-between group motion-reduce:transform-none ${
+              className={`transition-all duration-500 motion-reduce:transition-none ${
                 isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
               }`}
               style={{
-                transitionDelay: `${idx * 120}ms`
+                transitionDelay: `${idx * 100}ms`
               }}
             >
-              <div>
-                <div className="w-9 h-9 rounded-xl bg-[#00A0DF]/10 text-[#00A0DF] font-black text-xs sm:text-sm flex items-center justify-center border border-[#00A0DF]/25 mb-4 group-hover:bg-[#00A0DF] group-hover:text-white transition-colors duration-300">
-                  {card.number || `0${idx + 1}`}
+              <div className="bg-white border border-gray-200 rounded-2xl p-6 sm:p-7 shadow-sm card-hover-lift h-full flex flex-col justify-between group cursor-pointer select-none">
+                <div>
+                  <div className="w-10 h-10 rounded-xl bg-[#00A0DF]/10 text-[#00A0DF] font-black text-xs sm:text-sm flex items-center justify-center border border-[#00A0DF]/25 mb-4 group-hover:bg-[#00A0DF] group-hover:text-white transition-colors duration-200 shadow-sm">
+                    {card.number || `0${idx + 1}`}
+                  </div>
+                  <h3 className="text-base sm:text-lg font-black text-slate-900 mb-2 uppercase tracking-tight leading-snug">
+                    {card.title}
+                  </h3>
+                  <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-medium">
+                    {card.desc}
+                  </p>
                 </div>
-                <h3 className="text-sm sm:text-base font-black text-slate-900 tracking-tight mb-2.5 uppercase leading-snug">
-                  {card.title}
-                </h3>
-                <p className="text-xs sm:text-[13px] text-slate-600 leading-relaxed font-medium">
-                  {card.desc}
-                </p>
               </div>
             </div>
           ))}
