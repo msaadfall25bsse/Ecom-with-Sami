@@ -148,6 +148,7 @@ function SignatureFrameworkTeaser({ content, defaultData }: { content: any; defa
   const subtitle = data?.subtitle || defaultData.subtitle || '(That Is Also Called The Order Booster System)';
   const description = data?.description || defaultData.description || 'My proprietary 24-hour marketing & campaign shift strategy designed to maximize ad efficiency, boost confirmed daily orders, and scale profitability systematically.';
   const highlightTag = data?.highlight_tag || defaultData.highlight_tag || 'PROPRIETARY 24-HOUR MARKETING STRATEGY';
+  const ctaText = data?.cta_text || defaultData.cta_text || 'ENROLL NOW & GET THE 3S SYSTEM →';
 
   return (
     <section ref={sectionRef} className="py-8 sm:py-10 bg-slate-100/70 border-t border-slate-200/80 overflow-visible">
@@ -186,9 +187,23 @@ function SignatureFrameworkTeaser({ content, defaultData }: { content: any; defa
               </p>
 
               {/* Description */}
-              <p className="text-xs sm:text-sm text-slate-300 font-medium leading-relaxed max-w-3xl">
+              <p className="text-xs sm:text-sm text-slate-300 font-medium leading-relaxed max-w-3xl mb-6">
                 {description}
               </p>
+
+              {/* Bottom CTA Area */}
+              <div className="pt-5 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <p className="text-xs text-slate-400 font-semibold text-center sm:text-left">
+                  Included directly inside the complete Ecominion mentorship.
+                </p>
+                <Link
+                  href="/enrollment"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-7 py-3.5 bg-gradient-to-r from-[#00A0DF] to-[#0082b4] hover:from-[#00b0f5] hover:to-[#00A0DF] text-white font-black text-xs sm:text-sm rounded-xl shadow-lg shadow-[#00A0DF]/30 transition-all transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
+                >
+                  <span>{ctaText}</span>
+                  <ArrowRight size={16} />
+                </Link>
+              </div>
             </div>
           </div>
         </div>

@@ -3896,6 +3896,25 @@ export default function AdminCmsPage() {
                   placeholder="My proprietary 24-hour marketing & campaign shift strategy designed to maximize ad efficiency, boost confirmed daily orders, and scale profitability systematically."
                 />
               </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-400 mb-1">
+                  Bottom CTA Button Text (Links to /enrollment)
+                </label>
+                <input
+                  type="text"
+                  value={cmsData.signature_framework?.cta_text ?? defaultCmsContent.signature_framework?.cta_text ?? ''}
+                  onChange={(e) => {
+                    const cur = cmsData.signature_framework || defaultCmsContent.signature_framework!;
+                    setCmsData({
+                      ...cmsData,
+                      signature_framework: { ...cur, cta_text: e.target.value }
+                    });
+                  }}
+                  className="w-full px-3 py-2.5 rounded-xl bg-[#111827] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF]"
+                  placeholder="ENROLL NOW & GET THE 3S SYSTEM →"
+                />
+              </div>
             </div>
 
             {/* Bottom Save Button */}

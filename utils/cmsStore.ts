@@ -585,7 +585,8 @@ export const defaultCmsContent: CmsContentSchema = {
     title: 'THE 3-SHIFT SCALING FORMULA™',
     subtitle: '(That Is Also Called The Order Booster System)',
     description: 'My proprietary 24-hour marketing & campaign shift strategy designed to maximize ad efficiency, boost confirmed daily orders, and scale profitability systematically.',
-    highlight_tag: 'PROPRIETARY 24-HOUR MARKETING STRATEGY'
+    highlight_tag: 'PROPRIETARY 24-HOUR MARKETING STRATEGY',
+    cta_text: 'ENROLL NOW & GET THE 3S SYSTEM →'
   },
   who_is_this_for: {
     badge: 'PERFECT FOR YOU IF…',
