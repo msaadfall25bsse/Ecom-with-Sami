@@ -5424,238 +5424,357 @@ export default function AdminCmsPage() {
         {/* TAB 12: 12. 2 OPTIONS LEFT (DIY VS SAMI SHORTCUT) */}
         {/* ========================================================================= */}
         {activeTab === 'options' && (
-          <div className="bg-[#111827] border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-8 space-y-6 shadow-xl">
-            <div>
-              <h3 className="text-sm sm:text-lg font-bold text-white flex items-center gap-2">
-                <SlidersHorizontal size={18} className="text-[#00A0DF]" />
-                <span>2 Options Comparison Section</span>
-              </h3>
-              <p className="text-xs text-slate-400 mt-1">
-                Manage the side-by-side comparison between DIY trial &amp; error and Sami's direct mentorship shortcut.
-              </p>
+          <div className="space-y-6">
+            {/* Tab Header Banner */}
+            <div className="bg-[#111827] border border-white/10 rounded-2xl sm:rounded-3xl p-5 sm:p-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 shadow-xl">
+              <div>
+                <h3 className="text-base sm:text-xl font-bold text-white flex items-center gap-2">
+                  <SlidersHorizontal size={22} className="text-[#00A0DF]" />
+                  <span>2 Options Comparison Section (Option A vs Option B)</span>
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-400 mt-1">
+                  Manage the side-by-side comparison: badges, main titles/headings, subtitles, and bullet points for both Option A and Option B.
+                </p>
+              </div>
+
+              <button
+                onClick={handleSaveAll}
+                disabled={loading}
+                className="self-start sm:self-auto inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#00A0DF] hover:bg-[#008ec7] disabled:opacity-50 text-white text-xs sm:text-sm font-black shadow-lg shadow-[#00A0DF]/30 transition-all active:scale-95"
+              >
+                <Save size={15} />
+                <span>{loading ? 'Saving...' : 'Save Changes'}</span>
+              </button>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Overall Section Titles */}
+            <div className="bg-[#111827] border border-white/10 rounded-2xl sm:rounded-3xl p-5 sm:p-8 space-y-4 shadow-xl">
+              <h4 className="text-sm sm:text-base font-bold text-white flex items-center gap-2 pb-2 border-b border-white/10">
+                <Sparkles size={16} className="text-[#00A0DF]" />
+                <span>Main Section Headings</span>
+              </h4>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 mb-1">Section Badge</label>
+                  <input
+                    type="text"
+                    value={cmsData.options_comparison?.badge ?? defaultCmsContent.options_comparison.badge}
+                    onChange={(e) => setCmsData({
+                      ...cmsData,
+                      options_comparison: { ...(cmsData.options_comparison || defaultCmsContent.options_comparison), badge: e.target.value }
+                    })}
+                    placeholder="e.g. YOUR CHOICE"
+                    className="w-full px-3 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 mb-1">Section Title</label>
+                  <input
+                    type="text"
+                    value={cmsData.options_comparison?.title ?? defaultCmsContent.options_comparison.title}
+                    onChange={(e) => setCmsData({
+                      ...cmsData,
+                      options_comparison: { ...(cmsData.options_comparison || defaultCmsContent.options_comparison), title: e.target.value }
+                    })}
+                    placeholder="e.g. Now You Have 2 Options Left"
+                    className="w-full px-3 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF]"
+                  />
+                </div>
+              </div>
+
               <div>
-                <label className="block text-xs font-bold text-slate-400 mb-1">Section Badge</label>
-                <input
-                  type="text"
-                  value={cmsData.options_comparison?.badge ?? defaultCmsContent.options_comparison.badge}
+                <label className="block text-xs font-bold text-slate-400 mb-1">Section Subtitle</label>
+                <textarea
+                  rows={2}
+                  value={cmsData.options_comparison?.subtitle ?? defaultCmsContent.options_comparison.subtitle}
                   onChange={(e) => setCmsData({
                     ...cmsData,
-                    options_comparison: { ...(cmsData.options_comparison || defaultCmsContent.options_comparison), badge: e.target.value }
+                    options_comparison: { ...(cmsData.options_comparison || defaultCmsContent.options_comparison), subtitle: e.target.value }
                   })}
-                  className="w-full px-3 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF]"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-slate-400 mb-1">Section Title</label>
-                <input
-                  type="text"
-                  value={cmsData.options_comparison?.title ?? defaultCmsContent.options_comparison.title}
-                  onChange={(e) => setCmsData({
-                    ...cmsData,
-                    options_comparison: { ...(cmsData.options_comparison || defaultCmsContent.options_comparison), title: e.target.value }
-                  })}
-                  className="w-full px-3 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF]"
+                  placeholder="e.g. One keeps you stuck. The other moves you forward."
+                  className="w-full px-3 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF] resize-none"
                 />
               </div>
             </div>
 
-            <div>
-              <label className="block text-xs font-bold text-slate-400 mb-1">Section Subtitle</label>
-              <textarea
-                rows={2}
-                value={cmsData.options_comparison?.subtitle ?? defaultCmsContent.options_comparison.subtitle}
-                onChange={(e) => setCmsData({
-                  ...cmsData,
-                  options_comparison: { ...(cmsData.options_comparison || defaultCmsContent.options_comparison), subtitle: e.target.value }
-                })}
-                className="w-full px-3 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF] resize-none"
-              />
-            </div>
+            {/* Column Headers (Option A vs Option B) */}
+            <div className="bg-[#111827] border border-white/10 rounded-2xl sm:rounded-3xl p-5 sm:p-8 space-y-4 shadow-xl">
+              <h4 className="text-sm sm:text-base font-bold text-white flex items-center gap-2 pb-2 border-b border-white/10">
+                <SlidersHorizontal size={16} className="text-[#00A0DF]" />
+                <span>Column Titles, Badges &amp; Subtitles</span>
+              </h4>
 
-            {/* Column Headers */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 rounded-xl bg-[#0B0F19] border border-white/5">
-              <div className="space-y-2">
-                <div className="text-xs font-bold text-red-400 flex items-center gap-1.5">
-                  <span>❌ Column 1: DIY / Hard Road</span>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Column 1: Option A (DIY Road) */}
+                <div className="space-y-3.5 p-4 sm:p-5 rounded-2xl bg-[#0B0F19] border border-red-500/30">
+                  <div className="text-xs font-bold text-red-400 flex items-center gap-1.5 pb-2 border-b border-red-500/20">
+                    <span>❌ Column 1: Option A (DIY / Hard Road)</span>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-400 mb-1">Badge Title</label>
+                    <input
+                      type="text"
+                      value={cmsData.options_comparison?.diy_badge ?? defaultCmsContent.options_comparison.diy_badge}
+                      onChange={(e) => setCmsData({
+                        ...cmsData,
+                        options_comparison: { ...(cmsData.options_comparison || defaultCmsContent.options_comparison), diy_badge: e.target.value }
+                      })}
+                      placeholder="e.g. OPTION 01"
+                      className="w-full px-3 py-2 rounded-lg bg-[#111827] border border-white/10 text-xs text-white focus:outline-none focus:border-red-400"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-red-400 mb-1">Main Heading / Title</label>
+                    <input
+                      type="text"
+                      value={cmsData.options_comparison?.diy_title ?? defaultCmsContent.options_comparison.diy_title}
+                      onChange={(e) => setCmsData({
+                        ...cmsData,
+                        options_comparison: { ...(cmsData.options_comparison || defaultCmsContent.options_comparison), diy_title: e.target.value }
+                      })}
+                      placeholder="e.g. Option A: Figuring It Out Yourself"
+                      className="w-full px-3 py-2 rounded-lg bg-[#111827] border border-red-400/40 text-xs font-bold text-white focus:outline-none focus:border-red-400 shadow-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-400 mb-1">Subtitle</label>
+                    <input
+                      type="text"
+                      value={cmsData.options_comparison?.diy_subtitle ?? defaultCmsContent.options_comparison.diy_subtitle}
+                      onChange={(e) => setCmsData({
+                        ...cmsData,
+                        options_comparison: { ...(cmsData.options_comparison || defaultCmsContent.options_comparison), diy_subtitle: e.target.value }
+                      })}
+                      placeholder="e.g. The slow, frustrating road"
+                      className="w-full px-3 py-2 rounded-lg bg-[#111827] border border-white/10 text-xs text-slate-300 focus:outline-none focus:border-red-400"
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-400 mb-1">Badge Title</label>
-                  <input
-                    type="text"
-                    value={cmsData.options_comparison?.diy_badge ?? defaultCmsContent.options_comparison.diy_badge}
-                    onChange={(e) => setCmsData({
-                      ...cmsData,
-                      options_comparison: { ...(cmsData.options_comparison || defaultCmsContent.options_comparison), diy_badge: e.target.value }
-                    })}
-                    className="w-full px-3 py-2 rounded-lg bg-[#111827] border border-white/10 text-xs text-white focus:outline-none focus:border-red-400"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-400 mb-1">Subtitle</label>
-                  <input
-                    type="text"
-                    value={cmsData.options_comparison?.diy_subtitle ?? defaultCmsContent.options_comparison.diy_subtitle}
-                    onChange={(e) => setCmsData({
-                      ...cmsData,
-                      options_comparison: { ...(cmsData.options_comparison || defaultCmsContent.options_comparison), diy_subtitle: e.target.value }
-                    })}
-                    className="w-full px-3 py-2 rounded-lg bg-[#111827] border border-white/10 text-xs text-white focus:outline-none focus:border-red-400"
-                  />
+
+                {/* Column 2: Option B (Sami Shortcut) */}
+                <div className="space-y-3.5 p-4 sm:p-5 rounded-2xl bg-[#0B0F19] border border-[#00A0DF]/40">
+                  <div className="text-xs font-bold text-[#00A0DF] flex items-center gap-1.5 pb-2 border-b border-[#00A0DF]/20">
+                    <span>✅ Column 2: Option B (Fast-Track / With Sami)</span>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-400 mb-1">Badge Title</label>
+                    <input
+                      type="text"
+                      value={cmsData.options_comparison?.sami_badge ?? defaultCmsContent.options_comparison.sami_badge}
+                      onChange={(e) => setCmsData({
+                        ...cmsData,
+                        options_comparison: { ...(cmsData.options_comparison || defaultCmsContent.options_comparison), sami_badge: e.target.value }
+                      })}
+                      placeholder="e.g. OPTION 02"
+                      className="w-full px-3 py-2 rounded-lg bg-[#111827] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-[#00A0DF] mb-1">Main Heading / Title</label>
+                    <input
+                      type="text"
+                      value={cmsData.options_comparison?.sami_title ?? defaultCmsContent.options_comparison.sami_title}
+                      onChange={(e) => setCmsData({
+                        ...cmsData,
+                        options_comparison: { ...(cmsData.options_comparison || defaultCmsContent.options_comparison), sami_title: e.target.value }
+                      })}
+                      placeholder="e.g. Option B: The Ecom With Sami Shortcut"
+                      className="w-full px-3 py-2 rounded-lg bg-[#111827] border border-[#00A0DF]/50 text-xs font-bold text-white focus:outline-none focus:border-[#00A0DF] shadow-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-400 mb-1">Subtitle</label>
+                    <input
+                      type="text"
+                      value={cmsData.options_comparison?.sami_subtitle ?? defaultCmsContent.options_comparison.sami_subtitle}
+                      onChange={(e) => setCmsData({
+                        ...cmsData,
+                        options_comparison: { ...(cmsData.options_comparison || defaultCmsContent.options_comparison), sami_subtitle: e.target.value }
+                      })}
+                      placeholder="e.g. The proven, guided shortcut"
+                      className="w-full px-3 py-2 rounded-lg bg-[#111827] border border-white/10 text-xs text-slate-300 focus:outline-none focus:border-[#00A0DF]"
+                    />
+                  </div>
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <div className="text-xs font-bold text-[#00A0DF] flex items-center gap-1.5">
-                  <span>✅ Column 2: Fast-Track / With Sami</span>
-                </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-400 mb-1">Badge Title</label>
-                  <input
-                    type="text"
-                    value={cmsData.options_comparison?.sami_badge ?? defaultCmsContent.options_comparison.sami_badge}
-                    onChange={(e) => setCmsData({
-                      ...cmsData,
-                      options_comparison: { ...(cmsData.options_comparison || defaultCmsContent.options_comparison), sami_badge: e.target.value }
-                    })}
-                    className="w-full px-3 py-2 rounded-lg bg-[#111827] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF]"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-400 mb-1">Subtitle</label>
-                  <input
-                    type="text"
-                    value={cmsData.options_comparison?.sami_subtitle ?? defaultCmsContent.options_comparison.sami_subtitle}
-                    onChange={(e) => setCmsData({
-                      ...cmsData,
-                      options_comparison: { ...(cmsData.options_comparison || defaultCmsContent.options_comparison), sami_subtitle: e.target.value }
-                    })}
-                    className="w-full px-3 py-2 rounded-lg bg-[#111827] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF]"
-                  />
+              {/* Live Preview Box */}
+              <div className="bg-[#0B0F19] border border-white/10 rounded-2xl p-4 space-y-3">
+                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 bg-white/5 px-2.5 py-1 rounded-full border border-white/10 inline-block">
+                  Live Titles Preview
+                </span>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="p-3.5 rounded-xl border border-red-500/20 bg-black/40">
+                    <span className="text-[10px] font-black uppercase text-red-400 bg-red-500/10 px-2 py-0.5 rounded border border-red-500/20 inline-block mb-1">
+                      {cmsData.options_comparison?.diy_badge || defaultCmsContent.options_comparison.diy_badge}
+                    </span>
+                    <h5 className="text-sm font-black text-white">
+                      {cmsData.options_comparison?.diy_title || defaultCmsContent.options_comparison.diy_title}
+                    </h5>
+                    <p className="text-xs text-slate-400 font-medium">
+                      {cmsData.options_comparison?.diy_subtitle || defaultCmsContent.options_comparison.diy_subtitle}
+                    </p>
+                  </div>
+
+                  <div className="p-3.5 rounded-xl border border-[#00A0DF]/30 bg-black/40">
+                    <span className="text-[10px] font-black uppercase text-[#00A0DF] bg-[#00A0DF]/10 px-2 py-0.5 rounded border border-[#00A0DF]/20 inline-block mb-1">
+                      {cmsData.options_comparison?.sami_badge || defaultCmsContent.options_comparison.sami_badge}
+                    </span>
+                    <h5 className="text-sm font-black text-white">
+                      {cmsData.options_comparison?.sami_title || defaultCmsContent.options_comparison.sami_title}
+                    </h5>
+                    <p className="text-xs text-slate-400 font-medium">
+                      {cmsData.options_comparison?.sami_subtitle || defaultCmsContent.options_comparison.sami_subtitle}
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
 
             {/* Points Editors */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
-              {/* DIY Points */}
-              <div className="space-y-3 bg-[#0B0F19] p-4 rounded-xl border border-red-500/20">
-                <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-bold text-red-400">❌ DIY Road Bullet Points</h4>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const current = cmsData.options_comparison?.diy_points || defaultCmsContent.options_comparison.diy_points;
-                      setCmsData({
-                        ...cmsData,
-                        options_comparison: {
-                          ...(cmsData.options_comparison || defaultCmsContent.options_comparison),
-                          diy_points: [...current, 'New DIY struggle point']
-                        }
-                      });
-                    }}
-                    className="px-2.5 py-1 bg-red-500/20 hover:bg-red-500/30 text-red-300 rounded-lg text-xs font-bold"
-                  >
-                    + Add Point
-                  </button>
-                </div>
-                {(cmsData.options_comparison?.diy_points || defaultCmsContent.options_comparison.diy_points).map((pt: string, idx: number) => (
-                  <div key={idx} className="flex items-center gap-2">
-                    <input
-                      type="text"
-                      value={pt}
-                      onChange={(e) => {
-                        const current = [...(cmsData.options_comparison?.diy_points || defaultCmsContent.options_comparison.diy_points)];
-                        current[idx] = e.target.value;
-                        setCmsData({
-                          ...cmsData,
-                          options_comparison: {
-                            ...(cmsData.options_comparison || defaultCmsContent.options_comparison),
-                            diy_points: current
-                          }
-                        });
-                      }}
-                      className="flex-1 px-3 py-2 rounded-lg bg-[#111827] border border-white/10 text-xs text-white focus:outline-none focus:border-red-400"
-                    />
+            <div className="bg-[#111827] border border-white/10 rounded-2xl sm:rounded-3xl p-5 sm:p-8 space-y-4 shadow-xl">
+              <h4 className="text-sm sm:text-base font-bold text-white flex items-center gap-2 pb-2 border-b border-white/10">
+                <span>Comparison Bullet Points</span>
+              </h4>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* DIY Points */}
+                <div className="space-y-3 bg-[#0B0F19] p-4 rounded-xl border border-red-500/20">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-xs font-bold text-red-400">❌ Option A Bullet Points</h4>
                     <button
                       type="button"
                       onClick={() => {
-                        const current = (cmsData.options_comparison?.diy_points || defaultCmsContent.options_comparison.diy_points).filter((_: string, i: number) => i !== idx);
+                        const current = cmsData.options_comparison?.diy_points || defaultCmsContent.options_comparison.diy_points;
                         setCmsData({
                           ...cmsData,
                           options_comparison: {
                             ...(cmsData.options_comparison || defaultCmsContent.options_comparison),
-                            diy_points: current
+                            diy_points: [...current, 'New DIY struggle point']
                           }
                         });
                       }}
-                      className="text-slate-500 hover:text-red-400 p-1"
+                      className="px-2.5 py-1 bg-red-500/20 hover:bg-red-500/30 text-red-300 rounded-lg text-xs font-bold"
                     >
-                      <Trash2 size={15} />
+                      + Add Point
                     </button>
                   </div>
-                ))}
+                  {(cmsData.options_comparison?.diy_points || defaultCmsContent.options_comparison.diy_points).map((pt: string, idx: number) => (
+                    <div key={idx} className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={pt}
+                        onChange={(e) => {
+                          const current = [...(cmsData.options_comparison?.diy_points || defaultCmsContent.options_comparison.diy_points)];
+                          current[idx] = e.target.value;
+                          setCmsData({
+                            ...cmsData,
+                            options_comparison: {
+                              ...(cmsData.options_comparison || defaultCmsContent.options_comparison),
+                              diy_points: current
+                            }
+                          });
+                        }}
+                        className="flex-1 px-3 py-2 rounded-lg bg-[#111827] border border-white/10 text-xs text-white focus:outline-none focus:border-red-400"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const current = (cmsData.options_comparison?.diy_points || defaultCmsContent.options_comparison.diy_points).filter((_: string, i: number) => i !== idx);
+                          setCmsData({
+                            ...cmsData,
+                            options_comparison: {
+                              ...(cmsData.options_comparison || defaultCmsContent.options_comparison),
+                              diy_points: current
+                            }
+                          });
+                        }}
+                        className="text-slate-500 hover:text-red-400 p-1"
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Sami Shortcut Points */}
+                <div className="space-y-3 bg-[#0B0F19] p-4 rounded-xl border border-[#00A0DF]/30">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-xs font-bold text-[#00A0DF]">✅ Option B Bullet Points</h4>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const current = cmsData.options_comparison?.sami_points || defaultCmsContent.options_comparison.sami_points;
+                        setCmsData({
+                          ...cmsData,
+                          options_comparison: {
+                            ...(cmsData.options_comparison || defaultCmsContent.options_comparison),
+                            sami_points: [...current, 'New Sami shortcut benefit']
+                          }
+                        });
+                      }}
+                      className="px-2.5 py-1 bg-[#00A0DF]/20 hover:bg-[#008ec7] text-white rounded-lg text-xs font-bold"
+                    >
+                      + Add Point
+                    </button>
+                  </div>
+                  {(cmsData.options_comparison?.sami_points || defaultCmsContent.options_comparison.sami_points).map((pt: string, idx: number) => (
+                    <div key={idx} className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={pt}
+                        onChange={(e) => {
+                          const current = [...(cmsData.options_comparison?.sami_points || defaultCmsContent.options_comparison.sami_points)];
+                          current[idx] = e.target.value;
+                          setCmsData({
+                            ...cmsData,
+                            options_comparison: {
+                              ...(cmsData.options_comparison || defaultCmsContent.options_comparison),
+                              sami_points: current
+                            }
+                          });
+                        }}
+                        className="flex-1 px-3 py-2 rounded-lg bg-[#111827] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF]"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const current = (cmsData.options_comparison?.sami_points || defaultCmsContent.options_comparison.sami_points).filter((_: string, i: number) => i !== idx);
+                          setCmsData({
+                            ...cmsData,
+                            options_comparison: {
+                              ...(cmsData.options_comparison || defaultCmsContent.options_comparison),
+                              sami_points: current
+                            }
+                          });
+                        }}
+                        className="text-slate-500 hover:text-red-400 p-1"
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </div>
 
-              {/* Sami Shortcut Points */}
-              <div className="space-y-3 bg-[#0B0F19] p-4 rounded-xl border border-[#00A0DF]/30">
-                <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-bold text-[#00A0DF]">✅ Sami Program Shortcut Bullet Points</h4>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const current = cmsData.options_comparison?.sami_points || defaultCmsContent.options_comparison.sami_points;
-                      setCmsData({
-                        ...cmsData,
-                        options_comparison: {
-                          ...(cmsData.options_comparison || defaultCmsContent.options_comparison),
-                          sami_points: [...current, 'New Sami shortcut benefit']
-                        }
-                      });
-                    }}
-                    className="px-2.5 py-1 bg-[#00A0DF]/20 hover:bg-[#008ec7] text-white rounded-lg text-xs font-bold"
-                  >
-                    + Add Point
-                  </button>
-                </div>
-                {(cmsData.options_comparison?.sami_points || defaultCmsContent.options_comparison.sami_points).map((pt: string, idx: number) => (
-                  <div key={idx} className="flex items-center gap-2">
-                    <input
-                      type="text"
-                      value={pt}
-                      onChange={(e) => {
-                        const current = [...(cmsData.options_comparison?.sami_points || defaultCmsContent.options_comparison.sami_points)];
-                        current[idx] = e.target.value;
-                        setCmsData({
-                          ...cmsData,
-                          options_comparison: {
-                            ...(cmsData.options_comparison || defaultCmsContent.options_comparison),
-                            sami_points: current
-                          }
-                        });
-                      }}
-                      className="flex-1 px-3 py-2 rounded-lg bg-[#111827] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF]"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const current = (cmsData.options_comparison?.sami_points || defaultCmsContent.options_comparison.sami_points).filter((_: string, i: number) => i !== idx);
-                        setCmsData({
-                          ...cmsData,
-                          options_comparison: {
-                            ...(cmsData.options_comparison || defaultCmsContent.options_comparison),
-                            sami_points: current
-                          }
-                        });
-                      }}
-                      className="text-slate-500 hover:text-red-400 p-1"
-                    >
-                      <Trash2 size={15} />
-                    </button>
-                  </div>
-                ))}
+              {/* Bottom Quick Save */}
+              <div className="pt-4 border-t border-white/10 flex justify-end">
+                <button
+                  type="button"
+                  onClick={handleSaveAll}
+                  disabled={loading}
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-[#00A0DF] hover:bg-[#008ec7] disabled:opacity-50 text-white text-xs sm:text-sm font-black shadow-lg shadow-[#00A0DF]/30 transition-all active:scale-95"
+                >
+                  <Save size={15} />
+                  <span>{loading ? 'Saving...' : 'Save All Changes'}</span>
+                </button>
               </div>
             </div>
           </div>

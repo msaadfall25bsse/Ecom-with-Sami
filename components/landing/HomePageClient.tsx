@@ -1354,10 +1354,10 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
                   {content.options_comparison?.diy_badge || 'OPTION 01'}
                 </span>
                 <h3 className="text-xl font-black text-slate-900 mb-1">
-                  {content.options_comparison?.diy_title || 'Do It Yourself'}
+                  {content.options_comparison?.diy_title || defaultCmsContent.options_comparison.diy_title || 'Option A: Figuring It Out Yourself'}
                 </h3>
                 <p className="text-xs text-slate-500 font-semibold mb-6">
-                  {content.options_comparison?.diy_subtitle || 'The slow, frustrating road'}
+                  {content.options_comparison?.diy_subtitle || defaultCmsContent.options_comparison.diy_subtitle || 'The slow, frustrating road'}
                 </p>
 
                 <div className="space-y-4 text-xs sm:text-sm text-slate-700 font-medium">
@@ -1380,13 +1380,13 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
 
               <div>
                 <span className="inline-block bg-[#00A0DF]/20 text-[#00A0DF] text-xs font-black px-3.5 py-1 rounded-full uppercase tracking-wider mb-4 border border-[#00A0DF]/40">
-                  {content.options_comparison?.sami_badge || 'OPTION 02'}
+                  {content.options_comparison?.sami_badge || defaultCmsContent.options_comparison.sami_badge || 'OPTION 02'}
                 </span>
                 <h3 className="text-xl font-black text-white mb-1">
-                  {content.options_comparison?.sami_title || 'Join the Ecommestry Program'}
+                  {content.options_comparison?.sami_title || defaultCmsContent.options_comparison.sami_title || 'Option B: The Ecom With Sami Shortcut'}
                 </h3>
                 <p className="text-xs text-slate-400 font-semibold mb-6">
-                  {content.options_comparison?.sami_subtitle || 'The proven, guided shortcut'}
+                  {content.options_comparison?.sami_subtitle || defaultCmsContent.options_comparison.sami_subtitle || 'The proven, guided shortcut'}
                 </p>
 
                 <div className="space-y-4 text-xs sm:text-sm text-slate-200 font-medium mb-8">
