@@ -126,7 +126,7 @@ export default function SupportPage() {
                   <div className="flex items-start gap-3">
                     <MapPin size={18} className="text-[#00A0DF] flex-shrink-0 mt-0.5" />
                     <div>
-                      <strong className="block text-slate-900">Head Office:</strong>
+                      <strong className="block text-slate-900">Location:</strong>
                       <span className="leading-relaxed">{headOffice}</span>
                     </div>
                   </div>

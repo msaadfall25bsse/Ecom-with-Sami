@@ -159,8 +159,9 @@ export interface CmsContentSchema {
   contact: {
     phone: string;
     email: string;
-    headOffice: string;
-    regionalOffice: string;
+    location?: string;
+    headOffice?: string;
+    regionalOffice?: string;
     whatsappGreeting: string;
   };
   pixels: {
@@ -844,10 +845,11 @@ export const defaultCmsContent: CmsContentSchema = {
     }
   ],
   contact: {
-    phone: '03158960026',
-    email: 'support@samiecom.com',
-    headOffice: 'Office 402, Al-Hafeez Heights, Gulberg III, Lahore, Pakistan',
-    regionalOffice: 'Dubai Silicon Oasis, DDP, Building A2, Dubai, UAE',
+    phone: '0333-0093269',
+    email: 'ecomwithsamiofficial@gmail.com',
+    location: 'Abbottabad, Khyber Pakhtunkhwa, Pakistan',
+    headOffice: 'Abbottabad, Khyber Pakhtunkhwa, Pakistan',
+    regionalOffice: '',
     whatsappGreeting: 'Hi Sami! I want to enroll in the UAE & KSA Dropshipping Mentorship.'
   },
   pixels: {

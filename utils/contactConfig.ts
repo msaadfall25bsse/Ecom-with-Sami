@@ -5,6 +5,7 @@ export interface ContactConfig {
   email: string;
   phone: string;
   displayPhone: string;
+  location: string;
   headOffice: string;
   regionalOffice: string;
   supportHours: string;
@@ -16,8 +17,9 @@ export const contactConfig: ContactConfig = {
   email: 'ecomwithsamiofficial@gmail.com',
   phone: '+923330093269',
   displayPhone: '+92 333 0093269',
-  headOffice: 'Office #402, 4th Floor, Executive Heights, Gulberg III, Lahore, Pakistan',
-  regionalOffice: 'DHA Phase 6, Karachi, Pakistan',
+  location: 'Abbottabad, Khyber Pakhtunkhwa, Pakistan',
+  headOffice: 'Abbottabad, Khyber Pakhtunkhwa, Pakistan',
+  regionalOffice: '',
   supportHours: '9:00 AM – 5:00 PM PKT (Mon – Sat)',
   whatsappGreeting: 'Salam Sami! I am interested in joining the 2026 Dropshipping Masterclass. Please share details.',
   getWhatsAppUrl: (message?: string) => {
@@ -43,7 +45,8 @@ export function getDynamicContactConfig(): ContactConfig {
   const email = c?.email || contactConfig.email;
   const displayPhone = c?.phone || contactConfig.displayPhone;
   const phone = formatCleanPhone(displayPhone);
-  const headOffice = c?.headOffice || contactConfig.headOffice;
+  const location = c?.location || c?.headOffice || contactConfig.location;
+  const headOffice = c?.headOffice || c?.location || contactConfig.headOffice;
   const regionalOffice = c?.regionalOffice || contactConfig.regionalOffice;
   const whatsappGreeting = c?.whatsappGreeting || contactConfig.whatsappGreeting;
 
@@ -51,6 +54,7 @@ export function getDynamicContactConfig(): ContactConfig {
     email,
     phone,
     displayPhone,
+    location,
     headOffice,
     regionalOffice,
     supportHours: contactConfig.supportHours,

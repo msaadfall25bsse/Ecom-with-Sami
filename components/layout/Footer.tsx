@@ -56,8 +56,7 @@ export function Footer({ customContact, customFooter }: FooterProps) {
 
   const email = contactData?.email || dynamicConfig.email || 'ecomwithsamiofficial@gmail.com';
   const displayPhone = contactData?.phone || dynamicConfig.displayPhone || '+92 333 0093269';
-  const headOffice = contactData?.headOffice || dynamicConfig.headOffice || 'Office #402, 4th Floor, Executive Heights, Gulberg III, Lahore, Pakistan';
-  const regionalOffice = contactData?.regionalOffice || dynamicConfig.regionalOffice || 'DHA Phase 6, Karachi, Pakistan';
+  const location = contactData?.location || contactData?.headOffice || dynamicConfig.location || dynamicConfig.headOffice || 'Abbottabad, Khyber Pakhtunkhwa, Pakistan';
   const whatsappUrl = dynamicConfig.getWhatsAppUrl(
     contactData?.whatsappGreeting || 'Hi Sami! I want to enroll in the UAE & KSA Dropshipping Course (PKR 3,799). Can you help me?'
   );
@@ -73,7 +72,7 @@ export function Footer({ customContact, customFooter }: FooterProps) {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Main Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 mb-12">
           
           {/* Column 1: Contact Info */}
           <div>
@@ -104,32 +103,17 @@ export function Footer({ customContact, customFooter }: FooterProps) {
             </div>
           </div>
 
-          {/* Column 2: Head Office */}
+          {/* Column 2: Location */}
           <div>
             <h4 className="text-sm font-black text-white uppercase tracking-wider mb-4">
-              Head Office
+              Location
             </h4>
             <p className="text-xs sm:text-sm text-slate-400 leading-relaxed font-medium">
-              {headOffice}
+              {location}
             </p>
           </div>
 
-          {/* Column 3: Regional Presence */}
-          <div>
-            <h4 className="text-sm font-black text-white uppercase tracking-wider mb-4">
-              Regional Presence
-            </h4>
-            <p className="text-xs sm:text-sm text-slate-400 leading-relaxed font-medium">
-              {regionalOffice || (
-                <>
-                  Dubai, UAE<br />
-                  Riyadh, Saudi Arabia
-                </>
-              )}
-            </p>
-          </div>
-
-          {/* Column 4: Legal & Navigation */}
+          {/* Column 3: Legal & Navigation */}
           <div>
             <h4 className="text-sm font-black text-white uppercase tracking-wider mb-4">
               Legal &amp; Support

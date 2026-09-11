@@ -6389,25 +6389,23 @@ export default function AdminCmsPage() {
                 />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold text-slate-400 mb-1">Head Office Location</label>
-                  <input
-                    type="text"
-                    value={cmsData.contact?.headOffice ?? 'Office #402, 4th Floor, Executive Heights, Gulberg III, Lahore, Pakistan'}
-                    onChange={(e) => setCmsData({ ...cmsData, contact: { ...cmsData.contact, headOffice: e.target.value } })}
-                    className="w-full px-3 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF]"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-400 mb-1">Regional Office Location</label>
-                  <input
-                    type="text"
-                    value={cmsData.contact?.regionalOffice ?? 'DHA Phase 6, Karachi, Pakistan'}
-                    onChange={(e) => setCmsData({ ...cmsData, contact: { ...cmsData.contact, regionalOffice: e.target.value } })}
-                    className="w-full px-3 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF]"
-                  />
-                </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-400 mb-1">Office Location (Footer &amp; Support)</label>
+                <input
+                  type="text"
+                  value={cmsData.contact?.location ?? cmsData.contact?.headOffice ?? 'Abbottabad, Khyber Pakhtunkhwa, Pakistan'}
+                  onChange={(e) => setCmsData({ 
+                    ...cmsData, 
+                    contact: { 
+                      ...cmsData.contact, 
+                      location: e.target.value,
+                      headOffice: e.target.value,
+                      regionalOffice: ''
+                    } 
+                  })}
+                  placeholder="e.g. Abbottabad, Khyber Pakhtunkhwa, Pakistan"
+                  className="w-full px-3 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF]"
+                />
               </div>
             </div>
 
