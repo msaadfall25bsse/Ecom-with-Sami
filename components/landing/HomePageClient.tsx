@@ -215,9 +215,10 @@ function SignatureFrameworkTeaser({ content, defaultData }: { content: any; defa
 interface HomePageClientProps {
   initialContent: CmsContentSchema;
   initialModules: Module[];
+  serverRemainingSeconds?: number;
 }
 
-export function HomePageClient({ initialContent, initialModules }: HomePageClientProps) {
+export function HomePageClient({ initialContent, initialModules, serverRemainingSeconds }: HomePageClientProps) {
   const [isVideoOpen, setIsVideoOpen] = useState(false);
   const [activeVideoUrl, setActiveVideoUrl] = useState('');
   const [activeVideoTitle, setActiveVideoTitle] = useState('');
@@ -1486,7 +1487,19 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
           </div>
 
           <div className="mt-8 max-w-lg mx-auto">
-            <CountdownTimer />
+            <CountdownTimer 
+              timerAnchorTime={content.checkout_page?.timer_anchor_time ?? defaultCmsContent.checkout_page?.timer_anchor_time}
+              serverRemainingSeconds={serverRemainingSeconds}
+              timerHeading={content.checkout_page?.timer_heading ?? defaultCmsContent.checkout_page?.timer_heading}
+              initialHours={content.checkout_page?.timer_hours ?? defaultCmsContent.checkout_page?.timer_hours}
+              initialMinutes={content.checkout_page?.timer_minutes ?? defaultCmsContent.checkout_page?.timer_minutes}
+              initialSeconds={content.checkout_page?.timer_seconds ?? defaultCmsContent.checkout_page?.timer_seconds}
+              seatsLeftText={content.checkout_page?.seats_left_text ?? defaultCmsContent.checkout_page?.seats_left_text}
+              seatsFilledPercent={content.checkout_page?.seats_filled_percent ?? defaultCmsContent.checkout_page?.seats_filled_percent}
+              trustBadge1={content.checkout_page?.trust_badge1 ?? defaultCmsContent.checkout_page?.trust_badge1}
+              trustBadge2={content.checkout_page?.trust_badge2 ?? defaultCmsContent.checkout_page?.trust_badge2}
+              trustBadge3={content.checkout_page?.trust_badge3 ?? defaultCmsContent.checkout_page?.trust_badge3 ?? '1,200+ Students'}
+            />
           </div>
 
         </div>

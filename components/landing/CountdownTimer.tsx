@@ -28,7 +28,7 @@ export function CountdownTimer({
   seatsFilledPercent = 88,
   trustBadge1 = 'Lifetime Access',
   trustBadge2 = 'Instant LMS Activation',
-  trustBadge3 = '9,700+ Students'
+  trustBadge3 = '1,200+ Students'
 }: CountdownTimerProps) {
   const configuredDuration = Math.max(
     1,

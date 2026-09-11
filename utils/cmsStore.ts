@@ -904,7 +904,7 @@ export const defaultCmsContent: CmsContentSchema = {
     seats_filled_percent: 88,
     trust_badge1: 'Lifetime Access',
     trust_badge2: 'Instant LMS Activation',
-    trust_badge3: '9,700+ Students'
+    trust_badge3: '1,200+ Students'
   },
   homepage_curriculum: {
     tag: 'COMPLETE COURSE CURRICULUM',

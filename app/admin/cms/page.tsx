@@ -1555,7 +1555,7 @@ export default function AdminCmsPage() {
             { id: 'themes', label: '18. 🎨 Theme Colors', icon: Palette },
             { id: 'pixels', label: '19. 🎯 Pixels & Code', icon: Settings },
             { id: 'success_page', label: '20. 🏆 Success Stories Page', icon: Award },
-            { id: 'checkout_page', label: '21. 🛒 Checkout Page Header & Timer', icon: ShoppingBag }
+            { id: 'checkout_page', label: '21. 🛒 Checkout & Homepage Timer', icon: ShoppingBag }
           ].map((t) => {
             const Icon = t.icon;
             return (
@@ -7262,10 +7262,10 @@ export default function AdminCmsPage() {
               <div>
                 <h2 className="text-base sm:text-2xl font-black text-white flex items-center gap-2">
                   <ShoppingBag size={20} className="text-[#00A0DF]" />
-                  <span>Checkout Page Header &amp; Urgency Timer Settings</span>
+                  <span>Checkout Page &amp; Homepage Countdown Timer Settings</span>
                 </h2>
                 <p className="text-xs text-slate-400 mt-0.5">
-                  Customize the top banner, countdown timer clock, remaining seats alert, progress bar fill line, and trust badges on the Checkout page (/enrollment).
+                  Customize the top banner, synchronized countdown clock, remaining seats alert, progress bar fill line, and trust badges across both the Checkout page (/enrollment) and Homepage bottom CTA simultaneously.
                 </p>
               </div>
 
@@ -7600,7 +7600,7 @@ export default function AdminCmsPage() {
               {/* Bottom Save Button */}
               <div className="pt-4 border-t border-white/5 flex items-center justify-between">
                 <p className="text-xs text-slate-400">
-                  Changes will update live on <strong>/enrollment</strong> immediately upon saving.
+                  Changes will update live across both <strong>Homepage Bottom CTA</strong> and <strong>/enrollment</strong> immediately upon saving.
                 </p>
                 <button
                   type="button"
@@ -7609,7 +7609,7 @@ export default function AdminCmsPage() {
                   className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs sm:text-sm font-black shadow-lg shadow-emerald-600/30 transition-all active:scale-95"
                 >
                   <Save size={15} />
-                  <span>{loading ? 'Saving...' : 'Save Checkout Page'}</span>
+                  <span>{loading ? 'Saving...' : 'Save Checkout & Homepage Timer'}</span>
                 </button>
               </div>
 
