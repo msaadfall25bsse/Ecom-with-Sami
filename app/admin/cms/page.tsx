@@ -155,6 +155,8 @@ export default function AdminCmsPage() {
     initials: ''
   });
   const [newFaq, setNewFaq] = useState({ q: '', a: '' });
+  const [editingFaqIndex, setEditingFaqIndex] = useState<number | null>(null);
+  const [editingFaqData, setEditingFaqData] = useState<{ q: string; a: string }>({ q: '', a: '' });
 
   // Screenshot Reviews State (LearnWithAfaq Style for Checkout Page)
   const [reviewSubTab, setReviewSubTab] = useState<'screenshots' | 'text'>('screenshots');
@@ -1330,6 +1332,52 @@ export default function AdminCmsPage() {
   const handleDeleteFaq = (index: number) => {
     const updated = cmsData.faqs.filter((_, i) => i !== index);
     setCmsData({ ...cmsData, faqs: updated });
+    if (editingFaqIndex === index) {
+      setEditingFaqIndex(null);
+      setEditingFaqData({ q: '', a: '' });
+    } else if (editingFaqIndex !== null && editingFaqIndex > index) {
+      setEditingFaqIndex(editingFaqIndex - 1);
+    }
+  };
+
+  const handleStartEditFaq = (index: number) => {
+    setEditingFaqIndex(index);
+    setEditingFaqData({
+      q: cmsData.faqs[index]?.q || '',
+      a: cmsData.faqs[index]?.a || ''
+    });
+  };
+
+  const handleCancelEditFaq = () => {
+    setEditingFaqIndex(null);
+    setEditingFaqData({ q: '', a: '' });
+  };
+
+  const handleSaveEditFaq = (index: number) => {
+    if (!editingFaqData.q.trim()) return;
+    const updated = [...cmsData.faqs];
+    updated[index] = {
+      q: editingFaqData.q.trim(),
+      a: editingFaqData.a.trim()
+    };
+    setCmsData({ ...cmsData, faqs: updated });
+    setEditingFaqIndex(null);
+    setEditingFaqData({ q: '', a: '' });
+  };
+
+  const handleMoveFaq = (index: number, direction: 'up' | 'down') => {
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= cmsData.faqs.length) return;
+    const updated = [...cmsData.faqs];
+    const temp = updated[index];
+    updated[index] = updated[targetIndex];
+    updated[targetIndex] = temp;
+    setCmsData({ ...cmsData, faqs: updated });
+    if (editingFaqIndex === index) {
+      setEditingFaqIndex(targetIndex);
+    } else if (editingFaqIndex === targetIndex) {
+      setEditingFaqIndex(index);
+    }
   };
 
   // --- MENTOR PROFILE ACTIONS ---
@@ -5540,46 +5588,260 @@ export default function AdminCmsPage() {
         )}
 
         {/* ========================================================================= */}
-        {/* TAB 5: FAQS */}
+        {/* TAB 14: FAQS */}
         {/* ========================================================================= */}
         {activeTab === 'faqs' && (
-          <div className="space-y-4 sm:space-y-6">
-            <div className="bg-[#111827] border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-8 space-y-3">
-              <h3 className="text-sm sm:text-lg font-bold text-white">Add New FAQ</h3>
-              <input
-                type="text"
-                placeholder="Question..."
-                value={newFaq.q}
-                onChange={(e) => setNewFaq({ ...newFaq, q: e.target.value })}
-                className="w-full px-3 py-2 rounded-xl bg-[#0B0F19] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF]"
-              />
-              <textarea
-                rows={2}
-                placeholder="Answer..."
-                value={newFaq.a}
-                onChange={(e) => setNewFaq({ ...newFaq, a: e.target.value })}
-                className="w-full px-3 py-2 rounded-xl bg-[#0B0F19] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF] resize-none"
-              />
+          <div className="space-y-6">
+            {/* Tab Header Banner */}
+            <div className="bg-[#111827] border border-white/10 rounded-2xl sm:rounded-3xl p-5 sm:p-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 shadow-xl">
+              <div>
+                <h3 className="text-base sm:text-xl font-bold text-white flex items-center gap-2">
+                  <HelpCircle size={22} className="text-[#00A0DF]" />
+                  <span>Frequently Asked Questions (FAQs)</span>
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-400 mt-1">
+                  Manage questions &amp; answers displayed on the homepage. Edit titles, explanations, reorder them, or add new questions.
+                </p>
+              </div>
+
               <button
-                onClick={handleAddFaq}
-                className="px-4 py-2 rounded-xl bg-[#00A0DF] hover:bg-[#008ec7] text-white text-xs font-bold active:scale-95"
+                onClick={handleSaveAll}
+                disabled={loading}
+                className="self-start sm:self-auto inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#00A0DF] hover:bg-[#008ec7] disabled:opacity-50 text-white text-xs sm:text-sm font-black shadow-lg shadow-[#00A0DF]/30 transition-all active:scale-95"
               >
-                + Add FAQ
+                <Save size={15} />
+                <span>{loading ? 'Saving...' : 'Save Changes'}</span>
               </button>
             </div>
 
-            <div className="space-y-2.5">
-              {cmsData.faqs.map((f, idx) => (
-                <div key={idx} className="bg-[#111827] border border-white/10 rounded-2xl p-3.5 flex items-start justify-between gap-3">
-                  <div>
-                    <h4 className="text-xs sm:text-sm font-bold text-white mb-1">{f.q}</h4>
-                    <p className="text-xs text-slate-400">{f.a}</p>
-                  </div>
-                  <button onClick={() => handleDeleteFaq(idx)} className="text-slate-500 hover:text-red-400 p-1.5">
-                    <Trash2 size={15} />
+            {/* Add New FAQ Box */}
+            <div className="bg-[#111827] border border-white/10 rounded-2xl sm:rounded-3xl p-5 sm:p-8 space-y-4 shadow-xl">
+              <h4 className="text-sm sm:text-base font-bold text-white flex items-center gap-2">
+                <Plus size={16} className="text-[#00A0DF]" />
+                <span>Add New Question</span>
+              </h4>
+
+              <div>
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
+                  Question (Title)
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Do I need any prior eCommerce experience?"
+                  value={newFaq.q}
+                  onChange={(e) => setNewFaq({ ...newFaq, q: e.target.value })}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF] transition-colors"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
+                  Answer (Description / Explanation)
+                </label>
+                <textarea
+                  rows={3}
+                  placeholder="e.g. No prior experience is required. The mentorship covers everything step-by-step from beginner to advanced scaling."
+                  value={newFaq.a}
+                  onChange={(e) => setNewFaq({ ...newFaq, a: e.target.value })}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF] resize-none transition-colors"
+                />
+              </div>
+
+              <button
+                onClick={handleAddFaq}
+                disabled={!newFaq.q.trim() || !newFaq.a.trim()}
+                className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#00A0DF] hover:bg-[#008ec7] disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-bold active:scale-95 transition-all shadow-md shadow-[#00A0DF]/20"
+              >
+                <Plus size={15} />
+                <span>Add Question to List</span>
+              </button>
+            </div>
+
+            {/* List of Existing FAQs */}
+            <div className="bg-[#111827] border border-white/10 rounded-2xl sm:rounded-3xl p-5 sm:p-8 space-y-4 shadow-xl">
+              <div className="flex items-center justify-between pb-3 border-b border-white/10">
+                <div className="flex items-center gap-2">
+                  <h4 className="text-sm sm:text-base font-bold text-white">Current FAQ List</h4>
+                  <span className="text-[10px] font-extrabold bg-[#00A0DF]/20 text-[#00A0DF] px-2.5 py-0.5 rounded-full border border-[#00A0DF]/30">
+                    {cmsData.faqs.length} Questions
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-400 hidden sm:block">
+                  Click Edit to modify any question or answer in-place
+                </p>
+              </div>
+
+              {cmsData.faqs.length === 0 ? (
+                <div className="text-center py-10 text-slate-500 text-xs">
+                  No FAQs added yet. Use the form above to add your first question.
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {cmsData.faqs.map((f, idx) => {
+                    const isEditing = editingFaqIndex === idx;
+
+                    if (isEditing) {
+                      return (
+                        <div
+                          key={idx}
+                          className="bg-[#0e1626] border-2 border-[#00A0DF]/60 rounded-2xl p-4 sm:p-5 space-y-3.5 shadow-lg shadow-[#00A0DF]/10 animate-in fade-in"
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="text-[11px] font-black uppercase tracking-wider text-[#00A0DF] bg-[#00A0DF]/15 px-2.5 py-1 rounded-lg border border-[#00A0DF]/30">
+                              Editing Question #{idx + 1}
+                            </span>
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                onClick={() => handleSaveEditFaq(idx)}
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow"
+                                title="Save changes"
+                              >
+                                <Check size={14} />
+                                <span>Save FAQ</span>
+                              </button>
+                              <button
+                                onClick={handleCancelEditFaq}
+                                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium transition-all"
+                                title="Cancel editing"
+                              >
+                                <X size={14} />
+                                <span>Cancel</span>
+                              </button>
+                            </div>
+                          </div>
+
+                          <div>
+                            <label className="block text-[11px] font-bold text-slate-300 mb-1">
+                              Question (Title)
+                            </label>
+                            <input
+                              type="text"
+                              value={editingFaqData.q}
+                              onChange={(e) => setEditingFaqData({ ...editingFaqData, q: e.target.value })}
+                              className="w-full px-3 py-2 rounded-xl bg-[#0B0F19] border border-[#00A0DF]/40 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF]"
+                              autoFocus
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-[11px] font-bold text-slate-300 mb-1">
+                              Answer (Description / Explanation)
+                            </label>
+                            <textarea
+                              rows={3}
+                              value={editingFaqData.a}
+                              onChange={(e) => setEditingFaqData({ ...editingFaqData, a: e.target.value })}
+                              className="w-full px-3 py-2 rounded-xl bg-[#0B0F19] border border-[#00A0DF]/40 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF] resize-none"
+                            />
+                          </div>
+
+                          <div className="flex items-center justify-between pt-1">
+                            <p className="text-[10px] text-slate-400">
+                              Tip: Remember to click &quot;Save Changes&quot; after saving edits to update the live site.
+                            </p>
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={handleCancelEditFaq}
+                                className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium"
+                              >
+                                Cancel
+                              </button>
+                              <button
+                                onClick={() => handleSaveEditFaq(idx)}
+                                className="px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold inline-flex items-center gap-1.5 shadow"
+                              >
+                                <Check size={14} />
+                                <span>Done Editing</span>
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <div
+                        key={idx}
+                        className="bg-[#0B0F19] border border-white/10 hover:border-white/20 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-start justify-between gap-3.5 transition-all group"
+                      >
+                        <div className="flex items-start gap-3 flex-1 min-w-0">
+                          <span className="flex-shrink-0 w-6 h-6 rounded-lg bg-white/5 border border-white/10 text-[10px] font-extrabold text-[#00A0DF] flex items-center justify-center mt-0.5">
+                            {idx + 1}
+                          </span>
+                          <div className="space-y-1 min-w-0">
+                            <h5 className="text-xs sm:text-sm font-bold text-white group-hover:text-[#00A0DF] transition-colors leading-snug">
+                              {f.q}
+                            </h5>
+                            <p className="text-xs text-slate-400 leading-relaxed break-words whitespace-pre-line">
+                              {f.a}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="flex items-center gap-1.5 self-end sm:self-start flex-shrink-0 pt-1 sm:pt-0">
+                          {/* Move Up */}
+                          <button
+                            type="button"
+                            onClick={() => handleMoveFaq(idx, 'up')}
+                            disabled={idx === 0}
+                            title="Move Question Up"
+                            className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 disabled:opacity-20 disabled:hover:bg-white/5 text-slate-400 hover:text-white transition-colors"
+                          >
+                            <ChevronUp size={15} />
+                          </button>
+
+                          {/* Move Down */}
+                          <button
+                            type="button"
+                            onClick={() => handleMoveFaq(idx, 'down')}
+                            disabled={idx === cmsData.faqs.length - 1}
+                            title="Move Question Down"
+                            className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 disabled:opacity-20 disabled:hover:bg-white/5 text-slate-400 hover:text-white transition-colors"
+                          >
+                            <ChevronDown size={15} />
+                          </button>
+
+                          {/* Edit Button */}
+                          <button
+                            type="button"
+                            onClick={() => handleStartEditFaq(idx)}
+                            title="Edit Question and Answer"
+                            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#00A0DF]/10 hover:bg-[#00A0DF]/20 text-[#00A0DF] hover:text-[#008ec7] border border-[#00A0DF]/30 text-xs font-bold transition-all"
+                          >
+                            <Edit size={13} />
+                            <span>Edit</span>
+                          </button>
+
+                          {/* Delete Button */}
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteFaq(idx)}
+                            title="Delete FAQ"
+                            className="p-1.5 rounded-lg bg-white/5 hover:bg-red-500/10 text-slate-500 hover:text-red-400 transition-colors"
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Bottom Save Bar */}
+              {cmsData.faqs.length > 0 && (
+                <div className="pt-4 border-t border-white/10 flex justify-end">
+                  <button
+                    onClick={handleSaveAll}
+                    disabled={loading}
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#00A0DF] hover:bg-[#008ec7] disabled:opacity-50 text-white text-xs sm:text-sm font-black shadow-lg shadow-[#00A0DF]/30 transition-all active:scale-95"
+                  >
+                    <Save size={15} />
+                    <span>{loading ? 'Saving...' : 'Save All Changes'}</span>
                   </button>
                 </div>
-              ))}
+              )}
             </div>
           </div>
         )}
