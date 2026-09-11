@@ -4552,49 +4552,236 @@ export default function AdminCmsPage() {
         )}
 
         {/* ========================================================================= */}
-        {/* TAB 3: BONUSES */}
+        {/* TAB 10: 6 POWER BONUSES */}
         {/* ========================================================================= */}
         {activeTab === 'bonuses' && (
-          <div className="bg-[#111827] border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-8 space-y-4">
-            <h3 className="text-sm sm:text-lg font-bold text-white">6 Power Bonuses Management</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-              {cmsData.bonuses.items.map((b, idx) => (
-                <div key={idx} className="bg-[#0B0F19] border border-white/5 rounded-2xl p-3.5 sm:p-4 space-y-2.5">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-[#00A0DF]">Bonus #{idx + 1}</span>
-                    <input
-                      type="text"
-                      value={b.value}
-                      onChange={(e) => {
-                        const updated = [...cmsData.bonuses.items];
-                        updated[idx].value = e.target.value;
-                        setCmsData({ ...cmsData, bonuses: { ...cmsData.bonuses, items: updated } });
-                      }}
-                      className="px-2.5 py-1 rounded-lg bg-[#111827] border border-white/10 text-xs font-bold text-amber-400 focus:outline-none"
-                    />
+          <div className="space-y-6">
+            {/* Tab Header Banner */}
+            <div className="bg-[#111827] border border-white/10 rounded-2xl sm:rounded-3xl p-5 sm:p-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 shadow-xl">
+              <div>
+                <h3 className="text-base sm:text-xl font-bold text-white flex items-center gap-2">
+                  <Gift size={22} className="text-[#00A0DF]" />
+                  <span>6 Power Bonuses Management</span>
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-400 mt-1">
+                  Customize the section tag badge, main title, blue/cyan highlighted price value, subtitle, and the 6 bonus cards.
+                </p>
+              </div>
+
+              <button
+                onClick={handleSaveAll}
+                disabled={loading}
+                className="self-start sm:self-auto inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#00A0DF] hover:bg-[#008ec7] disabled:opacity-50 text-white text-xs sm:text-sm font-black shadow-lg shadow-[#00A0DF]/30 transition-all active:scale-95"
+              >
+                <Save size={15} />
+                <span>{loading ? 'Saving...' : 'Save Changes'}</span>
+              </button>
+            </div>
+
+            {/* Section Header, Title & Color Highlight Controls */}
+            <div className="bg-[#111827] border border-white/10 rounded-2xl sm:rounded-3xl p-5 sm:p-8 space-y-5 shadow-xl">
+              <div className="flex items-center justify-between pb-3 border-b border-white/10">
+                <div>
+                  <h4 className="text-sm sm:text-base font-bold text-white flex items-center gap-2">
+                    <Sparkles size={16} className="text-[#00A0DF]" />
+                    <span>Section Header &amp; Price Highlight (Colors)</span>
+                  </h4>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    Separately edit the main title and the cyan/blue highlighted price text.
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Section Tag / Eyebrow */}
+                <div>
+                  <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
+                    Section Tag / Eyebrow Badge
+                  </label>
+                  <input
+                    type="text"
+                    value={cmsData.bonuses?.tag ?? defaultCmsContent.bonuses.tag}
+                    onChange={(e) => setCmsData({
+                      ...cmsData,
+                      bonuses: {
+                        ...(cmsData.bonuses || defaultCmsContent.bonuses),
+                        tag: e.target.value
+                      }
+                    })}
+                    placeholder="e.g. EXCLUSIVE POWER BONUSES"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF] transition-colors"
+                  />
+                </div>
+
+                {/* Highlight Value (Cyan / Blue Text) */}
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="block text-[11px] font-bold uppercase tracking-wider text-[#00A0DF]">
+                      Highlight Value (Cyan / Blue Color)
+                    </label>
+                    <span className="text-[10px] font-bold bg-[#00A0DF]/15 text-[#00A0DF] px-2 py-0.5 rounded-md border border-[#00A0DF]/30">
+                      Blue Color Accent
+                    </span>
                   </div>
                   <input
                     type="text"
-                    value={b.title}
-                    onChange={(e) => {
-                      const updated = [...cmsData.bonuses.items];
-                      updated[idx].title = e.target.value;
-                      setCmsData({ ...cmsData, bonuses: { ...cmsData.bonuses, items: updated } });
-                    }}
-                    className="w-full px-3 py-2 rounded-xl bg-[#111827] border border-white/10 text-xs font-bold text-white focus:outline-none focus:border-[#00A0DF]"
-                  />
-                  <textarea
-                    rows={2}
-                    value={b.desc}
-                    onChange={(e) => {
-                      const updated = [...cmsData.bonuses.items];
-                      updated[idx].desc = e.target.value;
-                      setCmsData({ ...cmsData, bonuses: { ...cmsData.bonuses, items: updated } });
-                    }}
-                    className="w-full px-3 py-2 rounded-xl bg-[#111827] border border-white/10 text-xs text-slate-300 focus:outline-none focus:border-[#00A0DF] resize-none"
+                    value={cmsData.bonuses?.highlight_value ?? defaultCmsContent.bonuses.highlight_value}
+                    onChange={(e) => setCmsData({
+                      ...cmsData,
+                      bonuses: {
+                        ...(cmsData.bonuses || defaultCmsContent.bonuses),
+                        highlight_value: e.target.value
+                      }
+                    })}
+                    placeholder="e.g. Rs 30,000 Free"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#0B0F19] border border-[#00A0DF]/50 text-xs sm:text-sm text-[#00A0DF] font-bold focus:outline-none focus:border-[#00A0DF] shadow-sm shadow-[#00A0DF]/10 transition-colors"
                   />
                 </div>
-              ))}
+              </div>
+
+              {/* Main Heading (White Text) */}
+              <div>
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
+                  Main Title (White Text Before Blue Highlight)
+                </label>
+                <input
+                  type="text"
+                  value={cmsData.bonuses?.title ?? defaultCmsContent.bonuses.title}
+                  onChange={(e) => setCmsData({
+                    ...cmsData,
+                    bonuses: {
+                      ...(cmsData.bonuses || defaultCmsContent.bonuses),
+                      title: e.target.value
+                    }
+                  })}
+                  placeholder="e.g. Get 6 Game-Changing Bonuses Worth Over"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF] transition-colors"
+                />
+              </div>
+
+              {/* Subtitle */}
+              <div>
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
+                  Section Subtitle / Description
+                </label>
+                <textarea
+                  rows={2}
+                  value={cmsData.bonuses?.subtitle ?? defaultCmsContent.bonuses.subtitle}
+                  onChange={(e) => setCmsData({
+                    ...cmsData,
+                    bonuses: {
+                      ...(cmsData.bonuses || defaultCmsContent.bonuses),
+                      subtitle: e.target.value
+                    }
+                  })}
+                  placeholder="e.g. When you enroll today for PKR 3,900, you get all software tools, supplier contacts..."
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#0B0F19] border border-white/10 text-xs sm:text-sm text-white focus:outline-none focus:border-[#00A0DF] resize-none transition-colors"
+                />
+              </div>
+
+              {/* Live Preview Box */}
+              <div className="bg-[#0B0F19] border border-[#00A0DF]/30 rounded-2xl p-5 text-center space-y-2 relative overflow-hidden">
+                <div className="absolute top-0 inset-x-0 h-0.5 bg-gradient-to-r from-transparent via-[#00A0DF] to-transparent" />
+                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 bg-white/5 px-2.5 py-1 rounded-full border border-white/10 inline-block">
+                  Live Header Preview
+                </span>
+                <div>
+                  <span className="section-tag-pill inline-block mb-1 text-[11px]">
+                    {cmsData.bonuses?.tag || defaultCmsContent.bonuses.tag}
+                  </span>
+                </div>
+                <h4 className="text-lg sm:text-xl font-black text-white tracking-tight">
+                  {cmsData.bonuses?.title || defaultCmsContent.bonuses.title}{' '}
+                  <span className="text-[#00A0DF]">
+                    {cmsData.bonuses?.highlight_value || defaultCmsContent.bonuses.highlight_value}
+                  </span>
+                </h4>
+                <p className="text-xs text-slate-400 max-w-xl mx-auto leading-relaxed">
+                  {cmsData.bonuses?.subtitle || defaultCmsContent.bonuses.subtitle}
+                </p>
+              </div>
+            </div>
+
+            {/* 6 Bonus Items Grid */}
+            <div className="bg-[#111827] border border-white/10 rounded-2xl sm:rounded-3xl p-5 sm:p-8 space-y-4 shadow-xl">
+              <div className="flex items-center justify-between pb-2 border-b border-white/10">
+                <h4 className="text-sm sm:text-base font-bold text-white flex items-center gap-2">
+                  <Gift size={16} className="text-[#00A0DF]" />
+                  <span>Individual Bonus Cards ({cmsData.bonuses?.items?.length || 6} Items)</span>
+                </h4>
+                <p className="text-[11px] text-slate-400 hidden sm:block">
+                  Edit individual bonus titles, descriptions, and value tags
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {(cmsData.bonuses?.items || defaultCmsContent.bonuses.items).map((b, idx) => (
+                  <div key={idx} className="bg-[#0B0F19] border border-white/10 hover:border-white/20 rounded-2xl p-4 sm:p-5 space-y-3 transition-colors">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-black text-[#00A0DF] bg-[#00A0DF]/10 px-2.5 py-0.5 rounded-lg border border-[#00A0DF]/20">
+                        Bonus #{idx + 1}
+                      </span>
+                      <div className="flex items-center gap-1.5">
+                        <label className="text-[10px] uppercase font-bold text-slate-500">Value Tag:</label>
+                        <input
+                          type="text"
+                          value={b.value}
+                          onChange={(e) => {
+                            const updated = [...(cmsData.bonuses?.items || defaultCmsContent.bonuses.items)];
+                            updated[idx] = { ...updated[idx], value: e.target.value };
+                            setCmsData({ ...cmsData, bonuses: { ...(cmsData.bonuses || defaultCmsContent.bonuses), items: updated } });
+                          }}
+                          className="px-2.5 py-1 rounded-lg bg-[#111827] border border-white/10 text-xs font-bold text-amber-400 focus:outline-none focus:border-amber-400/50 w-28 text-right"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-400 mb-1">
+                        Bonus Title
+                      </label>
+                      <input
+                        type="text"
+                        value={b.title}
+                        onChange={(e) => {
+                          const updated = [...(cmsData.bonuses?.items || defaultCmsContent.bonuses.items)];
+                          updated[idx] = { ...updated[idx], title: e.target.value };
+                          setCmsData({ ...cmsData, bonuses: { ...(cmsData.bonuses || defaultCmsContent.bonuses), items: updated } });
+                        }}
+                        className="w-full px-3 py-2 rounded-xl bg-[#111827] border border-white/10 text-xs font-bold text-white focus:outline-none focus:border-[#00A0DF]"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-400 mb-1">
+                        Description
+                      </label>
+                      <textarea
+                        rows={2}
+                        value={b.desc}
+                        onChange={(e) => {
+                          const updated = [...(cmsData.bonuses?.items || defaultCmsContent.bonuses.items)];
+                          updated[idx] = { ...updated[idx], desc: e.target.value };
+                          setCmsData({ ...cmsData, bonuses: { ...(cmsData.bonuses || defaultCmsContent.bonuses), items: updated } });
+                        }}
+                        className="w-full px-3 py-2 rounded-xl bg-[#111827] border border-white/10 text-xs text-slate-300 focus:outline-none focus:border-[#00A0DF] resize-none"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Bottom Save Bar */}
+              <div className="pt-4 border-t border-white/10 flex justify-end">
+                <button
+                  onClick={handleSaveAll}
+                  disabled={loading}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#00A0DF] hover:bg-[#008ec7] disabled:opacity-50 text-white text-xs sm:text-sm font-black shadow-lg shadow-[#00A0DF]/30 transition-all active:scale-95"
+                >
+                  <Save size={15} />
+                  <span>{loading ? 'Saving...' : 'Save All Changes'}</span>
+                </button>
+              </div>
             </div>
           </div>
         )}

@@ -85,7 +85,10 @@ export function BonusStack({ customData }: { customData?: any }) {
       {/* Total Bonus Value Bar */}
       <div className="bg-slate-950/90 border border-slate-800 rounded-2xl p-5 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left mb-6">
         <div className="text-white font-extrabold text-sm sm:text-base">
-          🎁 Total Bonus Value: <span className="line-through text-slate-500">Rs 30,000</span>
+          🎁 Total Bonus Value:{' '}
+          <span className="line-through text-slate-500">
+            {bonusData.highlight_value ? bonusData.highlight_value.replace(/free/i, '').trim() : 'Rs 30,000'}
+          </span>
         </div>
         <div className="text-sm sm:text-base font-black text-emerald-400">
           Yours FREE Today
