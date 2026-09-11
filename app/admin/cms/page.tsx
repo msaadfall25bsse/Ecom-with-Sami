@@ -40,7 +40,8 @@ import {
   SlidersHorizontal,
   Star,
   X,
-  Zap
+  Zap,
+  Users
 } from 'lucide-react';
 import { 
   defaultCmsContent, 
@@ -60,7 +61,7 @@ export default function AdminCmsPage() {
   const router = useRouter();
   const [authChecking, setAuthChecking] = useState(true);
   const [activeTab, setActiveTab] = useState<
-    'marquee' | 'hero' | 'stats' | 'why' | 'what' | 'why_different' | 'signature_framework' | 'mentor' | 'video_reviews' | 'who' | 'homepage_curriculum' | 'lms' | 'bonuses' | 'reviews' | 'proofwall_home' | 'options' | 'cost' | 'faqs' | 'cta' | 'contact' | 'payments' | 'themes' | 'pixels' | 'success_page' | 'checkout_page'
+    'marquee' | 'hero' | 'stats' | 'why' | 'what' | 'why_different' | 'signature_framework' | 'mentor' | 'video_reviews' | 'who' | 'homepage_curriculum' | 'lms' | 'bonuses' | 'reviews' | 'proofwall_home' | 'options' | 'cost' | 'faqs' | 'cta' | 'contact' | 'payments' | 'themes' | 'pixels' | 'success_page' | 'checkout_page' | 'about_page'
   >('hero');
   const [cmsData, setCmsData] = useState<CmsContentSchema>(defaultCmsContent);
   const [openHomeModIndex, setOpenHomeModIndex] = useState<number | null>(0);
@@ -1555,7 +1556,8 @@ export default function AdminCmsPage() {
             { id: 'themes', label: '18. 🎨 Theme Colors', icon: Palette },
             { id: 'pixels', label: '19. 🎯 Pixels & Code', icon: Settings },
             { id: 'success_page', label: '20. 🏆 Success Stories Page', icon: Award },
-            { id: 'checkout_page', label: '21. 🛒 Checkout & Homepage Timer', icon: ShoppingBag }
+            { id: 'checkout_page', label: '21. 🛒 Checkout & Homepage Timer', icon: ShoppingBag },
+            { id: 'about_page', label: '22. 👤 About Sami Page', icon: Users }
           ].map((t) => {
             const Icon = t.icon;
             return (
@@ -7608,6 +7610,369 @@ export default function AdminCmsPage() {
                 >
                   <Save size={15} />
                   <span>{loading ? 'Saving...' : 'Save Checkout & Homepage Timer'}</span>
+                </button>
+              </div>
+
+            </div>
+
+          </div>
+        )}
+
+        {/* ========================================================================= */}
+        {/* TAB 22: ABOUT SAMI PAGE (/about) MANAGER */}
+        {/* ========================================================================= */}
+        {activeTab === 'about_page' && (
+          <div className="space-y-6 sm:space-y-8">
+            
+            {/* Header Action Bar */}
+            <div className="bg-[#111827] border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xl">
+              <div>
+                <h2 className="text-base sm:text-2xl font-black text-white flex items-center gap-2">
+                  <Users size={20} className="text-[#00A0DF]" />
+                  <span>About Sami Page (/about) Content Manager</span>
+                </h2>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  Customize the hero banner, story &amp; philosophy, mentorship formula checklist points, and interactive feature cards on the About page.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <Link
+                  href="/about"
+                  target="_blank"
+                  className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-300 transition-colors"
+                >
+                  <Eye size={14} />
+                  <span>View Live /about</span>
+                </Link>
+                <button
+                  type="button"
+                  onClick={handleSaveAll}
+                  disabled={loading}
+                  className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-5 py-2 sm:py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs sm:text-sm font-black shadow-lg shadow-emerald-600/30 transition-all active:scale-95"
+                >
+                  <Save size={15} />
+                  <span>{loading ? 'Saving...' : 'Save All'}</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Main Form Container */}
+            <div className="bg-[#111827] border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-8 shadow-xl space-y-6">
+              
+              {/* 1. Header Banner */}
+              <div className="space-y-4">
+                <h3 className="text-xs font-black uppercase tracking-wider text-[#00A0DF] flex items-center gap-2">
+                  <Sparkles size={16} />
+                  <span>1. Top Header Banner Content</span>
+                </h3>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                  <div className="sm:col-span-2">
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                      Top Pill Tag / Badge
+                    </label>
+                    <input
+                      type="text"
+                      value={cmsData.about_page?.tag ?? defaultCmsContent.about_page?.tag ?? 'YOUR MENTOR'}
+                      onChange={(e) => {
+                        const cur = cmsData.about_page || defaultCmsContent.about_page!;
+                        setCmsData({
+                          ...cmsData,
+                          about_page: { ...cur, tag: e.target.value }
+                        });
+                      }}
+                      className="w-full px-3 py-2 rounded-xl bg-[#0B0F19] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF]"
+                    />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                      Main Page Heading
+                    </label>
+                    <input
+                      type="text"
+                      value={cmsData.about_page?.hero_title ?? defaultCmsContent.about_page?.hero_title}
+                      onChange={(e) => {
+                        const cur = cmsData.about_page || defaultCmsContent.about_page!;
+                        setCmsData({
+                          ...cmsData,
+                          about_page: { ...cur, hero_title: e.target.value }
+                        });
+                      }}
+                      className="w-full px-3 py-2 rounded-xl bg-[#0B0F19] border border-white/10 text-xs font-black text-white focus:outline-none focus:border-[#00A0DF]"
+                    />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                      Header Subtitle
+                    </label>
+                    <textarea
+                      rows={2}
+                      value={cmsData.about_page?.hero_subtitle ?? defaultCmsContent.about_page?.hero_subtitle}
+                      onChange={(e) => {
+                        const cur = cmsData.about_page || defaultCmsContent.about_page!;
+                        setCmsData({
+                          ...cmsData,
+                          about_page: { ...cur, hero_subtitle: e.target.value }
+                        });
+                      }}
+                      className="w-full px-3 py-2 rounded-xl bg-[#0B0F19] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF] resize-none"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* 2. Story & Philosophy */}
+              <div className="pt-5 border-t border-white/5 space-y-4">
+                <h3 className="text-xs font-black uppercase tracking-wider text-amber-400 flex items-center gap-2">
+                  <span>2. My Story &amp; Philosophy</span>
+                </h3>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                  <div className="sm:col-span-2">
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                      Story Section Tag
+                    </label>
+                    <input
+                      type="text"
+                      value={cmsData.about_page?.story_tag ?? defaultCmsContent.about_page?.story_tag}
+                      onChange={(e) => {
+                        const cur = cmsData.about_page || defaultCmsContent.about_page!;
+                        setCmsData({
+                          ...cmsData,
+                          about_page: { ...cur, story_tag: e.target.value }
+                        });
+                      }}
+                      className="w-full px-3 py-2 rounded-xl bg-[#0B0F19] border border-white/10 text-xs font-bold text-white focus:outline-none focus:border-[#00A0DF]"
+                    />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                      Mentor Core Quote
+                    </label>
+                    <input
+                      type="text"
+                      value={cmsData.about_page?.story_quote ?? defaultCmsContent.about_page?.story_quote}
+                      onChange={(e) => {
+                        const cur = cmsData.about_page || defaultCmsContent.about_page!;
+                        setCmsData({
+                          ...cmsData,
+                          about_page: { ...cur, story_quote: e.target.value }
+                        });
+                      }}
+                      className="w-full px-3 py-2 rounded-xl bg-[#0B0F19] border border-white/10 text-xs font-bold text-amber-400 focus:outline-none focus:border-[#00A0DF]"
+                    />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                      Detailed Story Paragraphs (Separate paragraphs with double enter)
+                    </label>
+                    <textarea
+                      rows={5}
+                      value={cmsData.about_page?.story_text ?? defaultCmsContent.about_page?.story_text}
+                      onChange={(e) => {
+                        const cur = cmsData.about_page || defaultCmsContent.about_page!;
+                        setCmsData({
+                          ...cmsData,
+                          about_page: { ...cur, story_text: e.target.value }
+                        });
+                      }}
+                      className="w-full px-3 py-2 rounded-xl bg-[#0B0F19] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF]"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* 3. Key Mentorship Pillars & Formula Points */}
+              <div className="pt-5 border-t border-white/5 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-xs font-black uppercase tracking-wider text-emerald-400 flex items-center gap-2">
+                      <CheckCircle2 size={16} />
+                      <span>3. Mentorship Formula &amp; Core Pillars Checklist</span>
+                    </h3>
+                    <p className="text-[11px] text-slate-400 mt-0.5">
+                      Bullet points shown next to the story on /about (e.g. Scaling Formula, Screen Walkthroughs)
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const cur = cmsData.about_page || defaultCmsContent.about_page!;
+                      const pts = cur.benefits || defaultCmsContent.about_page!.benefits;
+                      setCmsData({
+                        ...cmsData,
+                        about_page: { ...cur, benefits: [...pts, 'New Mentorship Formula Point'] }
+                      });
+                    }}
+                    className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all flex items-center gap-1 active:scale-95"
+                  >
+                    <Plus size={13} />
+                    <span>Add Point</span>
+                  </button>
+                </div>
+
+                <div className="space-y-2">
+                  {(cmsData.about_page?.benefits || defaultCmsContent.about_page!.benefits).map((benefit: string, bIdx: number) => (
+                    <div key={bIdx} className="flex items-center gap-2 bg-[#0B0F19] p-2 rounded-xl border border-white/5">
+                      <span className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center flex-shrink-0 text-xs font-bold">
+                        ✓
+                      </span>
+                      <input
+                        type="text"
+                        value={benefit}
+                        onChange={(e) => {
+                          const cur = cmsData.about_page || defaultCmsContent.about_page!;
+                          const pts = [...(cur.benefits || defaultCmsContent.about_page!.benefits)];
+                          pts[bIdx] = e.target.value;
+                          setCmsData({
+                            ...cmsData,
+                            about_page: { ...cur, benefits: pts }
+                          });
+                        }}
+                        className="flex-1 bg-transparent text-xs sm:text-sm text-white focus:outline-none"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const cur = cmsData.about_page || defaultCmsContent.about_page!;
+                          const pts = (cur.benefits || defaultCmsContent.about_page!.benefits).filter((_, i) => i !== bIdx);
+                          setCmsData({
+                            ...cmsData,
+                            about_page: { ...cur, benefits: pts }
+                          });
+                        }}
+                        className="p-1.5 text-slate-500 hover:text-red-400 rounded-lg hover:bg-white/5 transition-colors"
+                        title="Delete point"
+                      >
+                        <Trash2 size={13} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* 4. Why Learn With Ecom With Sami Feature Cards */}
+              <div className="pt-5 border-t border-white/5 space-y-4">
+                <div>
+                  <h3 className="text-xs font-black uppercase tracking-wider text-[#00A0DF] flex items-center gap-2">
+                    <Award size={16} />
+                    <span>4. &ldquo;Why Learn With Ecom With Sami?&rdquo; Feature Cards</span>
+                  </h3>
+                  <p className="text-[11px] text-slate-400 mt-0.5">
+                    Configure the bottom 3 interactive clickable cards on the About page.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                      Section Heading
+                    </label>
+                    <input
+                      type="text"
+                      value={cmsData.about_page?.why_learn_title ?? defaultCmsContent.about_page?.why_learn_title}
+                      onChange={(e) => {
+                        const cur = cmsData.about_page || defaultCmsContent.about_page!;
+                        setCmsData({
+                          ...cmsData,
+                          about_page: { ...cur, why_learn_title: e.target.value }
+                        });
+                      }}
+                      className="w-full px-3 py-2 rounded-xl bg-[#0B0F19] border border-white/10 text-xs font-bold text-white focus:outline-none focus:border-[#00A0DF]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                      Section Subtitle
+                    </label>
+                    <input
+                      type="text"
+                      value={cmsData.about_page?.why_learn_subtitle ?? defaultCmsContent.about_page?.why_learn_subtitle}
+                      onChange={(e) => {
+                        const cur = cmsData.about_page || defaultCmsContent.about_page!;
+                        setCmsData({
+                          ...cmsData,
+                          about_page: { ...cur, why_learn_subtitle: e.target.value }
+                        });
+                      }}
+                      className="w-full px-3 py-2 rounded-xl bg-[#0B0F19] border border-white/10 text-xs text-white focus:outline-none focus:border-[#00A0DF]"
+                    />
+                  </div>
+                </div>
+
+                {/* 3 Cards Inputs */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+                  {(cmsData.about_page?.why_learn_cards || defaultCmsContent.about_page!.why_learn_cards).map((card, cIdx) => (
+                    <div key={cIdx} className="bg-[#0B0F19] p-4 rounded-2xl border border-white/10 space-y-3">
+                      <div className="flex items-center justify-between pb-1.5 border-b border-white/5">
+                        <span className="text-[11px] font-black uppercase text-[#00A0DF]">
+                          Card {cIdx + 1}
+                        </span>
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                          Card Title
+                        </label>
+                        <input
+                          type="text"
+                          value={card.title}
+                          onChange={(e) => {
+                            const cur = cmsData.about_page || defaultCmsContent.about_page!;
+                            const cards = [...(cur.why_learn_cards || defaultCmsContent.about_page!.why_learn_cards)];
+                            cards[cIdx] = { ...cards[cIdx], title: e.target.value };
+                            setCmsData({
+                              ...cmsData,
+                              about_page: { ...cur, why_learn_cards: cards }
+                            });
+                          }}
+                          className="w-full px-3 py-2 rounded-xl bg-[#111827] border border-white/10 text-xs font-bold text-white focus:outline-none focus:border-[#00A0DF]"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                          Card Description
+                        </label>
+                        <textarea
+                          rows={3}
+                          value={card.desc}
+                          onChange={(e) => {
+                            const cur = cmsData.about_page || defaultCmsContent.about_page!;
+                            const cards = [...(cur.why_learn_cards || defaultCmsContent.about_page!.why_learn_cards)];
+                            cards[cIdx] = { ...cards[cIdx], desc: e.target.value };
+                            setCmsData({
+                              ...cmsData,
+                              about_page: { ...cur, why_learn_cards: cards }
+                            });
+                          }}
+                          className="w-full px-3 py-2 rounded-xl bg-[#111827] border border-white/10 text-xs text-slate-300 focus:outline-none focus:border-[#00A0DF] resize-none"
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Bottom Save Button */}
+              <div className="pt-4 border-t border-white/5 flex items-center justify-between">
+                <p className="text-xs text-slate-400">
+                  Changes will update live on <strong>/about</strong> immediately upon saving.
+                </p>
+                <button
+                  type="button"
+                  onClick={handleSaveAll}
+                  disabled={loading}
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs sm:text-sm font-black shadow-lg shadow-emerald-600/30 transition-all active:scale-95"
+                >
+                  <Save size={15} />
+                  <span>{loading ? 'Saving...' : 'Save About Sami Page'}</span>
                 </button>
               </div>
 

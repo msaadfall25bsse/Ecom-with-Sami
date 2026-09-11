@@ -27,13 +27,17 @@ export function AboutPageClient({ initialContent }: AboutPageClientProps) {
   const { displayPhone, getWhatsAppUrl } = useContactConfig();
   const whatsappUrl = getWhatsAppUrl('Hi Sami! I want to ask some questions before enrolling.');
   
-  // Immediately initialize with server-fetched content to prevent 9,700+ flash
+  // Immediately initialize with server-fetched content to prevent flash
   const [mentor, setMentor] = useState(initialContent?.mentor || defaultCmsContent.mentor);
+  const [aboutData, setAboutData] = useState(initialContent?.about_page || defaultCmsContent.about_page);
 
   useEffect(() => {
-    // If initialContent was updated or available, ensure mentor state matches
+    // If initialContent was updated or available, ensure state matches
     if (initialContent?.mentor) {
       setMentor(initialContent.mentor);
+    }
+    if (initialContent?.about_page) {
+      setAboutData(initialContent.about_page);
     }
 
     const fetchContent = async () => {
@@ -41,8 +45,13 @@ export function AboutPageClient({ initialContent }: AboutPageClientProps) {
         const res = await fetch(`/api/public/cms-content?_nocache=${Date.now()}`);
         if (res.ok) {
           const data = await res.json();
-          if (data.success && data.sections?.mentor) {
-            setMentor({ ...defaultCmsContent.mentor, ...data.sections.mentor });
+          if (data.success && data.sections) {
+            if (data.sections.mentor) {
+              setMentor({ ...defaultCmsContent.mentor, ...data.sections.mentor });
+            }
+            if (data.sections.about_page) {
+              setAboutData({ ...defaultCmsContent.about_page, ...data.sections.about_page });
+            }
           }
         }
       } catch (e) {}
@@ -62,13 +71,15 @@ export function AboutPageClient({ initialContent }: AboutPageClientProps) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl mx-auto text-center">
             <span className="inline-block bg-[#00A0DF]/20 text-[#00A0DF] border border-[#00A0DF]/40 text-xs font-black uppercase tracking-wider px-4 py-1.5 rounded-full mb-4">
-              {mentor.tag || 'MEET YOUR MENTOR'}
+              {aboutData?.tag || mentor.tag || 'YOUR MENTOR'}
             </span>
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-white tracking-tight mb-4 sm:mb-6">
-              Empowering <span className="text-[#00A0DF]">{mentor.stat1_value || mentor.students_count || '9,700+'}</span> Students to Build <span className="text-[#00A0DF]">Real Online Stores</span>
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-white tracking-tight mb-4 sm:mb-6 leading-tight">
+              {aboutData?.hero_title || (
+                <>Empowering <span className="text-[#00A0DF]">{mentor.stat1_value || mentor.students_count || '1,200+'}</span> Students to Build <span className="text-[#00A0DF]">Real Online Stores</span></>
+              )}
             </h1>
-            <p className="text-sm sm:text-base md:text-xl text-slate-300 leading-relaxed max-w-2xl mx-auto">
-              From absolute zero to multi-million revenue in UAE &amp; Saudi Arabia markets. Learn the exact framework from someone who does it daily.
+            <p className="text-sm sm:text-base md:text-xl text-slate-300 leading-relaxed max-w-2xl mx-auto font-medium">
+              {aboutData?.hero_subtitle || 'From absolute zero to multi-million revenue in UAE & Saudi Arabia markets. Learn the exact framework from someone who does it daily.'}
             </p>
           </div>
         </div>
@@ -101,7 +112,7 @@ export function AboutPageClient({ initialContent }: AboutPageClientProps) {
                 <div className="grid grid-cols-2 gap-3 pt-4 border-t border-slate-800 text-left">
                   <div className="bg-slate-900/80 p-3 rounded-xl border border-slate-800">
                     <span className="text-xs text-slate-400 block">{mentor.stat1_label || 'Total Students'}</span>
-                    <strong className="text-base sm:text-lg font-black text-white">{mentor.stat1_value || mentor.students_count || '9,700+'}</strong>
+                    <strong className="text-base sm:text-lg font-black text-white">{mentor.stat1_value || mentor.students_count || '1,200+'}</strong>
                   </div>
                   <div className="bg-slate-900/80 p-3 rounded-xl border border-slate-800">
                     <span className="text-xs text-slate-400 block">{mentor.stat2_label || 'Active Focus'}</span>
@@ -113,13 +124,15 @@ export function AboutPageClient({ initialContent }: AboutPageClientProps) {
 
             {/* Right Story & Vision */}
             <div className="lg:col-span-7">
-              <span className="text-xs font-black uppercase tracking-widest text-[#00A0DF] block mb-2">MY STORY &amp; PHILOSOPHY</span>
+              <span className="text-xs font-black uppercase tracking-widest text-[#00A0DF] block mb-2">
+                {aboutData?.story_tag || 'MY STORY & PHILOSOPHY'}
+              </span>
               <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 tracking-tight mb-4">
-                &ldquo;{mentor.quote || 'You Don’t Need Millions To Start. You Just Need A Proven Step-by-Step Blueprint.'}&rdquo;
+                &ldquo;{aboutData?.story_quote || mentor.quote || 'You Don’t Need Millions To Start. You Just Need A Proven Step-by-Step Blueprint.'}&rdquo;
               </h2>
               <div className="space-y-4 text-xs sm:text-sm md:text-base text-slate-600 leading-relaxed mb-8">
-                {mentor.story ? (
-                  mentor.story.split('\n\n').map((para, pIdx) => (
+                {(aboutData?.story_text || mentor.story) ? (
+                  (aboutData?.story_text || mentor.story || '').split('\n\n').map((para, pIdx) => (
                     <p key={pIdx}>{para}</p>
                   ))
                 ) : (
@@ -139,12 +152,13 @@ export function AboutPageClient({ initialContent }: AboutPageClientProps) {
 
               {/* Core Pillars */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-8">
-                {(mentor.benefits && mentor.benefits.length > 0 ? mentor.benefits : [
+                {((aboutData?.benefits && aboutData.benefits.length > 0) ? aboutData.benefits : (mentor.benefits && mentor.benefits.length > 0 ? mentor.benefits : [
+                  'Dropshipping to Private Label Scaling Formula',
                   '100% Practical Screen Walkthroughs',
                   'Direct Verified GCC Warehouse Lists',
                   'Lifetime WhatsApp Mentorship (9AM-5PM)',
                   'Weekly Live Campaign & Pixel Audits'
-                ]).map((benefit, bIdx) => (
+                ])).map((benefit, bIdx) => (
                   <div key={bIdx} className="flex items-center gap-2.5 text-xs sm:text-sm font-bold text-slate-800">
                     <CheckCircle2 size={18} className="text-emerald-500 flex-shrink-0" />
                     <span>{benefit}</span>
@@ -182,43 +196,37 @@ export function AboutPageClient({ initialContent }: AboutPageClientProps) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-3xl mx-auto mb-10 sm:mb-14">
             <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight mb-2">
-              Why Learn With Ecom With Sami?
+              {aboutData?.why_learn_title || 'Why Learn With Ecom With Sami?'}
             </h2>
             <p className="text-slate-600 text-xs sm:text-base">
-              Here is what sets our training apart from generic online courses.
+              {aboutData?.why_learn_subtitle || 'Here is what sets our training apart from generic online courses.'}
             </p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-              <div className="w-12 h-12 rounded-xl bg-[#00A0DF]/10 text-[#00A0DF] flex items-center justify-center mb-4">
-                <Award size={24} />
-              </div>
-              <h3 className="text-base sm:text-lg font-bold text-slate-900 mb-2">Zero Fluff, 100% Practical</h3>
-              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                Every lecture is recorded with live store setups, real ad accounts, and actual campaigns spending budget.
-              </p>
-            </div>
-
-            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-              <div className="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center mb-4">
-                <Globe2 size={24} />
-              </div>
-              <h3 className="text-base sm:text-lg font-bold text-slate-900 mb-2">Local &amp; GCC Market Focus</h3>
-              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                Unlike US dropshipping which takes 20-day shipping, UAE &amp; KSA offers 2-day delivery with cash on delivery payouts.
-              </p>
-            </div>
-
-            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-              <div className="w-12 h-12 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center mb-4">
-                <Users size={24} />
-              </div>
-              <h3 className="text-base sm:text-lg font-bold text-slate-900 mb-2">Dedicated Student Community</h3>
-              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                Connect with thousands of students, share winning creatives, and solve challenges together in real-time.
-              </p>
-            </div>
+            {(aboutData?.why_learn_cards && aboutData.why_learn_cards.length > 0
+              ? aboutData.why_learn_cards
+              : defaultCmsContent.about_page!.why_learn_cards
+            ).map((card, cIdx) => {
+              const IconComp = cIdx === 0 ? Award : cIdx === 1 ? Globe2 : Users;
+              const iconBg = cIdx === 0 ? 'bg-[#00A0DF]/10 text-[#00A0DF]' : cIdx === 1 ? 'bg-emerald-500/10 text-emerald-600' : 'bg-amber-500/10 text-amber-600';
+              return (
+                <div 
+                  key={card.id || cIdx} 
+                  className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-xl hover:border-[#00A0DF] transition-all duration-300 card-hover-lift cursor-pointer select-none active:scale-[0.98] group relative overflow-hidden"
+                >
+                  <div className={`w-12 h-12 rounded-xl ${iconBg} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300`}>
+                    <IconComp size={24} />
+                  </div>
+                  <h3 className="text-base sm:text-lg font-bold text-slate-900 mb-2 group-hover:text-[#00A0DF] transition-colors">
+                    {card.title}
+                  </h3>
+                  <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                    {card.desc}
+                  </p>
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>

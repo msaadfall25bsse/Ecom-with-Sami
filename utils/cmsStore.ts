@@ -220,6 +220,23 @@ export interface CmsContentSchema {
     trust_badge2: string;
     trust_badge3: string;
   };
+  about_page?: {
+    tag: string;
+    hero_title: string;
+    hero_subtitle: string;
+    story_tag: string;
+    story_quote: string;
+    story_text: string;
+    benefits: string[];
+    why_learn_title: string;
+    why_learn_subtitle: string;
+    why_learn_cards: {
+      id?: string;
+      title: string;
+      desc: string;
+      icon?: string;
+    }[];
+  };
   homepage_curriculum?: {
     tag?: string;
     title?: string;
@@ -1014,6 +1031,43 @@ export const defaultCmsContent: CmsContentSchema = {
           '11.2 Standard Operating Procedures (SOPs) for Daily Store Ops',
           '11.3 Final Words of Wisdom from Mentor Sardar Samiullah'
         ]
+      }
+    ]
+  },
+  about_page: {
+    tag: 'YOUR MENTOR',
+    hero_title: 'Empowering 1,200+ Students to Build Real Online Stores',
+    hero_subtitle: 'From absolute zero to multi-million revenue in UAE & Saudi Arabia markets. Learn the exact framework from someone who does it daily.',
+    story_tag: 'MY STORY & PHILOSOPHY',
+    story_quote: "You Don't Need Millions To Start. You Just Need A Proven Step-by-Step Blueprint.",
+    story_text: "When I started dropshipping, the biggest hurdle wasn't the technical setup — it was the lack of reliable local supplier contacts in the GCC and constant trial-and-error wasting hard-earned ad spend.\n\nAfter years of testing, scaling, and establishing direct relationships with verified warehouses across Dubai, Sharjah, and Riyadh, I designed this training specifically for beginners in Pakistan who want to earn in Dirhams and Riyals from home.\n\nOur goal is simple: eliminate the guesswork, give you direct phone numbers to real suppliers, teach you high-converting TikTok & Facebook media buying, and provide live mentorship whenever you get stuck.",
+    benefits: [
+      'Dropshipping to Private Label Scaling Formula',
+      '100% Practical Screen Walkthroughs',
+      'Direct Verified GCC Warehouse Lists',
+      'Lifetime WhatsApp Mentorship (9AM-5PM)',
+      'Weekly Live Campaign & Pixel Audits'
+    ],
+    why_learn_title: 'Why Learn With Ecom With Sami?',
+    why_learn_subtitle: 'Here is what sets our training apart from generic online courses.',
+    why_learn_cards: [
+      {
+        id: 'card_1',
+        title: 'Zero Fluff, 100% Practical',
+        desc: 'Every lecture is recorded with live store setups, real ad accounts, and actual campaigns spending budget.',
+        icon: 'award'
+      },
+      {
+        id: 'card_2',
+        title: 'Local & GCC Market Focus',
+        desc: 'Unlike US dropshipping which takes 20-day shipping, UAE & KSA offers 2-day delivery with cash on delivery payouts.',
+        icon: 'globe'
+      },
+      {
+        id: 'card_3',
+        title: 'Dedicated Student Community',
+        desc: 'Connect with thousands of students, share winning creatives, and solve challenges together in real-time.',
+        icon: 'users'
       }
     ]
   }
