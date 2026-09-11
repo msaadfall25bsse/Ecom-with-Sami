@@ -1413,57 +1413,6 @@ export function HomePageClient({ initialContent, initialModules }: HomePageClien
       </section>
 
       {/* ========================================================================= */}
-      {/* 12. BEFORE YOU CLOSE THIS PAGE: WHAT DOES WAITING COST YOU? */}
-      {/* ========================================================================= */}
-      <section className="py-14 sm:py-20 bg-white">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          
-          <div className="text-center max-w-3xl mx-auto mb-12 sm:mb-16">
-            <span className="section-tag-pill">{content.cost_of_waiting?.badge || '⏳ BEFORE YOU CLOSE THIS PAGE'}</span>
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 tracking-tight mb-3">
-              {content.cost_of_waiting?.title || (
-                <>What Does Waiting <span className="text-[#00A0DF]">Really Cost</span> You?</>
-              )}
-            </h2>
-            <p className="text-xs sm:text-sm md:text-base text-slate-600 font-medium">
-              {content.cost_of_waiting?.subtitle || 'The price isn\'t just the course fee. It\'s everything that stays exactly the same if nothing changes today.'}
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-10">
-            {(content.cost_of_waiting?.cards || defaultCmsContent.cost_of_waiting.cards).map((card, idx) => (
-              <div key={idx} className="bg-slate-50 border border-slate-200 rounded-2xl p-6 card-hover-lift">
-                <span className="text-[11px] font-black uppercase text-slate-600 bg-slate-200/80 px-2.5 py-1 rounded-md inline-block mb-3">
-                  {card.label}
-                </span>
-                <h3 className="text-base font-black text-slate-900 mb-2">{card.title}</h3>
-                <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-medium">
-                  {card.desc}
-                </p>
-              </div>
-            ))}
-          </div>
-
-          {/* Decision Banner */}
-          <div className="bg-[#0B0F19] text-white rounded-2xl p-5 text-center mb-8 border border-slate-800 card-hover-lift">
-            <span className="text-sm sm:text-base font-bold">
-              {content.cost_of_waiting?.banner_text || '🎯 This isn\'t just a course decision. It\'s a decision about where you\'ll be 6 months from now.'}
-            </span>
-          </div>
-
-          <div className="text-center">
-            <Link
-              href="/enrollment"
-              className="lwa-btn px-10 py-4 text-sm sm:text-base font-black rounded-xl"
-            >
-              {hero.cta_text || 'YES! I WANT TO LEARN THIS'}
-            </Link>
-          </div>
-
-        </div>
-      </section>
-
-      {/* ========================================================================= */}
       {/* 13. FREQUENTLY ASKED QUESTIONS (FAQS) */}
       {/* ========================================================================= */}
       <section className="py-14 sm:py-20 bg-slate-50 border-t border-slate-200/80">
